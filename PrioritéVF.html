@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Priorité des opérations — Entraînement progressif</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #0e0f14;
+      --surface:  #161820;
+      --surface2: #1e2029;
+      --border:   #2a2d3a;
+      --accent:   #6c63ff;
+      --accent2:  #ff6584;
+      --accent3:  #43e97b;
+      --text:     #e8eaf6;
+      --dim:      #8b8fa8;
+      --correct:  #43e97b;
+      --wrong:    #ff6584;
+      --lvl1:     #43e97b;
+      --lvl2:     #f59e0b;
+      --lvl3:     #ff6584;
+      --mono:     'Space Mono', monospace;
+      --sans:     'Syne', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px 16px 60px;
+    }
+
+    /* ── HEADER ── */
+    .app-header { text-align: center; margin-bottom: 24px; }
+    .app-header h1 {
+      font-size: clamp(20px, 4vw, 34px);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #f59e0b, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .app-header p { color: var(--dim); font-size: 14px; margin-top: 4px; }
+
+    /* ── LEVEL INDICATOR ── */
+    .level-banner {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .lvl-pill {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: 2px solid var(--border);
+      color: var(--dim);
+      background: var(--surface2);
+      transition: all .3s;
+      letter-spacing: .5px;
+      cursor: pointer;
+    }
+    .lvl-pill:hover:not(.running) { border-color: var(--dim); color: var(--text); }
+    .lvl-pill.active-1 { border-color: var(--lvl1); color: var(--lvl1); background: rgba(67,233,123,.12); }
+    .lvl-pill.active-2 { border-color: var(--lvl2); color: var(--lvl2); background: rgba(245,158,11,.12); }
+    .lvl-pill.active-3 { border-color: var(--lvl3); color: var(--lvl3); background: rgba(255,101,132,.12); }
+    .lvl-pill.active-mix { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,.12); }
+    .lvl-pill.done     { opacity: .4; }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 18px;
+      margin-bottom: 16px;
+    }
+    .stat-group { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+    .stat { display: flex; flex-direction: column; align-items: center; }
+    .stat-val { font-family: var(--mono); font-size: 20px; font-weight: 700; }
+    .stat-val.timer  { color: var(--accent); }
+    .stat-val.green  { color: var(--correct); }
+    .stat-val.red    { color: var(--wrong); }
+    .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); }
+
+    .ctrl-group { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+
+    /* duration pills */
+    .dur-row { display: flex; gap: 5px; }
+    .dur-pill {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 7px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      color: var(--dim);
+      cursor: pointer;
+      transition: all .18s;
+    }
+    .dur-pill:hover { border-color: var(--accent); color: var(--text); }
+    .dur-pill.active { background: rgba(108,99,255,.2); border-color: var(--accent); color: var(--accent); }
+    .dur-pill:disabled { opacity: .4; cursor: not-allowed; }
+
+    .btn-start {
+      font-family: var(--sans);
+      font-weight: 700;
+      font-size: 14px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #f59e0b, var(--accent2));
+      color: #fff;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+    }
+    .btn-start:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-start:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .btn-reset {
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 13px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      color: var(--dim);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-reset:hover { border-color: var(--accent2); color: var(--text); }
+    .btn-reset:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── STREAK BAR ── */
+    .streak-bar { height: 4px; border-radius: 999px; background: var(--border); margin-bottom: 16px; overflow: hidden; }
+    .streak-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #43e97b, #f59e0b); transition: width .4s ease; }
+
+    /* ── PROGRESS DOTS ── */
+    .progress-dots { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; min-height: 14px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); transition: background .3s; }
+    .dot.ok  { background: var(--correct); }
+    .dot.bad { background: var(--wrong); }
+
+    /* ── MAIN CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245,158,11,.1), transparent 70%);
+      pointer-events: none;
+    }
+
+    .level-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+      transition: all .3s;
+    }
+    .badge-1 { background: rgba(67,233,123,.15);  color: var(--lvl1); }
+    .badge-2 { background: rgba(245,158,11,.15);  color: var(--lvl2); }
+    .badge-3 { background: rgba(255,101,132,.15); color: var(--lvl3); }
+
+    .question-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--dim);
+      margin-bottom: 8px;
+    }
+    .question-expr {
+      font-family: var(--mono);
+      font-size: clamp(22px, 4vw, 30px);
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .question-expr .box {
+      display: inline-block;
+      min-width: 36px;
+      border-bottom: 3px solid var(--accent2);
+      color: var(--accent2);
+      text-align: center;
+      animation: blink 1.2s ease-in-out infinite;
+      margin: 0 2px;
+    }
+    @keyframes blink {
+      0%,100% { border-color: var(--accent2); }
+      50%      { border-color: rgba(255,101,132,.3); }
+    }
+
+    /* ── CHOICES ── */
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    @media(max-width:540px) { .choices { grid-template-columns: 1fr; } }
+    .choice-btn {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 700;
+      padding: 16px 10px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      cursor: pointer;
+      transition: all .18s;
+      position: relative;
+    }
+    .choice-btn::before {
+      content: attr(data-num);
+      position: absolute;
+      top: 6px; right: 10px;
+      font-size: 10px;
+      font-family: var(--sans);
+      font-weight: 700;
+      color: var(--border);
+      transition: color .18s;
+    }
+    .choice-btn:hover:not(:disabled) { border-color: #f59e0b; background: rgba(245,158,11,.1); transform: translateY(-2px); }
+    .choice-btn:hover:not(:disabled)::before { color: #f59e0b; }
+    .choice-btn:disabled { cursor: not-allowed; opacity: .6; }
+    .choice-btn.correct { border-color: var(--correct) !important; background: rgba(67,233,123,.15) !important; color: var(--correct) !important; }
+    .choice-btn.wrong   { border-color: var(--wrong)   !important; background: rgba(255,101,132,.1)  !important; color: var(--wrong)   !important; }
+
+    /* ── FEEDBACK ── */
+    .feedback { margin-top: 16px; min-height: 32px; display: flex; align-items: center; gap: 10px; }
+    .feedback-icon { font-size: 22px; }
+    .feedback-text { font-size: 15px; font-weight: 700; }
+    .feedback-text.ok  { color: var(--correct); }
+    .feedback-text.bad { color: var(--wrong); }
+
+    /* ── KBD HINT ── */
+    .kbd-hint { font-size: 12px; color: var(--dim); text-align: center; margin-top: 10px; }
+    kbd { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; font-family: var(--mono); font-size: 11px; }
+
+    /* ── RECAP ── */
+    .recap-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+    }
+    .recap-card h2 {
+      font-size: 22px; font-weight: 800; margin-bottom: 16px;
+      background: linear-gradient(135deg, #f59e0b, var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .recap-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .recap-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .recap-box .big { font-family: var(--mono); font-size: 26px; font-weight: 700; }
+    .recap-box .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); margin-top: 4px; }
+    .recap-box.g .big { color: var(--correct); }
+    .recap-box.r .big { color: var(--wrong); }
+    .recap-box.b .big { color: var(--accent); }
+    .recap-box.y .big { color: #f59e0b; }
+
+    /* per-level recap */
+    .level-recap {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .lvl-recap-box {
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      border: 1.5px solid;
+    }
+    .lvl-recap-box.l1 { border-color: var(--lvl1); background: rgba(67,233,123,.07); }
+    .lvl-recap-box.l2 { border-color: var(--lvl2); background: rgba(245,158,11,.07); }
+    .lvl-recap-box.l3 { border-color: var(--lvl3); background: rgba(255,101,132,.07); }
+    .lvl-recap-box .lvl-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .lvl-recap-box.l1 .lvl-name { color: var(--lvl1); }
+    .lvl-recap-box.l2 .lvl-name { color: var(--lvl2); }
+    .lvl-recap-box.l3 .lvl-name { color: var(--lvl3); }
+    .lvl-recap-box .lvl-score { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--text); }
+    .lvl-recap-box .lvl-pct   { font-size: 12px; color: var(--dim); margin-top: 2px; }
+
+    .motivational { text-align: center; font-size: 14px; color: var(--dim); padding: 12px; }
+
+    .recap-table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 9px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+    th { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); font-family: var(--sans); }
+    td.mono { font-family: var(--mono); }
+    tr.bad-row td { background: rgba(255,101,132,.04); }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="app-header">
+    <h1>Priorité des Opérations</h1>
+    <p>Choisis ton niveau, puis démarre</p>
+  </div>
+
+  <!-- LEVEL SELECTOR -->
+  <div class="level-banner">
+    <div class="lvl-pill active-1" id="pill1" data-lvl="1">Niveau 1 — Simple</div>
+    <div class="lvl-pill" id="pill2" data-lvl="2">Niveau 2 — Parenthèses</div>
+    <div class="lvl-pill" id="pill3" data-lvl="3">Niveau 3 — Avancé</div>
+    <div class="lvl-pill" id="pillMix" data-lvl="mix">🎲 Progressif</div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat-group">
+      <div class="stat">
+        <span class="stat-val timer" id="timer">03:00</span>
+        <span class="stat-label">Temps</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val" id="countVal">0</span>
+        <span class="stat-label">Réponses</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val green" id="correctVal">0</span>
+        <span class="stat-label">Corrects</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val red" id="wrongVal">0</span>
+        <span class="stat-label">Erreurs</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val" id="streakVal">🔥 0</span>
+        <span class="stat-label">Série</span>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <div class="dur-row" id="durRow">
+        <button class="dur-pill" data-sec="60">1 min</button>
+        <button class="dur-pill" data-sec="120">2 min</button>
+        <button class="dur-pill active" data-sec="180">3 min</button>
+        <button class="dur-pill" data-sec="300">5 min</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-start" id="startBtn">▶ Démarrer</button>
+        <button class="btn-reset" id="resetBtn" disabled>↺ Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STREAK BAR -->
+  <div class="streak-bar"><div class="streak-fill" id="streakFill" style="width:0%"></div></div>
+
+  <!-- PROGRESS DOTS -->
+  <div class="progress-dots" id="progressDots"></div>
+
+  <!-- MAIN CARD -->
+  <div class="card" id="mainCard">
+    <div class="level-badge badge-1 hidden" id="levelBadge"></div>
+    <div class="question-label" id="questionLabel">Choisis une durée et clique sur "Démarrer"</div>
+    <div class="question-expr" id="questionExpr">🎯 Prêt ?</div>
+
+    <div class="choices" id="choicesGrid">
+      <button class="choice-btn" id="c0" disabled data-num="1"></button>
+      <button class="choice-btn" id="c1" disabled data-num="2"></button>
+      <button class="choice-btn" id="c2" disabled data-num="3"></button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+    <div class="kbd-hint" id="kbdHint" style="display:none">Raccourcis : <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></div>
+  </div>
+
+  <!-- RECAP -->
+  <div class="recap-card hidden" id="recap">
+    <h2>Récapitulatif de session</h2>
+    <div class="recap-stats" id="recapStats"></div>
+    <div class="level-recap" id="levelRecap"></div>
+    <div class="motivational" id="motivational"></div>
+    <div class="recap-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Niv.</th><th>Expression</th><th>Ta réponse</th><th>Bonne réponse</th><th>✓</th>
+          </tr>
+        </thead>
+        <tbody id="recapBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+"use strict";
+
+const MINUS = "−";
+const BOX   = "□";
+
+let running = false, startTime = 0, endTime = 0, intervalId = null;
+let current = null, results = [], streak = 0, maxStreak = 0, answerLocked = false;
+let selectedMs = 3 * 60 * 1000;
+let selectedLevel = 1; // 1 | 2 | 3 | "mix"
+
+// ─── MATH HELPERS ───────────────────────────────
+const R = {
+  int: (a, b) => Math.floor(Math.random() * (b - a + 1)) + a,
+  pick: arr => arr[Math.floor(Math.random() * arr.length)],
+  shuffle: arr => { for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
+};
+
+function fmtInt(n)    { return n < 0 ? `${MINUS}${Math.abs(n)}` : String(n); }
+function fmtMul(k, s) {
+  if (k ===  1) return s;
+  if (k === -1) return `${MINUS}${s}`;
+  if (k <   0)  return `${MINUS}${Math.abs(k)}×${s}`;
+  return `${k}×${s}`;
+}
+
+// ─── LEVEL from selection / time ────────────────
+function currentLevel() {
+  if (selectedLevel !== "mix") return selectedLevel;
+  // mix = progressive over time
+  if (!running) return 1;
+  const elapsed = Date.now() - startTime;
+  const third = selectedMs / 3;
+  if (elapsed < third)     return 1;
+  if (elapsed < third * 2) return 2;
+  return 3;
+}
+
+// ─── TRAPS ──────────────────────────────────────
+function buildTraps(correct, ctx) {
+  const cands = new Set([-correct, correct+1, correct-1, correct+2, correct-2, correct+3, correct-3]);
+  if (ctx?.kind === "a_plus_kx_eq_b" && ctx.k) {
+    cands.add(ctx.b - ctx.a);
+    cands.add(Math.trunc((ctx.a + ctx.b) / ctx.k));
+  }
+  if (ctx?.kind === "a_minus_x_minus_c") {
+    cands.add(ctx.a - ctx.c - ctx.b);
+    cands.add(ctx.b + ctx.c - ctx.a);
+  }
+  if (ctx?.kind === "a_div_x_eq_b" && ctx.b) {
+    cands.add(ctx.a * ctx.b);
+    cands.add(Math.trunc(ctx.b / ctx.a));
+  }
+  cands.delete(correct);
+  const arr = [...cands].filter(v => Number.isFinite(v) && Number.isInteger(v));
+  R.shuffle(arr);
+  const traps = [];
+  for (const v of arr) {
+    if (traps.length >= 2) break;
+    if (!traps.includes(v)) traps.push(v);
+  }
+  while (traps.length < 2) traps.push(correct + (traps.length ? -5 : 5));
+  return traps.slice(0, 2);
+}
+
+// ─── GENERATORS ─────────────────────────────────
+function genLevel1() {
+  const tpls = [
+    () => { const a=R.int(-20,20),x=R.int(-20,20),b=a+x; return {text:`${fmtInt(a)} + ${BOX} = ${fmtInt(b)}`,correct:x,ctx:{kind:"a_plus_x"}}; },
+    () => { const a=R.int(-20,20),x=R.int(-20,20),b=x+a; return {text:`${BOX} + ${fmtInt(a)} = ${fmtInt(b)}`,correct:x,ctx:{kind:"x_plus_a"}}; },
+    () => { const a=R.int(-20,20),x=R.int(-20,20),b=a-x; return {text:`${fmtInt(a)} ${MINUS} ${BOX} = ${fmtInt(b)}`,correct:x,ctx:{kind:"a_minus_x"}}; },
+    () => { const a=R.int(-20,20),x=R.int(-20,20),b=x-a; return {text:`${BOX} ${MINUS} ${fmtInt(a)} = ${fmtInt(b)}`,correct:x,ctx:{kind:"x_minus_a"}}; },
+  ];
+  return R.pick(tpls)();
+}
+
+function genLevel2() {
+  const tpls = [
+    () => { const a=R.int(-20,20),x=R.int(-20,20),b=a-x; return {text:`${fmtInt(a)} ${MINUS} (${BOX}) = ${fmtInt(b)}`,correct:x,ctx:{kind:"a_minus_x_eq_b",a,b}}; },
+    () => {
+      const a=R.int(-15,15),c=R.int(-10,10),x=R.int(-20,20),b=a-(x-c);
+      const inner = c>=0 ? `${BOX} ${MINUS} ${c}` : `${BOX} + ${Math.abs(c)}`;
+      return {text:`${fmtInt(a)} ${MINUS} (${inner}) = ${fmtInt(b)}`,correct:x,ctx:{kind:"a_minus_x_minus_c",a,b,c}};
+    },
+    () => { const a=R.int(-20,20),x=R.int(-20,20),b=-x+a; return {text:`${MINUS}(${BOX}) + ${fmtInt(a)} = ${fmtInt(b)}`,correct:x,ctx:{kind:"minus_x_plus_a"}}; },
+    () => { const a=R.int(-20,20),x=R.int(-20,20),b=a-(-x); return {text:`${fmtInt(a)} ${MINUS} (${MINUS}${BOX}) = ${fmtInt(b)}`,correct:x,ctx:{kind:"a_minus_minusx"}}; },
+  ];
+  return R.pick(tpls)();
+}
+
+function genLevel3() {
+  const tpls = [
+    () => { const k=R.pick([2,3,4,-2,-3]),a=R.int(-15,15),x=R.int(-10,10),b=a+k*x; return {text:`${fmtInt(a)} + ${fmtMul(k,BOX)} = ${fmtInt(b)}`,correct:x,ctx:{kind:"a_plus_kx_eq_b",a,b,k}}; },
+    () => { const k=R.pick([-2,-3,2,3,4,-4]),x=R.int(-10,10),a=R.int(-6,6),b=k*x+a; return {text:`${BOX}×(${fmtInt(k)}) + ${fmtInt(a)} = ${fmtInt(b)}`,correct:x,ctx:{kind:"kx_plus_a",a,b,k}}; },
+    () => { const a=R.int(-10,10),x=R.int(-10,10),b=(a+x)*2; return {text:`(${fmtInt(a)} + ${BOX})×2 = ${fmtInt(b)}`,correct:x,ctx:{kind:"a_plus_x_times_2"}}; },
+    () => {
+      const m=R.pick([12,15,18,20,24,30]),x=R.pick([-6,-5,-4,-3,-2,2,3,4,5,6]),t=R.int(-3,3),u=(-m/x)+t;
+      if (!Number.isInteger(u)) return null;
+      const plusT = t===0?"":(t>0?` + ${t}`:` ${MINUS} ${Math.abs(t)}`);
+      return {text:`${MINUS}${m} ÷ ${BOX}${plusT} = ${fmtInt(u)}`,correct:x,ctx:{kind:"minusM_div_x",m,t,u}};
+    },
+    () => { const k=-4,c=3,x=R.int(-10,10),b=k*(x+c); return {text:`${fmtInt(k)}×(${BOX} + ${c}) = ${fmtInt(b)}`,correct:x,ctx:{kind:"k_times_x_plus_c"}}; },
+    () => { const d=R.int(-10,10),x=R.int(-10,10),e=-x-d; return {text:`${MINUS}(${BOX}) ${MINUS} ${fmtInt(d)} = ${fmtInt(e)}`,correct:x,ctx:{kind:"minus_x_minus_d"}}; },
+    () => { const a=8,k=-2,x=R.int(-10,10),b=a+k*x; return {text:`2³ + ${BOX}×(${fmtInt(k)}) = ${fmtInt(b)}`,correct:x,ctx:{kind:"a_plus_kx_eq_b",a,b,k}}; },
+  ];
+  for (let i=0;i<25;i++) { const q=R.pick(tpls)(); if(q) return q; }
+  return genLevel1();
+}
+
+function genQuestion(lvl) {
+  const raw = lvl===1 ? genLevel1() : lvl===2 ? genLevel2() : genLevel3();
+  const traps = buildTraps(raw.correct, raw.ctx||{});
+  const opts = R.shuffle([raw.correct, traps[0], traps[1]]);
+  return { level: lvl, text: raw.text, correct: raw.correct, opts, correctIdx: opts.indexOf(raw.correct) };
+}
+
+// ─── UI HELPERS ─────────────────────────────────
+function updateHeader() {
+  const cor = results.filter(r=>r.ok).length;
+  const tot = results.length;
+  document.getElementById("countVal").textContent   = tot;
+  document.getElementById("correctVal").textContent = cor;
+  document.getElementById("wrongVal").textContent   = tot - cor;
+  document.getElementById("streakVal").textContent  = `🔥 ${streak}`;
+}
+
+function updateLevelPills(activeLvl) {
+  // When running in fixed level mode, just highlight the selected one
+  if (selectedLevel !== "mix") {
+    [1,2,3].forEach(n => {
+      const p = document.getElementById(`pill${n}`);
+      p.className = "lvl-pill running" + (n === selectedLevel ? ` active-${n}` : "");
+    });
+    document.getElementById("pillMix").className = "lvl-pill running";
+    return;
+  }
+  // Mix / progressive mode: show progress through levels
+  [1,2,3].forEach(n => {
+    const p = document.getElementById(`pill${n}`);
+    p.className = "lvl-pill running";
+    if (n === activeLvl) p.classList.add(`active-${n}`);
+    else if (n < activeLvl) p.classList.add("done");
+  });
+  document.getElementById("pillMix").className = "lvl-pill running active-mix";
+}
+
+function showFeedback(ok, correct) {
+  const fb = document.getElementById("feedback");
+  if (ok === null) { fb.innerHTML = ""; return; }
+  if (ok) {
+    fb.innerHTML = `<span class="feedback-icon">✅</span><span class="feedback-text ok">Correct !</span>`;
+  } else {
+    fb.innerHTML = `<span class="feedback-icon">❌</span><span class="feedback-text bad">Faux — bonne réponse : <span style="font-family:var(--mono)">${fmtInt(correct)}</span></span>`;
+  }
+}
+
+function renderQuestion(q) {
+  answerLocked = false;
+
+  // badge level
+  const badge = document.getElementById("levelBadge");
+  badge.textContent = `Niveau ${q.level}`;
+  badge.className = `level-badge badge-${q.level}`;
+  badge.classList.remove("hidden");
+
+  // label + expr  (replace □ with animated span)
+  document.getElementById("questionLabel").textContent = "Trouve la valeur du □ :";
+  const html = q.text.replace(/□/g, `<span class="box">□</span>`);
+  document.getElementById("questionExpr").innerHTML = html;
+
+  // choices
+  ["c0","c1","c2"].forEach((id, i) => {
+    const btn = document.getElementById(id);
+    btn.textContent = fmtInt(q.opts[i]);
+    btn.className = "choice-btn";
+    btn.disabled = false;
+  });
+
+  showFeedback(null);
+  updateLevelPills(q.level);
+  document.getElementById("kbdHint").style.display = "block";
+}
+
+// ─── ANSWERING ──────────────────────────────────
+function answer(i) {
+  if (!running || answerLocked) return;
+  answerLocked = true;
+
+  const ok = i === current.correctIdx;
+
+  if (ok) { streak++; if (streak > maxStreak) maxStreak = streak; }
+  else streak = 0;
+
+  results.push({ level: current.level, text: current.text, chosen: current.opts[i], correct: current.correct, ok });
+
+  // colour buttons
+  ["c0","c1","c2"].forEach((id, idx) => {
+    const btn = document.getElementById(id);
+    btn.disabled = true;
+    if (idx === current.correctIdx) btn.classList.add("correct");
+    else if (idx === i && !ok) btn.classList.add("wrong");
+  });
+
+  showFeedback(ok, current.correct);
+  updateHeader();
+
+  // progress dot
+  const dot = document.createElement("div");
+  dot.className = "dot " + (ok ? "ok" : "bad");
+  document.getElementById("progressDots").appendChild(dot);
+
+  // streak fill
+  document.getElementById("streakFill").style.width = Math.min(streak * 10, 100) + "%";
+
+  setTimeout(() => { if (running) nextQuestion(); }, ok ? 500 : 900);
+}
+
+function nextQuestion() {
+  current = genQuestion(currentLevel());
+  renderQuestion(current);
+}
+
+// ─── TIMER ──────────────────────────────────────
+function tick() {
+  const rem = endTime - Date.now();
+  const s = Math.max(0, Math.ceil(rem / 1000));
+  document.getElementById("timer").textContent = `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+  if (running) updateLevelPills(currentLevel());
+  if (rem <= 0) finish();
+}
+
+// ─── FLOW ────────────────────────────────────────
+function start() {
+  results = []; streak = 0; maxStreak = 0; answerLocked = false;
+  updateHeader();
+  document.getElementById("progressDots").innerHTML = "";
+  document.getElementById("streakFill").style.width = "0%";
+  document.getElementById("recap").classList.add("hidden");
+
+  running = true;
+  startTime = Date.now();
+  endTime   = startTime + selectedMs;
+
+  document.getElementById("startBtn").disabled = true;
+  document.getElementById("resetBtn").disabled = false;
+  document.querySelectorAll(".dur-pill").forEach(b => b.disabled = true);
+
+  nextQuestion();
+  tick();
+  intervalId = setInterval(tick, 250);
+}
+
+function finish() {
+  if (!running) return;
+  running = false;
+  clearInterval(intervalId); intervalId = null;
+
+  document.getElementById("startBtn").disabled = false;
+  document.getElementById("resetBtn").disabled = false;
+  document.querySelectorAll(".dur-pill").forEach(b => b.disabled = false);
+
+  document.getElementById("timer").textContent = "00:00";
+  document.getElementById("questionExpr").textContent = "Terminé 🎉";
+  document.getElementById("levelBadge").classList.add("hidden");
+  document.getElementById("choicesGrid").style.display = "none";
+  document.getElementById("kbdHint").style.display = "none";
+  showFeedback(null);
+  restorePillsToSelection();
+
+  renderRecap();
+}
+
+function resetAll() {
+  running = false;
+  clearInterval(intervalId); intervalId = null;
+  results = []; streak = 0; maxStreak = 0; current = null; answerLocked = false;
+
+  const s = Math.round(selectedMs / 1000);
+  document.getElementById("timer").textContent = `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+  document.getElementById("questionExpr").textContent = "🎯 Prêt ?";
+  document.getElementById("questionLabel").textContent = `Choisis une durée et clique sur "Démarrer"`;
+  document.getElementById("levelBadge").classList.add("hidden");
+  document.getElementById("progressDots").innerHTML = "";
+  document.getElementById("streakFill").style.width = "0%";
+  document.getElementById("recap").classList.add("hidden");
+  document.getElementById("choicesGrid").style.display = "grid";
+  document.getElementById("kbdHint").style.display = "none";
+  ["c0","c1","c2"].forEach(id => { const b=document.getElementById(id); b.textContent=""; b.disabled=true; b.className="choice-btn"; });
+  showFeedback(null);
+  restorePillsToSelection();
+
+  document.getElementById("startBtn").disabled = false;
+  document.getElementById("resetBtn").disabled = true;
+  document.querySelectorAll(".dur-pill").forEach(b => b.disabled = false);
+  updateHeader();
+}
+
+// ─── RECAP ───────────────────────────────────────
+function renderRecap() {
+  const tot = results.length;
+  const cor = results.filter(r=>r.ok).length;
+  const pct = tot === 0 ? 0 : Math.round(cor/tot*100);
+
+  const motiv = [
+    [90,"🏆 Excellent ! Tu maîtrises les priorités d'opérations."],
+    [75,"⭐ Très bien ! Quelques erreurs mais belle progression."],
+    [60,"👍 Bien ! Continue à t'entraîner sur les niveaux 2 et 3."],
+    [40,"💪 Pas mal pour un début ! Relis les règles et réessaie."],
+    [0, "📚 Continue à t'entraîner — la régularité fait tout !"]
+  ];
+  document.getElementById("motivational").textContent = motiv.find(([t])=>pct>=t)[1];
+
+  document.getElementById("recapStats").innerHTML = `
+    <div class="recap-box g"><div class="big">${cor}</div><div class="lbl">Corrects</div></div>
+    <div class="recap-box r"><div class="big">${tot-cor}</div><div class="lbl">Erreurs</div></div>
+    <div class="recap-box b"><div class="big">${pct}%</div><div class="lbl">Réussite</div></div>
+    <div class="recap-box y"><div class="big">${maxStreak}🔥</div><div class="lbl">Série max</div></div>
+  `;
+
+  const stats = {1:{t:0,c:0},2:{t:0,c:0},3:{t:0,c:0}};
+  for (const r of results) { stats[r.level].t++; if(r.ok) stats[r.level].c++; }
+  const cls = ['l1','l2','l3'];
+  const names = ['Niveau 1 — Simple','Niveau 2 — Parenthèses','Niveau 3 — Avancé'];
+  document.getElementById("levelRecap").innerHTML = [1,2,3].map(n => {
+    const s = stats[n];
+    const p = s.t === 0 ? "—" : Math.round(s.c/s.t*100) + "%";
+    return `<div class="lvl-recap-box ${cls[n-1]}">
+      <div class="lvl-name">${names[n-1]}</div>
+      <div class="lvl-score">${s.c} / ${s.t}</div>
+      <div class="lvl-pct">${p}</div>
+    </div>`;
+  }).join("");
+
+  const tbody = document.getElementById("recapBody");
+  tbody.innerHTML = "";
+  results.forEach((r,i) => {
+    const tr = document.createElement("tr");
+    tr.className = r.ok ? "" : "bad-row";
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td><span style="font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.06);color:var(--dim)">N${r.level}</span></td>
+      <td class="mono">${r.text.replace(/□/g,'<span style="color:var(--accent2)">□</span>')}</td>
+      <td class="mono" style="color:${r.ok?'var(--correct)':'var(--wrong)'}">${fmtInt(r.chosen)}</td>
+      <td class="mono">${fmtInt(r.correct)}</td>
+      <td>${r.ok?"✅":"❌"}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("recap").classList.remove("hidden");
+}
+
+// ─── EVENTS ──────────────────────────────────────
+function restorePillsToSelection() {
+  [1,2,3].forEach(n => {
+    const p = document.getElementById(`pill${n}`);
+    p.className = "lvl-pill" + (selectedLevel === n ? ` active-${n}` : "");
+  });
+  document.getElementById("pillMix").className = "lvl-pill" + (selectedLevel === "mix" ? " active-mix" : "");
+}
+
+document.querySelectorAll(".lvl-pill").forEach(pill => {
+  pill.addEventListener("click", () => {
+    if (running) return;
+    const lvl = pill.dataset.lvl;
+    selectedLevel = lvl === "mix" ? "mix" : parseInt(lvl);
+    restorePillsToSelection();
+  });
+});
+
+document.getElementById("startBtn").addEventListener("click", start);
+document.getElementById("resetBtn").addEventListener("click", resetAll);
+document.getElementById("c0").addEventListener("click", () => answer(0));
+document.getElementById("c1").addEventListener("click", () => answer(1));
+document.getElementById("c2").addEventListener("click", () => answer(2));
+
+document.querySelectorAll(".dur-pill").forEach(pill => {
+  pill.addEventListener("click", () => {
+    if (running) return;
+    document.querySelectorAll(".dur-pill").forEach(p => p.classList.remove("active"));
+    pill.classList.add("active");
+    selectedMs = parseInt(pill.dataset.sec) * 1000;
+    const s = parseInt(pill.dataset.sec);
+    document.getElementById("timer").textContent = `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+  });
+});
+
+document.addEventListener("keydown", e => {
+  if (!running || answerLocked) return;
+  if (e.key === "1") answer(0);
+  if (e.key === "2") answer(1);
+  if (e.key === "3") answer(2);
+});
+
+updateHeader();
+restorePillsToSelection();
+</script>
+</body>
+</html>

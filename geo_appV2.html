@@ -1,0 +1,2446 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Géométrie Interactive</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f4ff;
+    --card: #ffffff;
+    --blue: #3464aa;
+    --blue-light: #e8eeff;
+    --green: #2ecc71;
+    --green-light: #e8fdf2;
+    --red: #e74c3c;
+    --red-light: #fdecea;
+    --yellow: #f39c12;
+    --yellow-light: #fef9e7;
+    --text: #1a2340;
+    --muted: #7a8aaa;
+    --border: #d0daf0;
+    --shadow: 0 4px 24px rgba(52,100,170,0.10);
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--text);
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--blue);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 16px rgba(52,100,170,0.25);
+  }
+  header h1 {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+  header .star { font-size: 1.8rem; }
+
+  /* ── Mode selector ── */
+  .mode-bar {
+    background: #fff;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    border-bottom: 2px solid var(--border);
+  }
+  .mode-bar label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  select {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--blue);
+    background: var(--blue-light);
+    border: 2px solid var(--blue);
+    border-radius: 12px;
+    padding: 10px 18px;
+    cursor: pointer;
+    outline: none;
+    transition: all .2s;
+  }
+  select:hover { background: #dce5ff; }
+
+  /* ── Score ── */
+  .score-badge {
+    margin-left: auto;
+    background: var(--yellow-light);
+    border: 2px solid var(--yellow);
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--yellow);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── Main ── */
+  main {
+    max-width: 860px;
+    margin: 32px auto;
+    padding: 0 20px;
+  }
+
+  /* ── Exercise card ── */
+  .ex-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 32px;
+    animation: fadeIn .35s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+  .ex-card h2 {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--blue);
+    margin-bottom: 8px;
+  }
+  .ex-card .instruction {
+    font-size: 1.0rem;
+    color: var(--muted);
+    margin-bottom: 24px;
+    font-weight: 600;
+  }
+
+  /* ── Canvas zone ── */
+  .canvas-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 28px;
+  }
+  canvas {
+    border-radius: 12px;
+    background: #f7f9ff;
+    border: 2px solid var(--border);
+  }
+
+  /* ── Choices ── */
+  .choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+  .choice-btn {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    padding: 13px 28px;
+    border-radius: 50px;
+    border: 3px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+    transition: all .18s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .choice-btn:hover { border-color: var(--blue); color: var(--blue); transform: translateY(-2px); }
+  .choice-btn.correct {
+    background: var(--green-light);
+    border-color: var(--green);
+    color: var(--green);
+    animation: pop .3s;
+  }
+  .choice-btn.wrong {
+    background: var(--red-light);
+    border-color: var(--red);
+    color: var(--red);
+    animation: shake .3s;
+  }
+  @keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.12)} 100%{transform:scale(1)} }
+  @keyframes shake { 0%{transform:translateX(0)} 20%{transform:translateX(-5px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} 100%{transform:translateX(0)} }
+
+  /* ── Feedback ── */
+  .feedback {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 800;
+    min-height: 32px;
+    transition: all .2s;
+  }
+  .feedback.ok { color: var(--green); }
+  .feedback.ko { color: var(--red); }
+
+  /* ── Next button ── */
+  .next-btn {
+    display: block;
+    margin: 20px auto 0;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    padding: 13px 36px;
+    border-radius: 50px;
+    border: none;
+    background: var(--blue);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(52,100,170,0.25);
+    transition: all .18s;
+  }
+  .next-btn:hover { background: #2550a0; transform: translateY(-2px); }
+
+  /* ── Triangle creator ── */
+  .sum-indicator {
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 8px 18px;
+    border-radius: 50px;
+    display: inline-block;
+    margin: 0 auto;
+  }
+  .sum-ok  { background:var(--green-light); color:var(--green); }
+  .sum-bad { background:var(--red-light);   color:var(--red); }
+
+  /* ── Angle input blocks ── */
+  .angle-inputs {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .angle-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: #f7f9ff;
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 20px;
+    min-width: 140px;
+    transition: border-color .2s;
+  }
+  .angle-group:focus-within {
+    border-color: var(--blue);
+  }
+  .angle-group .ag-label {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+  }
+  .angle-spinbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .spin-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: #fff;
+    font-size: 1.2rem;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+    color: var(--text);
+    line-height: 1;
+    padding: 0;
+  }
+  .spin-btn:hover { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+  .spin-btn:active { transform: scale(0.93); }
+  .angle-number-input {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.5rem;
+    font-weight: 800;
+    width: 68px;
+    text-align: center;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 6px 4px;
+    color: var(--text);
+    background: #fff;
+    outline: none;
+    transition: border-color .2s;
+    -moz-appearance: textfield;
+  }
+  .angle-number-input::-webkit-outer-spin-button,
+  .angle-number-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .angle-number-input:focus { border-color: var(--blue); }
+  .angle-number-input.invalid { border-color: var(--red); color: var(--red); background: var(--red-light); }
+  .angle-deg-symbol {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--muted);
+  }
+  .angle-type {
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 50px;
+  }
+  .type-droit  { background:#dff0ff; color:#3464aa; }
+  .type-aigu   { background:#e8fdf2; color:#27ae60; }
+  .type-obtus  { background:#fdecea; color:#e74c3c; }
+  .type-invalide { background:#f0f0f0; color:#aaa; }
+
+  /* ── Auto-complete hint ── */
+  .autocomplete-hint {
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--muted);
+    min-height: 20px;
+    margin-top: 2px;
+  }
+  .autocomplete-hint button {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 800;
+    background: var(--blue-light);
+    color: var(--blue);
+    border: 1.5px solid var(--blue);
+    border-radius: 50px;
+    padding: 3px 12px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .autocomplete-hint button:hover { background: var(--blue); color: #fff; }
+
+  .tri-canvas-wrap {
+    display: flex;
+    justify-content: center;
+  }
+  #triCanvas {
+    background: #f7f9ff;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+  }
+
+  /* ── Nombres relatifs ── */
+  .nr-card { display: flex; flex-direction: column; gap: 20px; }
+
+  .nr-operation-display {
+    text-align: center;
+    font-family: 'Baloo 2', cursive;
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    padding: 18px;
+    border-radius: 16px;
+    background: var(--blue-light);
+    border: 2px solid var(--blue);
+    color: var(--text);
+  }
+  .nr-operation-display .num-pos { color: #27ae60; }
+  .nr-operation-display .num-neg { color: #e74c3c; }
+  .nr-operation-display .op-sym  { color: var(--blue); margin: 0 6px; }
+
+  .nr-numberline-wrap {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  #nrCanvas {
+    width: 100%;
+    border-radius: 14px;
+    background: #f7f9ff;
+    border: 2px solid var(--border);
+    display: block;
+  }
+
+  .nr-step-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .nr-step-btn {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    padding: 10px 22px;
+    border-radius: 50px;
+    border: 2px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+    transition: all .18s;
+  }
+  .nr-step-btn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+  .nr-step-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .nr-step-btn.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .nr-step-btn.primary:hover:not(:disabled) { background: #2550a0; }
+
+  .nr-step-counter {
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: var(--muted);
+    min-width: 80px;
+    text-align: center;
+  }
+
+  .nr-explanation {
+    background: #fffbea;
+    border: 2px solid #f5d76e;
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-size: 0.97rem;
+    font-weight: 700;
+    color: #7a6000;
+    line-height: 1.6;
+    min-height: 58px;
+    transition: all .25s;
+  }
+  .nr-explanation .step-tag {
+    display: inline-block;
+    background: var(--blue);
+    color: #fff;
+    font-size: 0.78rem;
+    padding: 2px 10px;
+    border-radius: 50px;
+    margin-right: 8px;
+    font-weight: 900;
+    letter-spacing: .5px;
+  }
+  .nr-explanation.ok  { background: var(--green-light); border-color: var(--green); color: #1a5c3a; }
+  .nr-explanation.ko  { background: var(--red-light);   border-color: var(--red);   color: #8b1a1a; }
+
+  .nr-answer-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .nr-answer-label {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .nr-answer-input {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.6rem;
+    font-weight: 800;
+    width: 100px;
+    text-align: center;
+    border: 3px solid var(--border);
+    border-radius: 12px;
+    padding: 8px;
+    color: var(--text);
+    background: #fff;
+    outline: none;
+    transition: border-color .2s;
+    -moz-appearance: textfield;
+  }
+  .nr-answer-input::-webkit-outer-spin-button,
+  .nr-answer-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .nr-answer-input:focus { border-color: var(--blue); }
+  .nr-answer-input.correct { border-color: var(--green); background: var(--green-light); color: #1a5c3a; }
+  .nr-answer-input.wrong   { border-color: var(--red);   background: var(--red-light);   color: #8b1a1a; }
+
+  .nr-validate-btn {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    padding: 11px 28px;
+    border-radius: 50px;
+    border: none;
+    background: var(--blue);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(52,100,170,.22);
+    transition: all .18s;
+  }
+  .nr-validate-btn:hover { background: #2550a0; transform: translateY(-2px); }
+
+  .nr-new-btn {
+    display: block;
+    margin: 4px auto 0;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    padding: 10px 26px;
+    border-radius: 50px;
+    border: 2px solid var(--blue);
+    background: #fff;
+    color: var(--blue);
+    cursor: pointer;
+    transition: all .18s;
+  }
+  .nr-new-btn:hover { background: var(--blue); color: #fff; }
+
+  /* ── Responsive ── */
+  @media (max-width:600px) {
+    header { padding: 14px 16px; }
+    header h1 { font-size: 1.2rem; }
+    main { padding: 0 10px; margin: 16px auto; }
+    .ex-card { padding: 18px; }
+    .mode-bar { padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="star">📐</span>
+  <h1>Géométrie Interactive</h1>
+</header>
+
+<div class="mode-bar">
+  <label>Mode :</label>
+  <select id="modeSelect">
+    <option value="formes_nom">🔷 Formes — Trouver le nom</option>
+    <option value="formes_cotes">📏 Formes — Compter les côtés</option>
+    <option value="angles">🔺 Angles — Identifier le type</option>
+    <option value="tracer_angle">📐 Angles — Visualiser un angle</option>
+    <option value="triangle_creator">✏️ Créateur de triangle</option>
+    <option value="nombres_relatifs">➕➖ Additions — Nombres relatifs</option>
+    <option value="nombres_chaine">🔢 Calculs en chaîne — Difficile</option>
+  </select>
+  <div class="score-badge" id="scoreBadge">⭐ 0 / 0</div>
+</div>
+
+<main id="mainArea"></main>
+
+<script>
+// ─────────────────────────────────────────────
+//  DONNÉES
+// ─────────────────────────────────────────────
+const SHAPES = [
+  {
+    name: "triangle", sides: 3, color: "#3464aa", fill: "rgba(52,100,170,0.13)",
+    draw(ctx, cx, cy, r) {
+      const pts = polygon(cx, cy, r, 3, -Math.PI/2);
+      drawPoly(ctx, pts, this.fill, this.color);
+    }
+  },
+  {
+    name: "carré", sides: 4, color: "#2ecc71", fill: "rgba(46,204,113,0.13)",
+    draw(ctx, cx, cy, r) {
+      const s = r * 1.35;
+      ctx.beginPath();
+      ctx.rect(cx - s/2, cy - s/2, s, s);
+      ctx.fillStyle = this.fill; ctx.fill();
+      ctx.strokeStyle = this.color; ctx.lineWidth = 2.5; ctx.stroke();
+      drawRightAngle(ctx, cx - s/2, cy + s/2, 12, this.color);
+      drawTickMark(ctx, cx, cy - s/2, 0, this.color);
+      drawTickMark(ctx, cx + s/2, cy, Math.PI/2, this.color);
+    }
+  },
+  {
+    name: "rectangle", sides: 4, color: "#e67e22", fill: "rgba(230,126,34,0.13)",
+    draw(ctx, cx, cy, r) {
+      const w = r * 1.8, h = r * 1.0;
+      ctx.beginPath();
+      ctx.rect(cx - w/2, cy - h/2, w, h);
+      ctx.fillStyle = this.fill; ctx.fill();
+      ctx.strokeStyle = this.color; ctx.lineWidth = 2.5; ctx.stroke();
+      drawRightAngle(ctx, cx - w/2, cy + h/2, 12, this.color);
+    }
+  },
+  {
+    name: "pentagone", sides: 5, color: "#9b59b6", fill: "rgba(155,89,182,0.13)",
+    draw(ctx, cx, cy, r) {
+      const pts = polygon(cx, cy, r, 5, -Math.PI/2);
+      drawPoly(ctx, pts, this.fill, this.color);
+    }
+  },
+  {
+    name: "hexagone", sides: 6, color: "#16a085", fill: "rgba(22,160,133,0.13)",
+    draw(ctx, cx, cy, r) {
+      const pts = polygon(cx, cy, r, 6, 0);
+      drawPoly(ctx, pts, this.fill, this.color);
+    }
+  },
+  {
+    name: "losange", sides: 4, color: "#c0392b", fill: "rgba(192,57,43,0.13)",
+    draw(ctx, cx, cy, r) {
+      const pts = [{x:cx,y:cy-r},{x:cx+r*0.75,y:cy},{x:cx,y:cy+r},{x:cx-r*0.75,y:cy}];
+      drawPoly(ctx, pts, this.fill, this.color);
+      drawTickMark(ctx, (cx+cx+r*0.75)/2, (cy-r+cy)/2, Math.atan2(r,r*0.75), this.color);
+      drawTickMark(ctx, (cx+r*0.75+cx)/2, (cy+cy+r)/2, Math.atan2(-r,r*0.75), this.color);
+    }
+  },
+  {
+    name: "cercle", sides: 0, color: "#f39c12", fill: "rgba(243,156,18,0.13)",
+    draw(ctx, cx, cy, r) {
+      ctx.beginPath(); ctx.arc(cx, cy, r*0.95, 0, Math.PI*2);
+      ctx.fillStyle = this.fill; ctx.fill();
+      ctx.strokeStyle = this.color; ctx.lineWidth = 2.5; ctx.stroke();
+    }
+  },
+  {
+    name: "octogone", sides: 8, color: "#34495e", fill: "rgba(52,73,94,0.13)",
+    draw(ctx, cx, cy, r) {
+      const pts = polygon(cx, cy, r, 8, Math.PI/8);
+      drawPoly(ctx, pts, this.fill, this.color);
+    }
+  },
+  {
+    name: "trapèze", sides: 4, color: "#e91e8c", fill: "rgba(233,30,140,0.13)",
+    draw(ctx, cx, cy, r) {
+      const pts = [{x:cx-r*0.55,y:cy+r*0.7},{x:cx+r*0.55,y:cy+r*0.7},{x:cx+r*0.85,y:cy-r*0.7},{x:cx-r*0.85,y:cy-r*0.7}];
+      drawPoly(ctx, pts, this.fill, this.color);
+    }
+  }
+];
+
+// ── Helpers dessin ──
+function polygon(cx, cy, r, n, startAngle) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const a = startAngle + (2 * Math.PI * i) / n;
+    pts.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+  }
+  return pts;
+}
+function drawPoly(ctx, pts, fill, stroke) {
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  pts.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.closePath();
+  ctx.fillStyle = fill; ctx.fill();
+  ctx.strokeStyle = stroke; ctx.lineWidth = 2.5; ctx.stroke();
+}
+function drawRightAngle(ctx, x, y, size, color) {
+  ctx.strokeStyle = color; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(x + size, y);
+  ctx.lineTo(x + size, y - size);
+  ctx.lineTo(x, y - size);
+  ctx.stroke();
+}
+function drawTickMark(ctx, x, y, angle, color) {
+  ctx.strokeStyle = color; ctx.lineWidth = 2;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(angle);
+  ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(6, 0); ctx.stroke();
+  ctx.restore();
+}
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let score = 0, total = 0;
+let currentMode = 'formes_nom';
+let currentAnswer = null;
+let answered = false;
+
+function updateScore() {
+  document.getElementById('scoreBadge').textContent = `⭐ ${score} / ${total}`;
+}
+
+// ─────────────────────────────────────────────
+//  MODE SELECTOR
+// ─────────────────────────────────────────────
+document.getElementById('modeSelect').addEventListener('change', function() {
+  currentMode = this.value;
+  score = 0; total = 0; updateScore();
+  renderMode();
+});
+
+function renderMode() {
+  const main = document.getElementById('mainArea');
+  main.innerHTML = '';
+  if (currentMode === 'formes_nom')     renderFormesNom(main);
+  else if (currentMode === 'formes_cotes') renderFormesCotes(main);
+  else if (currentMode === 'angles')    renderAngles(main);
+  else if (currentMode === 'tracer_angle')  renderTracerAngle(main);
+  else if (currentMode === 'triangle_creator') renderTriCreator(main);
+  else if (currentMode === 'nombres_relatifs') renderNombresRelatifs(main);
+  else if (currentMode === 'nombres_chaine')   renderNombresChaine(main);
+}
+
+// ─────────────────────────────────────────────
+//  EX 1 : TROUVER LE NOM
+// ─────────────────────────────────────────────
+function renderFormesNom(container) {
+  answered = false;
+  const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+  currentAnswer = shape.name;
+
+  // 3 wrong choices
+  const others = SHAPES.filter(s => s.name !== shape.name);
+  shuffle(others);
+  const choices = shuffle([shape.name, others[0].name, others[1].name, others[2].name]);
+
+  const card = makeCard(
+    'Exercice — Trouver le nom',
+    'Quel est le nom de cette forme ?'
+  );
+
+  // Canvas
+  const cw = buildCanvas(card, 240, 240, ctx => {
+    shape.draw(ctx, 120, 120, 80);
+  });
+
+  // Choices
+  const choicesDiv = document.createElement('div');
+  choicesDiv.className = 'choices';
+  choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = c;
+    btn.onclick = () => handleChoice(btn, c, shape.name, choicesDiv, card);
+    choicesDiv.appendChild(btn);
+  });
+  card.appendChild(choicesDiv);
+  addFeedback(card);
+  container.appendChild(card);
+}
+
+// ─────────────────────────────────────────────
+//  EX 2 : COMPTER LES CÔTÉS
+// ─────────────────────────────────────────────
+function renderFormesCotes(container) {
+  answered = false;
+  const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+
+  const card = makeCard(
+    'Exercice — Compter les côtés',
+    'Combien de côtés a cette forme ?'
+  );
+
+  buildCanvas(card, 240, 240, ctx => {
+    shape.draw(ctx, 120, 120, 80);
+  });
+
+  // Options around correct answer
+  const correct = shape.sides;
+  const opts = new Set([correct]);
+  while (opts.size < 4) {
+    const v = Math.max(0, correct + Math.floor(Math.random() * 5) - 2);
+    if (v !== correct) opts.add(v);
+  }
+  const choices = shuffle([...opts]);
+
+  const choicesDiv = document.createElement('div');
+  choicesDiv.className = 'choices';
+  choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = c === 0 ? '0 (arrondi)' : `${c} côté${c > 1 ? 's' : ''}`;
+    btn.onclick = () => handleChoice(btn, c, correct, choicesDiv, card);
+    choicesDiv.appendChild(btn);
+  });
+  card.appendChild(choicesDiv);
+  addFeedback(card);
+  container.appendChild(card);
+}
+
+// ─────────────────────────────────────────────
+//  EX 3 : ANGLES
+// ─────────────────────────────────────────────
+const ANGLE_TYPES = [
+  { name: 'droit', min: 90, max: 90 },
+  { name: 'aigu',  min: 25, max: 89 },
+  { name: 'obtus', min: 91, max: 160 }
+];
+
+function renderAngles(container) {
+  answered = false;
+  const typeObj = ANGLE_TYPES[Math.floor(Math.random() * ANGLE_TYPES.length)];
+  const deg = typeObj.name === 'droit' ? 90
+    : typeObj.min + Math.floor(Math.random() * (typeObj.max - typeObj.min + 1));
+
+  currentAnswer = typeObj.name;
+
+  const card = makeCard(
+    'Exercice — Identifier un angle',
+    'Cet angle est-il droit, aigu ou obtus ?'
+  );
+
+  buildCanvas(card, 260, 200, ctx => drawAngle(ctx, 60, 170, deg));
+
+  const choicesDiv = document.createElement('div');
+  choicesDiv.className = 'choices';
+  ['droit', 'aigu', 'obtus'].forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = t.charAt(0).toUpperCase() + t.slice(1);
+    btn.onclick = () => handleChoice(btn, t, typeObj.name, choicesDiv, card);
+    choicesDiv.appendChild(btn);
+  });
+  card.appendChild(choicesDiv);
+  addFeedback(card);
+  container.appendChild(card);
+}
+
+function drawAngle(ctx, ox, oy, deg) {
+  const rad = deg * Math.PI / 180;
+  const len = 110;
+
+  // First ray: horizontal right
+  const x1 = ox + len, y1 = oy;
+  // Second ray: at angle deg upward
+  const x2 = ox + len * Math.cos(-rad);
+  const y2 = oy + len * Math.sin(-rad);
+
+  ctx.strokeStyle = '#3464aa'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(x1, y1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(x2, y2); ctx.stroke();
+
+  // Vertex dot
+  ctx.fillStyle = '#3464aa';
+  ctx.beginPath(); ctx.arc(ox, oy, 5, 0, Math.PI * 2); ctx.fill();
+
+  // Arc
+  ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2;
+  if (deg === 90) {
+    // Right angle square
+    const s = 22;
+    ctx.strokeStyle = '#e74c3c';
+    ctx.beginPath();
+    ctx.moveTo(ox + s, oy);
+    ctx.lineTo(ox + s, oy - s);
+    ctx.lineTo(ox, oy - s);
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.arc(ox, oy, 38, -rad, 0);
+    ctx.stroke();
+  }
+
+  // Label
+  ctx.font = 'bold 16px Nunito';
+  ctx.fillStyle = '#e74c3c';
+  const midAngle = -rad / 2;
+  ctx.fillText(deg + '°', ox + 50 * Math.cos(midAngle) + 4, oy + 50 * Math.sin(midAngle) - 4);
+}
+
+// ─────────────────────────────────────────────
+//  CRÉATEUR DE TRIANGLE
+// ─────────────────────────────────────────────
+function renderTriCreator(container) {
+  const card = document.createElement('div');
+  card.className = 'ex-card';
+
+  const h2 = document.createElement('h2');
+  h2.textContent = '✏️ Créateur de Triangle';
+  card.appendChild(h2);
+
+  const instr = document.createElement('p');
+  instr.className = 'instruction';
+  instr.textContent = 'Saisis les 3 angles A, B et C. Leur somme doit être exactement 180°.';
+  card.appendChild(instr);
+
+  const COLORS = ['#3464aa', '#e74c3c', '#27ae60'];
+  const inputs = [];
+
+  // ── Angle input blocks ──
+  const anglesDiv = document.createElement('div');
+  anglesDiv.className = 'angle-inputs';
+
+  ['A', 'B', 'C'].forEach((lbl, i) => {
+    const grp = document.createElement('div');
+    grp.className = 'angle-group';
+
+    // Label
+    const labelEl = document.createElement('div');
+    labelEl.className = 'ag-label';
+    labelEl.textContent = `Angle ${lbl}`;
+    labelEl.style.color = COLORS[i];
+    grp.appendChild(labelEl);
+
+    // Spinbox row: [−] [input] ° [+]
+    const spinbox = document.createElement('div');
+    spinbox.className = 'angle-spinbox';
+
+    const minusBtn = document.createElement('button');
+    minusBtn.className = 'spin-btn';
+    minusBtn.innerHTML = '−';
+    minusBtn.style.borderColor = COLORS[i];
+
+    const numInput = document.createElement('input');
+    numInput.type = 'number';
+    numInput.className = 'angle-number-input';
+    numInput.min = 1; numInput.max = 178;
+    numInput.value = 60;
+    numInput.placeholder = '°';
+
+    const sym = document.createElement('span');
+    sym.className = 'angle-deg-symbol';
+    sym.textContent = '°';
+
+    const plusBtn = document.createElement('button');
+    plusBtn.className = 'spin-btn';
+    plusBtn.innerHTML = '+';
+    plusBtn.style.borderColor = COLORS[i];
+
+    spinbox.appendChild(minusBtn);
+    spinbox.appendChild(numInput);
+    spinbox.appendChild(sym);
+    spinbox.appendChild(plusBtn);
+    grp.appendChild(spinbox);
+
+    // Angle type badge
+    const typeDiv = document.createElement('div');
+    typeDiv.className = 'angle-type type-aigu';
+    typeDiv.textContent = 'aigu';
+    grp.appendChild(typeDiv);
+
+    inputs.push({ numInput, typeDiv, color: COLORS[i], label: lbl });
+    anglesDiv.appendChild(grp);
+
+    // Events
+    const onChange = () => {
+      let v = parseInt(numInput.value);
+      if (isNaN(v) || v < 1) v = 1;
+      if (v > 178) v = 178;
+      numInput.value = v;
+      refreshTriCreator(inputs, sumRow, hintDiv, triCanvas);
+    };
+
+    numInput.addEventListener('input', () => refreshTriCreator(inputs, sumRow, hintDiv, triCanvas));
+    numInput.addEventListener('change', onChange);
+    numInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { onChange(); numInput.blur(); }
+    });
+
+    minusBtn.addEventListener('click', () => {
+      const v = parseInt(numInput.value) || 60;
+      numInput.value = Math.max(1, v - 1);
+      refreshTriCreator(inputs, sumRow, hintDiv, triCanvas);
+    });
+    plusBtn.addEventListener('click', () => {
+      const v = parseInt(numInput.value) || 60;
+      numInput.value = Math.min(178, v + 1);
+      refreshTriCreator(inputs, sumRow, hintDiv, triCanvas);
+    });
+  });
+
+  card.appendChild(anglesDiv);
+
+  // ── Sum row ──
+  const sumRow = document.createElement('div');
+  sumRow.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:4px;';
+
+  const sumBadge = document.createElement('div');
+  sumBadge.className = 'sum-indicator sum-ok';
+  sumBadge.id = 'triSumBadge';
+  sumRow.appendChild(sumBadge);
+
+  const hintDiv = document.createElement('div');
+  hintDiv.className = 'autocomplete-hint';
+  sumRow.appendChild(hintDiv);
+
+  card.appendChild(sumRow);
+
+  // ── Canvas ──
+  const triWrap = document.createElement('div');
+  triWrap.className = 'tri-canvas-wrap';
+  triWrap.style.marginTop = '16px';
+  const triCanvas = document.createElement('canvas');
+  triCanvas.id = 'triCanvas';
+  triCanvas.width = 520; triCanvas.height = 300;
+  triWrap.appendChild(triCanvas);
+  card.appendChild(triWrap);
+
+  container.appendChild(card);
+  refreshTriCreator(inputs, sumRow, hintDiv, triCanvas);
+}
+
+function getAngleVals(inputs) {
+  return inputs.map(i => {
+    const v = parseInt(i.numInput.value);
+    return isNaN(v) ? null : v;
+  });
+}
+
+function refreshTriCreator(inputs, sumRow, hintDiv, canvas) {
+  const vals = getAngleVals(inputs);
+  const allValid = vals.every(v => v !== null && v >= 1 && v <= 178);
+  const sum = allValid ? vals.reduce((a, b) => a + b, 0) : null;
+
+  const COLORS = ['#3464aa', '#e74c3c', '#27ae60'];
+
+  // Update type badges + input styling
+  inputs.forEach((inp, i) => {
+    const v = vals[i];
+    inp.numInput.classList.remove('invalid');
+    if (v === null || v < 1 || v > 178) {
+      inp.numInput.classList.add('invalid');
+      inp.typeDiv.textContent = '?';
+      inp.typeDiv.className = 'angle-type type-invalide';
+    } else {
+      const t = v === 90 ? 'droit' : v < 90 ? 'aigu' : 'obtus';
+      inp.typeDiv.textContent = t;
+      inp.typeDiv.className = 'angle-type type-' + t;
+    }
+  });
+
+  // Sum badge
+  const badge = document.getElementById('triSumBadge');
+  if (!allValid) {
+    badge.textContent = 'Saisis des valeurs entre 1° et 178°';
+    badge.className = 'sum-indicator sum-bad';
+    hintDiv.innerHTML = '';
+  } else {
+    const diff = 180 - sum;
+    badge.textContent = `Somme : ${sum}°${sum === 180 ? ' ✓ — Triangle valide !' : ` ✗ (il manque ${diff > 0 ? '+' : ''}${diff}°)`}`;
+    badge.className = 'sum-indicator ' + (sum === 180 ? 'sum-ok' : 'sum-bad');
+
+    // Hint: suggest auto-completing last angle
+    if (sum !== 180 && diff > 0 && diff < 180) {
+      const needed = 180 - vals[0] - vals[1];
+      if (needed >= 1 && needed <= 178) {
+        hintDiv.innerHTML = `💡 Pour compléter : <button onclick="document.querySelectorAll('.angle-number-input')[2].value=${needed};document.querySelectorAll('.angle-number-input')[2].dispatchEvent(new Event('input'))">Mettre C = ${needed}°</button>`;
+      } else {
+        hintDiv.innerHTML = '';
+      }
+    } else {
+      hintDiv.innerHTML = '';
+    }
+  }
+
+  drawTriangleCanvas(canvas, allValid && sum === 180 ? vals : null);
+}
+
+function drawTriangleCanvas(canvas, vals) {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!vals) {
+    ctx.font = 'bold 15px Nunito';
+    ctx.fillStyle = '#b0bcd0';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('Le triangle apparaîtra ici quand la somme = 180°', canvas.width / 2, canvas.height / 2);
+    return;
+  }
+
+  const COLS = ['#3464aa', '#e74c3c', '#27ae60'];
+  const angNames = ['A', 'B', 'C'];
+
+  // Build triangle using law of sines, fix base BC = 1 (side opposite A)
+  const [Ar, Br, Cr] = vals.map(v => v * Math.PI / 180);
+  const a = 1; // BC
+  const b = a * Math.sin(Br) / Math.sin(Ar); // AC
+  const c = a * Math.sin(Cr) / Math.sin(Ar); // AB
+
+  // Place B at origin, C at (a, 0), A computed from angle B
+  const pts = [
+    { x: c * Math.cos(Br), y: c * Math.sin(Br) }, // A
+    { x: 0, y: 0 },                                // B
+    { x: a, y: 0 }                                 // C
+  ];
+
+  // Scale & center
+  const pad = 70;
+  const minX = Math.min(...pts.map(p => p.x));
+  const minY = Math.min(...pts.map(p => p.y));
+  const maxX = Math.max(...pts.map(p => p.x));
+  const maxY = Math.max(...pts.map(p => p.y));
+  const sx = (canvas.width  - pad*2) / ((maxX - minX) || 1);
+  const sy = (canvas.height - pad*2) / ((maxY - minY) || 1);
+  const sc = Math.min(sx, sy);
+  const ox = pad + (canvas.width  - pad*2 - (maxX-minX)*sc) / 2 - minX*sc;
+  const oy = pad + (canvas.height - pad*2 - (maxY-minY)*sc) / 2 - minY*sc;
+
+  // Flip Y (canvas y-down)
+  const tp = pts.map(p => ({
+    x: ox + p.x * sc,
+    y: canvas.height - (oy + p.y * sc)
+  }));
+
+  // Shadow + fill
+  ctx.shadowColor = 'rgba(52,100,170,0.14)';
+  ctx.shadowBlur = 22;
+  ctx.beginPath();
+  tp.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(52,100,170,0.07)';
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Stroke sides with subtle gradient
+  const sideColors = ['#3464aa44', '#e74c3c44', '#27ae6044'];
+  [[0,1],[1,2],[2,0]].forEach(([a,b], si) => {
+    ctx.beginPath();
+    ctx.moveTo(tp[a].x, tp[a].y);
+    ctx.lineTo(tp[b].x, tp[b].y);
+    ctx.strokeStyle = '#3464aa'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+    ctx.stroke();
+  });
+
+  // Center of triangle
+  const cx = (tp[0].x + tp[1].x + tp[2].x) / 3;
+  const cy = (tp[0].y + tp[1].y + tp[2].y) / 3;
+
+  // Per-vertex: arc + right-angle marker + label
+  tp.forEach((p, i) => {
+    const prev = tp[(i + 2) % 3];
+    const next = tp[(i + 1) % 3];
+    const a1 = Math.atan2(prev.y - p.y, prev.x - p.x);
+    const a2 = Math.atan2(next.y - p.y, next.x - p.x);
+    const arcR = Math.min(30, Math.sqrt((p.x-cx)**2+(p.y-cy)**2)*0.38);
+
+    ctx.strokeStyle = COLS[i]; ctx.lineWidth = 2;
+
+    if (vals[i] === 90) {
+      // Right angle square
+      const sq = arcR * 0.85;
+      const e1x = prev.x - p.x, e1y = prev.y - p.y, e1l = Math.sqrt(e1x**2+e1y**2);
+      const e2x = next.x - p.x, e2y = next.y - p.y, e2l = Math.sqrt(e2x**2+e2y**2);
+      const u1x = e1x/e1l*sq, u1y = e1y/e1l*sq;
+      const u2x = e2x/e2l*sq, u2y = e2y/e2l*sq;
+      ctx.beginPath();
+      ctx.moveTo(p.x+u1x, p.y+u1y);
+      ctx.lineTo(p.x+u1x+u2x, p.y+u1y+u2y);
+      ctx.lineTo(p.x+u2x, p.y+u2y);
+      ctx.stroke();
+    } else {
+      // Arc — always goes through interior
+      const mid1 = (a1 + a2) / 2;
+      const mid2 = mid1 + Math.PI;
+      const testIn = (m) => {
+        const tx = p.x + arcR * Math.cos(m);
+        const ty = p.y + arcR * Math.sin(m);
+        return Math.sqrt((tx-cx)**2+(ty-cy)**2) < Math.sqrt((p.x-cx)**2+(p.y-cy)**2);
+      };
+      const midAngle = testIn(mid1) ? mid1 : mid2;
+      // Draw arc from a1 to a2 passing through midAngle
+      let start = a1, end = a2;
+      let ccw = false;
+      // Determine direction
+      const testM = (start + end) / 2;
+      const testM2 = testM + Math.PI;
+      if (!testIn(testM)) { ccw = true; }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, arcR, start, end, ccw);
+      ctx.stroke();
+    }
+
+    // Vertex dot
+    ctx.fillStyle = COLS[i];
+    ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fill();
+
+    // Label positioned toward interior
+    const dx = cx - p.x, dy = cy - p.y;
+    const dl = Math.sqrt(dx*dx+dy*dy);
+    const lx = p.x + (dx/dl) * 36;
+    const ly = p.y + (dy/dl) * 36;
+
+    ctx.font = 'bold 14px Nunito';
+    ctx.fillStyle = COLS[i];
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(`${angNames[i]} = ${vals[i]}°`, lx, ly);
+  });
+
+  // Triangle type centered at top
+  let type = '';
+  if (vals.includes(90)) type = '📐 Triangle rectangle';
+  else if (vals.every(v => v < 90)) type = '🔺 Triangle aigu';
+  else type = '📐 Triangle obtus';
+  if (vals[0] === vals[1] && vals[1] === vals[2]) type = '⭐ Triangle équilatéral (60°–60°–60°)';
+  else if (vals.filter((v,i,a) => a.indexOf(v) !== i).length > 0 || new Set(vals).size < 3) {
+    if (vals[0]===vals[1]||vals[1]===vals[2]||vals[0]===vals[2]) {
+      type += ' · isocèle';
+    }
+  }
+
+  ctx.font = 'bold 14px Nunito';
+  ctx.fillStyle = '#7a8aaa';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillText(type, canvas.width / 2, 6);
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function makeCard(title, instruction) {
+  const card = document.createElement('div');
+  card.className = 'ex-card';
+  const h2 = document.createElement('h2');
+  h2.textContent = title;
+  const p = document.createElement('p');
+  p.className = 'instruction';
+  p.textContent = instruction;
+  card.appendChild(h2);
+  card.appendChild(p);
+  return card;
+}
+
+function buildCanvas(parent, w, h, drawFn) {
+  const wrap = document.createElement('div');
+  wrap.className = 'canvas-wrap';
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  drawFn(ctx);
+  wrap.appendChild(canvas);
+  parent.appendChild(wrap);
+  return canvas;
+}
+
+function addFeedback(card) {
+  const fb = document.createElement('div');
+  fb.className = 'feedback';
+  card.appendChild(fb);
+}
+
+function handleChoice(btn, chosen, correct, choicesDiv, card) {
+  if (answered) return;
+  answered = true;
+  total++;
+
+  const btns = choicesDiv.querySelectorAll('.choice-btn');
+  const fb = card.querySelector('.feedback');
+
+  if (chosen === correct) {
+    btn.classList.add('correct');
+    fb.textContent = '✅ Bravo, c\'est correct !';
+    fb.className = 'feedback ok';
+    score++;
+  } else {
+    btn.classList.add('wrong');
+    fb.textContent = `❌ Non — la bonne réponse est : ${correct}`;
+    fb.className = 'feedback ko';
+    // Show correct
+    btns.forEach(b => {
+      const t = b.textContent;
+      const val = b.textContent.replace(/ côtés?/, '').replace(' (arrondi)', '');
+      const numVal = isNaN(val) ? b.textContent : parseInt(val);
+      if (b.textContent.toLowerCase().includes(String(correct).toLowerCase())) {
+        b.classList.add('correct');
+      }
+    });
+  }
+
+  btns.forEach(b => b.disabled = true);
+  updateScore();
+
+  // Next button
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'next-btn';
+  nextBtn.textContent = 'Question suivante →';
+  nextBtn.onclick = () => renderMode();
+  card.appendChild(nextBtn);
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ─────────────────────────────────────────────
+//  NOMBRES RELATIFS — BARRE GRADUÉE
+// ─────────────────────────────────────────────
+
+// Generate a pedagogically useful operation
+function genOperation() {
+  // Mix of cases: pos+pos, pos+neg, neg+pos, neg+neg, and some tricky ones
+  const cases = [
+    () => { const a = rnd(1,12), b = rnd(1,12);  return [a, '+', b]; },
+    () => { const a = rnd(1,12), b = -rnd(1,12); return [a, '+', b]; },
+    () => { const a = -rnd(1,12), b = rnd(1,12); return [a, '+', b]; },
+    () => { const a = -rnd(1,12), b = -rnd(1,12);return [a, '+', b]; },
+    () => { const a = rnd(1,12), b = rnd(1,12);  return [a, '-', b]; },
+    () => { const a = rnd(1,12), b = rnd(1,b=rnd(1,15));return [a, '-', b]; }, // may go negative
+    () => { const a = -rnd(1,10), b = rnd(1,10); return [a, '-', b]; },
+  ];
+  const fn = cases[Math.floor(Math.random() * cases.length)];
+  const [a, op, b] = fn();
+  const result = op === '+' ? a + b : a - b;
+  // keep result in a reasonable range
+  if (Math.abs(result) > 20 || Math.abs(a) > 15 || Math.abs(b) > 15) return genOperation();
+  return { a, op, b, result };
+}
+function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+// NR state
+let nrState = null;
+
+function renderNombresRelatifs(container) {
+  const op = genOperation();
+  nrState = {
+    a: op.a, op: op.op, b: op.b, result: op.result,
+    // Animation steps: 0=initial, 1=show A, 2=show movement, 3=show result
+    phase: 0,
+    answered: false,
+    userAnswer: null
+  };
+
+  const card = document.createElement('div');
+  card.className = 'ex-card nr-card';
+
+  // ── Title
+  const h2 = document.createElement('h2');
+  h2.textContent = '➕➖ Additions sur la droite graduée';
+  card.appendChild(h2);
+
+  const instr = document.createElement('p');
+  instr.className = 'instruction';
+  instr.innerHTML = 'Saisis ta réponse, puis clique sur <b>Vérifier</b> pour voir le calcul sur la droite graduée.';
+  card.appendChild(instr);
+
+  // ── Operation display
+  const opDisplay = document.createElement('div');
+  opDisplay.className = 'nr-operation-display';
+  opDisplay.id = 'nrOpDisplay';
+  renderOpDisplay(opDisplay, op);
+  card.appendChild(opDisplay);
+
+  // ── Answer row
+  const ansRow = document.createElement('div');
+  ansRow.className = 'nr-answer-row';
+  const ansLabel = document.createElement('div');
+  ansLabel.className = 'nr-answer-label';
+  ansLabel.textContent = 'Réponse =';
+  const ansInput = document.createElement('input');
+  ansInput.type = 'number';
+  ansInput.className = 'nr-answer-input';
+  ansInput.id = 'nrAnswerInput';
+  ansInput.placeholder = '?';
+  ansInput.autocomplete = 'off';
+  const valBtn = document.createElement('button');
+  valBtn.className = 'nr-validate-btn';
+  valBtn.textContent = 'Vérifier ✓';
+  valBtn.id = 'nrValidateBtn';
+  ansRow.appendChild(ansLabel);
+  ansRow.appendChild(ansInput);
+  ansRow.appendChild(valBtn);
+  card.appendChild(ansRow);
+
+  // ── Number line canvas
+  const nlWrap = document.createElement('div');
+  nlWrap.className = 'nr-numberline-wrap';
+  const nlCanvas = document.createElement('canvas');
+  nlCanvas.id = 'nrCanvas';
+  nlCanvas.height = 185;
+  nlWrap.appendChild(nlCanvas);
+  card.appendChild(nlWrap);
+
+  // ── Step controls (hidden until verified)
+  const stepControls = document.createElement('div');
+  stepControls.className = 'nr-step-controls';
+  stepControls.id = 'nrStepControls';
+  stepControls.style.display = 'none';
+
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'nr-step-btn';
+  prevBtn.textContent = '← Étape précédente';
+  prevBtn.id = 'nrPrevBtn';
+
+  const stepCounter = document.createElement('div');
+  stepCounter.className = 'nr-step-counter';
+  stepCounter.id = 'nrStepCounter';
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'nr-step-btn primary';
+  nextBtn.textContent = 'Étape suivante →';
+  nextBtn.id = 'nrNextBtn';
+
+  stepControls.appendChild(prevBtn);
+  stepControls.appendChild(stepCounter);
+  stepControls.appendChild(nextBtn);
+  card.appendChild(stepControls);
+
+  // ── Explanation box
+  const expl = document.createElement('div');
+  expl.className = 'nr-explanation';
+  expl.id = 'nrExpl';
+  expl.innerHTML = '👆 Saisis ta réponse ci-dessus et clique sur <b>Vérifier</b>.';
+  card.appendChild(expl);
+
+  // ── New question button
+  const newBtn = document.createElement('button');
+  newBtn.className = 'nr-new-btn';
+  newBtn.textContent = '🔀 Nouvelle question';
+  newBtn.onclick = () => { renderMode(); };
+  card.appendChild(newBtn);
+
+  container.appendChild(card);
+
+  // ── Canvas setup
+  const resizeCanvas = () => {
+    nlCanvas.width = nlCanvas.offsetWidth || 700;
+    drawNumberLine(nlCanvas, nrState.a, nrState.op, nrState.b, nrState.result, nrState.phase);
+  };
+  setTimeout(resizeCanvas, 30);
+  window.addEventListener('resize', resizeCanvas);
+
+  // ── Validate
+  valBtn.onclick = () => {
+    const userVal = parseInt(ansInput.value);
+    if (isNaN(userVal)) { ansInput.focus(); return; }
+    nrState.userAnswer = userVal;
+    nrState.answered = true;
+    nrState.phase = 1; // Start animation from step 1
+
+    ansInput.disabled = true;
+    valBtn.disabled = true;
+
+    if (userVal === nrState.result) {
+      ansInput.classList.add('correct');
+      score++; total++; updateScore();
+    } else {
+      ansInput.classList.add('wrong');
+      total++; updateScore();
+    }
+
+    // Show step controls and explanation
+    stepControls.style.display = 'flex';
+    updateNrPhase(nlCanvas, nrState, userVal);
+  };
+
+  ansInput.addEventListener('keydown', e => { if (e.key === 'Enter') valBtn.click(); });
+
+  prevBtn.onclick = () => {
+    if (nrState.phase > 1) { nrState.phase--; updateNrPhase(nlCanvas, nrState, nrState.userAnswer); }
+  };
+  nextBtn.onclick = () => {
+    if (nrState.phase < 3) { nrState.phase++; updateNrPhase(nlCanvas, nrState, nrState.userAnswer); }
+  };
+}
+
+function renderOpDisplay(el, op) {
+  const fmtNum = (n) => {
+    const cls = n >= 0 ? 'num-pos' : 'num-neg';
+    const sign = n >= 0 ? '+' : '−';
+    const abs = Math.abs(n);
+    return `<span class="${cls}">${n < 0 ? '(' : ''}${sign === '+' && n < 0 ? '' : (n < 0 ? '' : '')}${n < 0 ? sign : ''}${abs}${n < 0 ? ')' : ''}</span>`;
+  };
+  // e.g.  (−9) + 11  or  7 + (−4)
+  const aStr = op.a < 0
+    ? `<span class="num-neg">(${op.a})</span>`
+    : `<span class="num-pos">${op.a}</span>`;
+  const bAbs = Math.abs(op.b);
+  let bStr, opStr;
+  if (op.op === '+') {
+    if (op.b >= 0) {
+      opStr = `<span class="op-sym">+</span>`;
+      bStr  = `<span class="num-pos">${op.b}</span>`;
+    } else {
+      opStr = `<span class="op-sym">+</span>`;
+      bStr  = `<span class="num-neg">(${op.b})</span>`;
+    }
+  } else { // '-'
+    if (op.b >= 0) {
+      opStr = `<span class="op-sym">−</span>`;
+      bStr  = `<span class="num-pos">${op.b}</span>`;
+    } else {
+      opStr = `<span class="op-sym">−</span>`;
+      bStr  = `<span class="num-neg">(${op.b})</span>`;
+    }
+  }
+  el.innerHTML = aStr + opStr + bStr + `<span class="op-sym"> = </span><span style="color:#7a8aaa">?</span>`;
+}
+
+function updateNrPhase(canvas, state, userAnswer) {
+  const expl = document.getElementById('nrExpl');
+  const prevBtn = document.getElementById('nrPrevBtn');
+  const nextBtn = document.getElementById('nrNextBtn');
+  const stepCounter = document.getElementById('nrStepCounter');
+  const opDisplay = document.getElementById('nrOpDisplay');
+
+  const { a, op, b, result, phase } = state;
+  // Effective movement: op '+' b means move by +b; op '-' b means move by -b
+  const move = op === '+' ? b : -b;
+
+  // Step counter
+  stepCounter.textContent = `Étape ${phase} / 3`;
+  prevBtn.disabled = phase <= 1;
+  nextBtn.disabled = phase >= 3;
+
+  // Explanation text
+  const signA = a >= 0 ? `+${a}` : `${a}`;
+  const signMove = move >= 0 ? `+${move}` : `${move}`;
+  const signResult = result >= 0 ? `+${result}` : `${result}`;
+
+  const dirWord = move > 0 ? 'droite ➡️' : 'gauche ⬅️';
+  const dirExplain = move > 0
+    ? `On ajoute un nombre <b>positif</b> → on avance vers la <b>droite</b>`
+    : `On ajoute un nombre <b>négatif</b> (ou on soustrait un positif) → on recule vers la <b>gauche</b>`;
+
+  expl.className = 'nr-explanation';
+  if (phase === 1) {
+    expl.innerHTML = `<span class="step-tag">ÉTAPE 1</span>On part du nombre <b>${signA}</b> sur la droite graduée. Le <b>0</b> est au centre : les négatifs sont à gauche, les positifs à droite.`;
+  } else if (phase === 2) {
+    expl.innerHTML = `<span class="step-tag">ÉTAPE 2</span>${dirExplain}.<br>On se déplace de <b>${Math.abs(move)} case${Math.abs(move)>1?'s':''}</b> vers la ${dirWord}.`;
+  } else if (phase === 3) {
+    const correct = userAnswer === result;
+    expl.className = 'nr-explanation ' + (correct ? 'ok' : 'ko');
+    // Update op display with result
+    opDisplay.innerHTML = opDisplay.innerHTML.replace(
+      /<span style="color:#7a8aaa">\?<\/span>/,
+      `<span style="color:${correct?'#27ae60':'#e74c3c'};font-weight:900">${result}</span>`
+    );
+    if (correct) {
+      expl.innerHTML = `<span class="step-tag">✅ BRAVO</span>On arrive à <b>${signResult}</b>. C'est bien la bonne réponse ! ${a} ${op} ${op==='+'?'(':'(−'}${Math.abs(b)}) = <b>${result}</b>`;
+    } else {
+      expl.innerHTML = `<span class="step-tag">❌ ERREUR</span>Tu avais répondu <b>${userAnswer}</b>, mais on arrive bien à <b>${result}</b>. Souviens-toi : on part de ${signA}, puis on se déplace de ${Math.abs(move)} vers la ${dirWord}.`;
+    }
+  }
+
+  drawNumberLine(canvas, a, op, b, result, phase);
+}
+
+function drawNumberLine(canvas, a, op, b, result, phase) {
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const move = op === '+' ? b : -b;
+
+  // ── Range: always center 0, include a, result, +padding
+  const rangeVals = [0, a, result, a + move];
+  const rangeMin = Math.min(...rangeVals) - 3;
+  const rangeMax = Math.max(...rangeVals) + 3;
+  const range = rangeMax - rangeMin;
+
+  const padL = 40, padR = 40;
+  const lineY = H * 0.52;
+  const scaleX = (W - padL - padR) / range;
+
+  const toX = (val) => padL + (val - rangeMin) * scaleX;
+  const zeroX = toX(0);
+
+  // ── Background bands: negative=pink, positive=mint
+  const gNeg = ctx.createLinearGradient(padL, 0, zeroX, 0);
+  gNeg.addColorStop(0, 'rgba(231,76,60,0.0)');
+  gNeg.addColorStop(1, 'rgba(231,76,60,0.06)');
+  ctx.fillStyle = gNeg;
+  ctx.fillRect(padL, 20, Math.max(0, zeroX - padL), H - 40);
+
+  const gPos = ctx.createLinearGradient(zeroX, 0, W - padR, 0);
+  gPos.addColorStop(0, 'rgba(39,174,96,0.06)');
+  gPos.addColorStop(1, 'rgba(39,174,96,0.0)');
+  ctx.fillStyle = gPos;
+  ctx.fillRect(zeroX, 20, Math.max(0, W - padR - zeroX), H - 40);
+
+  // ── Axis line
+  ctx.strokeStyle = '#c0cce0'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(padL, lineY); ctx.lineTo(W - padR, lineY); ctx.stroke();
+
+  // Arrow heads
+  const arrowHead = (x, y, dir) => {
+    ctx.fillStyle = '#c0cce0';
+    ctx.beginPath();
+    ctx.moveTo(x + dir * 10, y);
+    ctx.lineTo(x + dir * 2, y - 6);
+    ctx.lineTo(x + dir * 2, y + 6);
+    ctx.closePath(); ctx.fill();
+  };
+  arrowHead(W - padR + 2, lineY, 1);
+  arrowHead(padL - 2, lineY, -1);
+
+  // ── Tick marks and labels
+  const tickInts = [];
+  for (let i = Math.ceil(rangeMin); i <= Math.floor(rangeMax); i++) tickInts.push(i);
+
+  tickInts.forEach(n => {
+    const x = toX(n);
+    if (x < padL - 2 || x > W - padR + 2) return;
+    const isMajor = n % 5 === 0 || n === 0 || n === a || n === result;
+    const tickH = n === 0 ? 14 : isMajor ? 9 : 5;
+
+    ctx.strokeStyle = n === 0 ? '#3464aa' : '#b0bcd0';
+    ctx.lineWidth = n === 0 ? 2.5 : 1.2;
+    ctx.beginPath(); ctx.moveTo(x, lineY - tickH); ctx.lineTo(x, lineY + tickH); ctx.stroke();
+
+    // Label (always show 0 and every 5, plus key numbers)
+    const showLabel = n === 0 || n % 5 === 0 || n === a || n === result || Math.abs(range) <= 12;
+    if (showLabel) {
+      ctx.font = n === 0 ? 'bold 13px Nunito' : '11px Nunito';
+      ctx.fillStyle = n === 0 ? '#3464aa' : n < 0 ? '#c0392b' : '#27ae60';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(n, x, lineY + 16);
+    }
+  });
+
+  // ── NEG / POS zone labels
+  if (zeroX > padL + 20) {
+    ctx.font = 'bold 11px Nunito';
+    ctx.fillStyle = 'rgba(192,57,43,0.5)';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('◀ négatifs', padL + 4, 6);
+  }
+  ctx.font = 'bold 11px Nunito';
+  ctx.fillStyle = 'rgba(39,174,96,0.5)';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+  ctx.fillText('positifs ▶', W - padR - 4, 6);
+
+  // ── PHASE 1+: Draw starting point A
+  if (phase >= 1) {
+    const ax = toX(a);
+    // Glow
+    ctx.shadowColor = a >= 0 ? '#27ae60' : '#e74c3c';
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = a >= 0 ? '#27ae60' : '#e74c3c';
+    ctx.beginPath(); ctx.arc(ax, lineY, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px Nunito';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('A', ax, lineY);
+    // Label above
+    ctx.font = 'bold 14px Nunito';
+    ctx.fillStyle = a >= 0 ? '#1a5c3a' : '#8b1a1a';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText(`Départ : ${a >= 0 ? '+' : ''}${a}`, ax, lineY - 14);
+  }
+
+  // ── PHASE 2+: Draw animated arrow showing movement
+  if (phase >= 2) {
+    const ax = toX(a);
+    const rx = toX(result);
+    const arrowY = lineY - 28;
+
+    // Curved arrow from a to result
+    ctx.save();
+    const midX = (ax + rx) / 2;
+    const curveH = Math.min(40, Math.abs(rx - ax) * 0.4 + 12);
+
+    // Arrow body (bezier)
+    ctx.strokeStyle = move >= 0 ? '#27ae60' : '#e74c3c';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([7, 4]);
+    ctx.beginPath();
+    ctx.moveTo(ax, arrowY);
+    ctx.quadraticCurveTo(midX, arrowY - curveH, rx, arrowY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Arrow tip at result end
+    const tipDir = rx > ax ? 1 : -1;
+    ctx.fillStyle = move >= 0 ? '#27ae60' : '#e74c3c';
+    ctx.beginPath();
+    ctx.moveTo(rx + tipDir * 2, arrowY);
+    ctx.lineTo(rx - tipDir * 8, arrowY - 7);
+    ctx.lineTo(rx - tipDir * 8, arrowY + 7);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    // Movement label — pill bubble above the arc peak
+    const labelX = midX;
+    const labelY = arrowY - curveH - 8;
+    const moveStr = move > 0 ? `+${move}` : `${move}`;
+    const arrow  = move > 0 ? '→ droite' : '← gauche';
+    const labelText = `${moveStr}  (${arrow})`;
+    const bgColor  = move >= 0 ? '#27ae60' : '#e74c3c';
+    const txtColor = '#ffffff';
+
+    ctx.font = 'bold 13px Nunito, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(labelText).width;
+    const pw = tw + 22, ph = 26, pr = 13; // pill dimensions
+
+    // Clamp pill so it doesn't overflow canvas edges
+    const pillX = Math.max(padL + pw/2 + 4, Math.min(W - padR - pw/2 - 4, labelX));
+    const pillTop = Math.max(6, labelY - ph/2);
+
+    // Shadow behind pill
+    ctx.shadowColor = 'rgba(0,0,0,0.18)';
+    ctx.shadowBlur = 8; ctx.shadowOffsetY = 2;
+
+    // Pill background
+    ctx.fillStyle = bgColor;
+    ctx.beginPath();
+    ctx.moveTo(pillX - pw/2 + pr, pillTop);
+    ctx.lineTo(pillX + pw/2 - pr, pillTop);
+    ctx.arc(pillX + pw/2 - pr, pillTop + ph/2, ph/2, -Math.PI/2, Math.PI/2);
+    ctx.lineTo(pillX - pw/2 + pr, pillTop + ph);
+    ctx.arc(pillX - pw/2 + pr, pillTop + ph/2, ph/2, Math.PI/2, -Math.PI/2);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+    // Pill text
+    ctx.fillStyle = txtColor;
+    ctx.fillText(labelText, pillX, pillTop + ph/2);
+  }
+
+  // ── PHASE 3: Draw result point
+  if (phase >= 3) {
+    const rx = toX(result);
+    ctx.shadowColor = '#f39c12';
+    ctx.shadowBlur = 18;
+    ctx.fillStyle = '#f39c12';
+    ctx.beginPath(); ctx.arc(rx, lineY, 11, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(rx, lineY, 11, 0, Math.PI * 2); ctx.stroke();
+    ctx.font = 'bold 12px Nunito';
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('=', rx, lineY);
+    // Label below
+    ctx.font = 'bold 15px Nunito';
+    ctx.fillStyle = '#b7770d';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(`Résultat : ${result >= 0 ? '+' : ''}${result}`, rx, lineY + 16);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  CALCULS EN CHAÎNE — MODE DIFFICILE
+// ─────────────────────────────────────────────
+
+function genChaine() {
+  // 3 terms, larger numbers, result may be anywhere in [-80, 80]
+  const termCount = 3;
+  let terms, result;
+  let attempts = 0;
+  do {
+    attempts++;
+    terms = [];
+    // First term: can be large negative or positive
+    const signs = [-1, 1];
+    const first = signs[Math.floor(Math.random()*2)] * rnd(10, 60);
+    terms.push({ val: first });
+    let running = first;
+    for (let i = 1; i < termCount; i++) {
+      // Op is shown between terms, value can be ±2..±30
+      const op = Math.random() < 0.5 ? '+' : '-';
+      const num = rnd(2, 30);
+      // actual signed delta
+      const delta = op === '+' ? num : -num;
+      terms.push({ op, num, val: num, delta });
+      running += delta;
+    }
+    result = running;
+    // Keep result reasonable on screen
+  } while ((Math.abs(result) > 80 || Math.abs(terms[0].val) > 65) && attempts < 50);
+
+  return { terms, result };
+}
+
+let ncState = null;
+
+function renderNombresChaine(container) {
+  const { terms, result } = genChaine();
+  // Build steps array: start, then one move per operation
+  // steps[0] = starting position (terms[0].val)
+  // steps[i] = { from, delta, to, op, num }  for i>=1
+  const steps = [];
+  let running = terms[0].val;
+  steps.push({ type: 'start', pos: running });
+  for (let i = 1; i < terms.length; i++) {
+    const t = terms[i];
+    const from = running;
+    running += t.delta;
+    steps.push({ type: 'move', from, delta: t.delta, to: running, op: t.op, num: t.num });
+  }
+  steps.push({ type: 'end', pos: running });
+
+  ncState = {
+    terms, result, steps,
+    phase: 0,         // 0=initial, 1..steps.length-1 = successive moves, last=result
+    answered: false,
+    userAnswer: null
+  };
+
+  const card = document.createElement('div');
+  card.className = 'ex-card nr-card';
+
+  const h2 = document.createElement('h2');
+  h2.textContent = '🔢 Calculs en chaîne';
+  card.appendChild(h2);
+
+  const instr = document.createElement('p');
+  instr.className = 'instruction';
+  instr.innerHTML = 'Calcule le résultat, puis vérifie étape par étape sur la droite graduée.';
+  card.appendChild(instr);
+
+  // ── Operation display (full chain)
+  const opDisplay = document.createElement('div');
+  opDisplay.className = 'nr-operation-display';
+  opDisplay.id = 'ncOpDisplay';
+  opDisplay.style.fontSize = '1.9rem';
+  opDisplay.style.letterSpacing = '1px';
+  renderChaineDisplay(opDisplay, terms, null);
+  card.appendChild(opDisplay);
+
+  // ── Answer row
+  const ansRow = document.createElement('div');
+  ansRow.className = 'nr-answer-row';
+  const ansLabel = document.createElement('div');
+  ansLabel.className = 'nr-answer-label';
+  ansLabel.textContent = 'Résultat =';
+  const ansInput = document.createElement('input');
+  ansInput.type = 'number';
+  ansInput.className = 'nr-answer-input';
+  ansInput.id = 'ncAnswerInput';
+  ansInput.placeholder = '?';
+  ansInput.autocomplete = 'off';
+  const valBtn = document.createElement('button');
+  valBtn.className = 'nr-validate-btn';
+  valBtn.textContent = 'Vérifier ✓';
+  valBtn.id = 'ncValidateBtn';
+  ansRow.appendChild(ansLabel); ansRow.appendChild(ansInput); ansRow.appendChild(valBtn);
+  card.appendChild(ansRow);
+
+  // ── Intermediate results strip (hidden until verified)
+  const interStrip = document.createElement('div');
+  interStrip.id = 'ncInterStrip';
+  interStrip.style.cssText = 'display:none;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px;';
+  card.appendChild(interStrip);
+
+  // ── Canvas
+  const nlWrap = document.createElement('div');
+  nlWrap.className = 'nr-numberline-wrap';
+  const nlCanvas = document.createElement('canvas');
+  nlCanvas.id = 'ncCanvas';
+  nlCanvas.height = 200;
+  nlWrap.appendChild(nlCanvas);
+  card.appendChild(nlWrap);
+
+  // ── Step controls
+  const stepControls = document.createElement('div');
+  stepControls.className = 'nr-step-controls';
+  stepControls.id = 'ncStepControls';
+  stepControls.style.display = 'none';
+
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'nr-step-btn';
+  prevBtn.textContent = '← Précédent';
+  prevBtn.id = 'ncPrevBtn';
+
+  const stepCounter = document.createElement('div');
+  stepCounter.className = 'nr-step-counter';
+  stepCounter.id = 'ncStepCounter';
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'nr-step-btn primary';
+  nextBtn.textContent = 'Suivant →';
+  nextBtn.id = 'ncNextBtn';
+
+  stepControls.appendChild(prevBtn); stepControls.appendChild(stepCounter); stepControls.appendChild(nextBtn);
+  card.appendChild(stepControls);
+
+  // ── Explanation
+  const expl = document.createElement('div');
+  expl.className = 'nr-explanation';
+  expl.id = 'ncExpl';
+  expl.innerHTML = '👆 Saisis le résultat final et clique sur <b>Vérifier</b>.';
+  card.appendChild(expl);
+
+  // ── New question
+  const newBtn = document.createElement('button');
+  newBtn.className = 'nr-new-btn';
+  newBtn.textContent = '🔀 Nouvelle question';
+  newBtn.onclick = () => renderMode();
+  card.appendChild(newBtn);
+
+  container.appendChild(card);
+
+  // Canvas sizing
+  const resizeCanvas = () => {
+    nlCanvas.width = nlCanvas.offsetWidth || 700;
+    drawChaineCanvas(nlCanvas, ncState.steps, ncState.phase);
+  };
+  setTimeout(resizeCanvas, 30);
+  window.addEventListener('resize', resizeCanvas);
+
+  // Validate
+  valBtn.onclick = () => {
+    const userVal = parseInt(ansInput.value);
+    if (isNaN(userVal)) { ansInput.focus(); return; }
+    ncState.userAnswer = userVal;
+    ncState.answered = true;
+    ncState.phase = 1;
+    ansInput.disabled = true; valBtn.disabled = true;
+
+    if (userVal === result) {
+      ansInput.classList.add('correct');
+      score++; total++;
+    } else {
+      ansInput.classList.add('wrong');
+      total++;
+    }
+    updateScore();
+
+    // Show intermediate strip
+    interStrip.style.display = 'flex';
+    buildInterStrip(interStrip, steps);
+
+    stepControls.style.display = 'flex';
+    updateChainePhase(nlCanvas, ncState);
+  };
+
+  ansInput.addEventListener('keydown', e => { if (e.key === 'Enter') valBtn.click(); });
+
+  prevBtn.onclick = () => { if (ncState.phase > 1) { ncState.phase--; updateChainePhase(nlCanvas, ncState); } };
+  nextBtn.onclick = () => { if (ncState.phase < ncState.steps.length - 1) { ncState.phase++; updateChainePhase(nlCanvas, ncState); } };
+}
+
+function renderChaineDisplay(el, terms, finalResult) {
+  let html = '';
+  const fmt = (n) => {
+    const cls = n < 0 ? 'num-neg' : 'num-pos';
+    return `<span class="${cls}">${n < 0 ? '(' + n + ')' : n}</span>`;
+  };
+  html += fmt(terms[0].val);
+  for (let i = 1; i < terms.length; i++) {
+    const t = terms[i];
+    const opCls = 'op-sym';
+    html += `<span class="${opCls}">${t.op === '+' ? ' + ' : ' − '}</span>`;
+    html += `<span class="${t.delta < 0 ? 'num-neg' : 'num-pos'}">${t.val}</span>`;
+  }
+  html += `<span class="op-sym"> = </span>`;
+  if (finalResult !== null) {
+    const rc = finalResult >= 0 ? '#27ae60' : '#e74c3c';
+    html += `<span style="color:${rc};font-weight:900">${finalResult}</span>`;
+  } else {
+    html += `<span style="color:#7a8aaa">?</span>`;
+  }
+  el.innerHTML = html;
+}
+
+function buildInterStrip(container, steps) {
+  container.innerHTML = '';
+  // Show running totals as pills
+  let running = steps[0].pos;
+  const pill0 = makePill(`Départ : ${running >= 0 ? '+' : ''}${running}`, running >= 0 ? '#27ae60' : '#e74c3c');
+  container.appendChild(pill0);
+
+  for (let i = 1; i < steps.length - 1; i++) {
+    const s = steps[i];
+    const opTxt = s.delta >= 0 ? `+ ${s.num}` : `− ${s.num}`;
+    const arrow = s.delta >= 0 ? '→' : '←';
+    running = s.to;
+    const p = makePill(`${opTxt} ${arrow} ${running >= 0 ? '+' : ''}${running}`, s.delta >= 0 ? '#27ae60' : '#e74c3c');
+    container.appendChild(p);
+  }
+  const last = steps[steps.length - 1];
+  const finalPill = makePill(`= ${last.pos >= 0 ? '+' : ''}${last.pos}`, '#f39c12', true);
+  container.appendChild(finalPill);
+}
+
+function makePill(text, color, bold = false) {
+  const p = document.createElement('div');
+  p.style.cssText = `background:${color}20;border:2px solid ${color};color:${color};
+    border-radius:50px;padding:5px 14px;font-size:0.85rem;font-weight:${bold?900:700};
+    font-family:'Nunito',sans-serif;`;
+  p.textContent = text;
+  return p;
+}
+
+function updateChainePhase(canvas, state) {
+  const { steps, phase, userAnswer, result } = state;
+  const expl = document.getElementById('ncExpl');
+  const prevBtn = document.getElementById('ncPrevBtn');
+  const nextBtn = document.getElementById('ncNextBtn');
+  const stepCounter = document.getElementById('ncStepCounter');
+
+  const maxPhase = steps.length - 1;
+  stepCounter.textContent = `Étape ${phase} / ${maxPhase}`;
+  prevBtn.disabled = phase <= 1;
+  nextBtn.disabled = phase >= maxPhase;
+
+  expl.className = 'nr-explanation';
+
+  if (phase === 1) {
+    const pos = steps[0].pos;
+    expl.innerHTML = `<span class="step-tag">DÉPART</span>On commence à <b>${pos >= 0 ? '+' + pos : pos}</b> sur la droite graduée.`;
+  } else if (phase > 1 && phase < steps.length) {
+    const s = steps[phase - 1];
+    const dirWord = s.delta >= 0 ? 'droite ➡️' : 'gauche ⬅️';
+    const dirExplain = s.delta >= 0
+      ? `On <b>additionne ${s.num}</b> → on avance vers la <b>droite</b>`
+      : s.op === '-'
+        ? `On <b>soustrait ${s.num}</b> → on recule vers la <b>gauche</b>`
+        : `On <b>additionne (${s.num * -1})</b> → on recule vers la <b>gauche</b>`;
+    expl.innerHTML = `<span class="step-tag">OPÉRATION ${phase - 1}</span>${dirExplain}.<br>
+      On se déplace de <b>${Math.abs(s.delta)} case${Math.abs(s.delta) > 1 ? 's' : ''}</b> vers la ${dirWord}.<br>
+      Position intermédiaire : <b>${s.to >= 0 ? '+' + s.to : s.to}</b>`;
+  }
+
+  if (phase === maxPhase) {
+    const correct = userAnswer === result;
+    expl.className = 'nr-explanation ' + (correct ? 'ok' : 'ko');
+    const display = document.getElementById('ncOpDisplay');
+    renderChaineDisplay(display, state.terms, result);
+    if (correct) {
+      expl.innerHTML = `<span class="step-tag">✅ BRAVO</span>Excellent ! Le résultat est bien <b>${result >= 0 ? '+' + result : result}</b>.`;
+    } else {
+      expl.innerHTML = `<span class="step-tag">❌ ERREUR</span>Tu avais répondu <b>${userAnswer}</b> mais le résultat est <b>${result >= 0 ? '+' + result : result}</b>.<br>
+        Suis les étapes sur la droite pour voir où le calcul diffère.`;
+    }
+  }
+
+  drawChaineCanvas(canvas, steps, phase);
+}
+
+function drawChaineCanvas(canvas, steps, phase) {
+  const W = canvas.width, H = canvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+  if (!W) return;
+
+  // Collect all positions
+  const allPos = [steps[0].pos, ...steps.slice(1).map(s => s.to !== undefined ? s.to : s.pos)];
+  const rangeVals = [0, ...allPos];
+  const rangeMin = Math.min(...rangeVals) - 4;
+  const rangeMax = Math.max(...rangeVals) + 4;
+  const range = rangeMax - rangeMin;
+
+  const padL = 44, padR = 44;
+  const lineY = H * 0.60;
+  const scaleX = (W - padL - padR) / range;
+  const toX = (val) => padL + (val - rangeMin) * scaleX;
+  const zeroX = toX(0);
+
+  // Background bands
+  const gNeg = ctx.createLinearGradient(padL, 0, zeroX, 0);
+  gNeg.addColorStop(0, 'rgba(231,76,60,0.0)');
+  gNeg.addColorStop(1, 'rgba(231,76,60,0.07)');
+  ctx.fillStyle = gNeg;
+  ctx.fillRect(padL, 20, Math.max(0, zeroX - padL), H - 40);
+
+  const gPos = ctx.createLinearGradient(zeroX, 0, W - padR, 0);
+  gPos.addColorStop(0, 'rgba(39,174,96,0.07)');
+  gPos.addColorStop(1, 'rgba(39,174,96,0.0)');
+  ctx.fillStyle = gPos;
+  ctx.fillRect(zeroX, 20, Math.max(0, W - padR - zeroX), H - 40);
+
+  // Axis
+  ctx.strokeStyle = '#c0cce0'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(padL, lineY); ctx.lineTo(W - padR, lineY); ctx.stroke();
+
+  // Arrow heads
+  const arrowHead = (x, y, dir) => {
+    ctx.fillStyle = '#c0cce0';
+    ctx.beginPath();
+    ctx.moveTo(x + dir * 10, y);
+    ctx.lineTo(x + dir * 2, y - 6);
+    ctx.lineTo(x + dir * 2, y + 6);
+    ctx.closePath(); ctx.fill();
+  };
+  arrowHead(W - padR + 2, lineY, 1);
+  arrowHead(padL - 2, lineY, -1);
+
+  // Ticks
+  for (let n = Math.ceil(rangeMin); n <= Math.floor(rangeMax); n++) {
+    const x = toX(n);
+    if (x < padL - 2 || x > W - padR + 2) continue;
+    const isMajor = n % 5 === 0 || n === 0 || allPos.includes(n);
+    const tickH = n === 0 ? 14 : isMajor ? 8 : 4;
+    ctx.strokeStyle = n === 0 ? '#3464aa' : '#b0bcd0';
+    ctx.lineWidth = n === 0 ? 2.5 : 1;
+    ctx.beginPath(); ctx.moveTo(x, lineY - tickH); ctx.lineTo(x, lineY + tickH); ctx.stroke();
+
+    const showLabel = n === 0 || n % 10 === 0 || allPos.includes(n) || (Math.abs(range) <= 20 && n % 5 === 0);
+    if (showLabel) {
+      ctx.font = n === 0 ? 'bold 12px Nunito' : '10px Nunito';
+      ctx.fillStyle = n === 0 ? '#3464aa' : n < 0 ? '#c0392b' : '#27ae60';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(n, x, lineY + 16);
+    }
+  }
+
+  // Zone labels
+  if (zeroX > padL + 30) {
+    ctx.font = 'bold 10px Nunito'; ctx.fillStyle = 'rgba(192,57,43,0.45)';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('◀ négatifs', padL + 4, 5);
+  }
+  ctx.font = 'bold 10px Nunito'; ctx.fillStyle = 'rgba(39,174,96,0.45)';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+  ctx.fillText('positifs ▶', W - padR - 4, 5);
+
+  // Colors per arc: cycle through a palette
+  const ARC_COLORS = ['#3464aa', '#e74c3c', '#9b59b6', '#f39c12'];
+
+  // Phase 1+: starting dot
+  if (phase >= 1) {
+    const pos = steps[0].pos;
+    const ax = toX(pos);
+    ctx.shadowColor = pos >= 0 ? '#27ae60' : '#e74c3c';
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = pos >= 0 ? '#27ae60' : '#e74c3c';
+    ctx.beginPath(); ctx.arc(ax, lineY, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Nunito';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('①', ax, lineY);
+    ctx.font = 'bold 12px Nunito';
+    ctx.fillStyle = pos >= 0 ? '#1a5c3a' : '#8b1a1a';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText(`${pos >= 0 ? '+' : ''}${pos}`, ax, lineY - 13);
+  }
+
+  // Draw arcs for each move up to current phase
+  // Stagger arc heights so they don't overlap
+  const arcHeights = [38, 52, 34]; // vary per operation
+  for (let i = 1; i < phase && i < steps.length; i++) {
+    const s = steps[i];
+    if (!s.delta) continue; // end step
+    const ax = toX(s.from);
+    const rx = toX(s.to);
+    const arcColor = ARC_COLORS[(i - 1) % ARC_COLORS.length];
+    const curveH = Math.min(arcHeights[(i - 1) % arcHeights.length], Math.abs(rx - ax) * 0.45 + 14);
+    const arrowY = lineY - 30 - ((i - 1) * 4); // slight vertical offset per layer
+
+    ctx.save();
+    const midX = (ax + rx) / 2;
+
+    // Dashed arc
+    ctx.strokeStyle = arcColor; ctx.lineWidth = 2.8;
+    ctx.setLineDash([7, 4]);
+    ctx.beginPath();
+    ctx.moveTo(ax, arrowY);
+    ctx.quadraticCurveTo(midX, arrowY - curveH, rx, arrowY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Arrow tip
+    const tipDir = rx > ax ? 1 : -1;
+    ctx.fillStyle = arcColor;
+    ctx.beginPath();
+    ctx.moveTo(rx + tipDir * 2, arrowY);
+    ctx.lineTo(rx - tipDir * 9, arrowY - 7);
+    ctx.lineTo(rx - tipDir * 9, arrowY + 7);
+    ctx.closePath(); ctx.fill();
+
+    // Pill label above arc peak
+    const moveStr = s.delta > 0 ? `+${s.delta}` : `${s.delta}`;
+    const dirTxt  = s.delta > 0 ? '→ droite' : '← gauche';
+    const labelTxt = `${moveStr}  (${dirTxt})`;
+    ctx.font = 'bold 12px Nunito, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(labelTxt).width;
+    const pw = tw + 20, ph = 22, pr = 11;
+    const pillX = Math.max(padL + pw/2 + 4, Math.min(W - padR - pw/2 - 4, midX));
+    const pillTop = Math.max(4, arrowY - curveH - ph - 2);
+
+    ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
+    ctx.fillStyle = arcColor;
+    ctx.beginPath();
+    ctx.moveTo(pillX - pw/2 + pr, pillTop);
+    ctx.lineTo(pillX + pw/2 - pr, pillTop);
+    ctx.arc(pillX + pw/2 - pr, pillTop + ph/2, ph/2, -Math.PI/2, Math.PI/2);
+    ctx.lineTo(pillX - pw/2 + pr, pillTop + ph);
+    ctx.arc(pillX - pw/2 + pr, pillTop + ph/2, ph/2, Math.PI/2, -Math.PI/2);
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+    ctx.fillStyle = '#fff';
+    ctx.fillText(labelTxt, pillX, pillTop + ph/2);
+    ctx.restore();
+
+    // Intermediate dot (not the last)
+    if (i < steps.length - 1) {
+      const dotX = toX(s.to);
+      ctx.fillStyle = arcColor;
+      ctx.shadowColor = arcColor; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(dotX, lineY, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Nunito';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(`${i + 1}`, dotX, lineY);
+    }
+  }
+
+  // Final result dot (phase = maxPhase)
+  const maxPhase = steps.length - 1;
+  if (phase >= maxPhase) {
+    const finalPos = steps[steps.length - 1].pos;
+    const rx = toX(finalPos);
+    ctx.shadowColor = '#f39c12'; ctx.shadowBlur = 18;
+    ctx.fillStyle = '#f39c12';
+    ctx.beginPath(); ctx.arc(rx, lineY, 12, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(rx, lineY, 12, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Nunito';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('=', rx, lineY);
+    ctx.font = 'bold 14px Nunito'; ctx.fillStyle = '#b7770d';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(`${finalPos >= 0 ? '+' : ''}${finalPos}`, rx, lineY + 17);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  VISUALISER UN ANGLE (illustration libre)
+// ─────────────────────────────────────────────
+function renderTracerAngle() {
+  const card = document.createElement('div');
+  card.className = 'ex-card';
+
+  const h2 = document.createElement('h2');
+  h2.textContent = '📐 Visualiser un angle';
+  card.appendChild(h2);
+
+  const instr = document.createElement('p');
+  instr.className = 'instruction';
+  instr.textContent = 'Choisis un angle puis clique sur "Afficher" pour voir les deux côtés.';
+  card.appendChild(instr);
+
+  // ── Slider row ──
+  const sliderRow = document.createElement('div');
+  sliderRow.style.cssText = 'display:flex;align-items:center;gap:12px;justify-content:center;margin:0 0 18px;flex-wrap:wrap;';
+
+  const minusBtn = document.createElement('button');
+  minusBtn.className = 'spin-btn';
+  minusBtn.innerHTML = '−';
+  minusBtn.style.borderColor = '#3464aa';
+
+  const slider = document.createElement('input');
+  slider.type = 'range';
+  slider.min = 1; slider.max = 360; slider.value = 90;
+  slider.style.cssText = 'width:220px;accent-color:#3464aa;cursor:pointer;';
+
+  const plusBtn = document.createElement('button');
+  plusBtn.className = 'spin-btn';
+  plusBtn.innerHTML = '+';
+  plusBtn.style.borderColor = '#3464aa';
+
+  const currentLabel = document.createElement('div');
+  currentLabel.style.cssText = `font-family:'Baloo 2',cursive;font-size:1.8rem;font-weight:800;color:#3464aa;min-width:72px;text-align:center;`;
+  currentLabel.textContent = '90°';
+
+  // Angle type badge
+  const typeBadge = document.createElement('span');
+  typeBadge.style.cssText = 'font-size:0.82rem;font-weight:800;padding:4px 14px;border-radius:50px;margin-left:4px;';
+
+  sliderRow.appendChild(minusBtn);
+  sliderRow.appendChild(slider);
+  sliderRow.appendChild(plusBtn);
+  sliderRow.appendChild(currentLabel);
+  sliderRow.appendChild(typeBadge);
+  card.appendChild(sliderRow);
+
+  // ── Afficher button ──
+  const showBtn = document.createElement('button');
+  showBtn.className = 'next-btn';
+  showBtn.textContent = '▶ Afficher';
+  showBtn.style.cssText = 'display:block;margin:0 auto 22px;';
+  card.appendChild(showBtn);
+
+  // ── Canvas (hidden until first click) ──
+  const canvasWrap = document.createElement('div');
+  canvasWrap.className = 'canvas-wrap';
+  canvasWrap.style.display = 'none';
+  const cv = document.createElement('canvas');
+  cv.width = 480; cv.height = 320;
+  canvasWrap.appendChild(cv);
+  card.appendChild(canvasWrap);
+
+  // ── Angle name label below canvas ──
+  const nameLabel = document.createElement('div');
+  nameLabel.style.cssText = 'text-align:center;font-family:"Baloo 2",cursive;font-size:1.15rem;font-weight:800;margin-top:10px;min-height:28px;';
+  card.appendChild(nameLabel);
+
+  // ── Helpers ──
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+
+  function angleType(deg) {
+    if (deg === 90)  return { name: 'Angle droit',   color: '#3464aa', bg: '#e8eeff' };
+    if (deg < 90)   return { name: 'Angle aigu',    color: '#27ae60', bg: '#e8fdf2' };
+    if (deg === 180) return { name: 'Angle plat',    color: '#9b59b6', bg: '#f3e8fd' };
+    if (deg < 180)  return { name: 'Angle obtus',   color: '#e74c3c', bg: '#fdecea' };
+    if (deg === 360) return { name: 'Angle plein',   color: '#f39c12', bg: '#fef9e7' };
+    return             { name: 'Angle rentrant', color: '#e67e22', bg: '#fef3e7' };
+  }
+
+  function updateBadge(deg) {
+    const t = angleType(deg);
+    typeBadge.textContent = t.name;
+    typeBadge.style.background = t.bg;
+    typeBadge.style.color = t.color;
+  }
+
+  function drawArrow(ox, oy, tx, ty, color, lw) {
+    ctx.save();
+    ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(tx, ty); ctx.stroke();
+    const a = Math.atan2(ty - oy, tx - ox);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(tx + Math.cos(a) * 13, ty + Math.sin(a) * 13);
+    ctx.lineTo(tx + Math.cos(a + 2.7) * 9, ty + Math.sin(a + 2.7) * 9);
+    ctx.lineTo(tx + Math.cos(a - 2.7) * 9, ty + Math.sin(a - 2.7) * 9);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawIllustration(deg) {
+    ctx.clearRect(0, 0, W, H);
+    const rad  = deg * Math.PI / 180;
+    const t    = angleType(deg);
+
+    // Place origin so both rays fit regardless of angle
+    // First ray goes right → origin sits at left-center
+    // Second ray goes at angle deg CCW from horizontal
+    const RAY = 180; // ray length in px
+
+    // Compute second ray endpoint direction
+    const dx2 = Math.cos(-rad), dy2 = Math.sin(-rad);
+
+    // Bounding box of both rays from (0,0)
+    const pts = [
+      { x: RAY, y: 0 },           // tip of ray 1
+      { x: dx2 * RAY, y: dy2 * RAY } // tip of ray 2
+    ];
+    const minX = Math.min(0, ...pts.map(p => p.x));
+    const maxX = Math.max(0, ...pts.map(p => p.x));
+    const minY = Math.min(0, ...pts.map(p => p.y));
+    const maxY = Math.max(0, ...pts.map(p => p.y));
+
+    const pad = 48;
+    const scaleX = (W - pad * 2) / (maxX - minX || 1);
+    const scaleY = (H - pad * 2) / (maxY - minY || 1);
+    const scale  = Math.min(scaleX, scaleY, 1.6); // don't scale up too much
+
+    // Origin position so drawing is centered
+    const OX = pad + (-minX) * scale + ((W - pad * 2) - (maxX - minX) * scale) / 2;
+    const OY = pad + (-minY) * scale + ((H - pad * 2) - (maxY - minY) * scale) / 2;
+    const L  = RAY * scale;
+
+    // Tip positions
+    const r1x = OX + L,           r1y = OY;
+    const r2x = OX + dx2 * L,     r2y = OY + dy2 * L;
+
+    // ── Filled sector ──
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(OX, OY);
+    ctx.arc(OX, OY, L * 0.85, -rad, 0, false);
+    ctx.closePath();
+    ctx.fillStyle = t.bg.replace(')', ',0.55)').replace('rgb', 'rgba').replace('#', '');
+    // use a simple approach: just set alpha
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = t.bg;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // ── Arc or right-angle symbol ──
+    const arcR = Math.min(L * 0.32, 58);
+    ctx.save();
+    ctx.strokeStyle = t.color; ctx.lineWidth = 2.5;
+    if (deg === 90) {
+      const s = arcR;
+      ctx.beginPath();
+      ctx.moveTo(OX + s, OY);
+      ctx.lineTo(OX + s, OY - s);
+      ctx.lineTo(OX, OY - s);
+      ctx.stroke();
+    } else if (deg === 360) {
+      ctx.beginPath();
+      ctx.arc(OX, OY, arcR, 0, Math.PI * 2);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(OX, OY, arcR, -rad, 0, false);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // ── Angle label in the arc ──
+    const midA  = -rad / 2;
+    const lDist = arcR + 22;
+    const lx = OX + lDist * Math.cos(midA);
+    const ly = OY + lDist * Math.sin(midA);
+    ctx.save();
+    ctx.font = 'bold 17px Nunito'; ctx.fillStyle = t.color;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(`${deg}°`, lx, ly);
+    ctx.restore();
+
+    // ── Ray 1 (horizontal right) ──
+    drawArrow(OX, OY, r1x, r1y, '#3464aa', 3.5);
+    ctx.save();
+    ctx.font = '12px Nunito'; ctx.fillStyle = '#3464aa';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('Premier côté', OX + L * 0.5, OY + 8);
+    ctx.restore();
+
+    // ── Ray 2 (rotates) ──
+    drawArrow(OX, OY, r2x, r2y, t.color, 3.5);
+    // place label perpendicular to avoid overlap
+    const lblA   = -rad;
+    const lblDist = L * 0.5;
+    const offPerpX = Math.cos(lblA + Math.PI / 2) * 18;
+    const offPerpY = Math.sin(lblA + Math.PI / 2) * 18;
+    ctx.save();
+    ctx.font = '12px Nunito'; ctx.fillStyle = t.color;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('Second côté',
+      OX + lblDist * Math.cos(lblA) + offPerpX,
+      OY + lblDist * Math.sin(lblA) + offPerpY);
+    ctx.restore();
+
+    // ── Origin dot ──
+    ctx.save();
+    ctx.fillStyle = '#1a2340';
+    ctx.beginPath(); ctx.arc(OX, OY, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Nunito';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('O', OX, OY);
+    ctx.restore();
+
+    // ── Name label below canvas ──
+    nameLabel.textContent = t.name;
+    nameLabel.style.color = t.color;
+  }
+
+  // ── Slider interactions ──
+  function onSliderChange() {
+    const deg = parseInt(slider.value);
+    currentLabel.textContent = `${deg}°`;
+    updateBadge(deg);
+    // Live-update if canvas already visible
+    if (canvasWrap.style.display !== 'none') drawIllustration(deg);
+  }
+
+  slider.addEventListener('input', onSliderChange);
+  minusBtn.onclick = () => { slider.value = Math.max(1,   parseInt(slider.value) - 1); onSliderChange(); };
+  plusBtn.onclick  = () => { slider.value = Math.min(360, parseInt(slider.value) + 1); onSliderChange(); };
+
+  // ── Show button ──
+  showBtn.onclick = () => {
+    const deg = parseInt(slider.value);
+    canvasWrap.style.display = 'flex';
+    drawIllustration(deg);
+    showBtn.textContent = '↺ Mettre à jour';
+  };
+
+  // Init badge
+  updateBadge(90);
+
+  const main = document.getElementById('mainArea');
+  main.innerHTML = '';
+  main.appendChild(card);
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+renderMode();
+</script>
+</body>
+</html>
