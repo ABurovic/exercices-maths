@@ -1,0 +1,1231 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Identités Remarquables — Entraînement</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0e0f14;
+      --surface: #161820;
+      --surface2: #1e2029;
+      --border: #2a2d3a;
+      --accent: #6c63ff;
+      --accent2: #ff6584;
+      --accent3: #43e97b;
+      --text: #e8eaf6;
+      --text-dim: #8b8fa8;
+      --correct: #43e97b;
+      --wrong: #ff6584;
+      --mono: 'Space Mono', monospace;
+      --sans: 'Syne', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px 16px 60px;
+    }
+
+    /* HEADER */
+    .app-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .app-header h1 {
+      font-size: clamp(22px, 4vw, 36px);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .app-header p {
+      color: var(--text-dim);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    /* FORMULAS REFERENCE STRIP */
+    .formulas-strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .formula-ref {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-dim);
+      text-align: center;
+      transition: border-color .2s;
+    }
+    .formula-ref:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+    .formula-ref .label {
+      font-family: var(--sans);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* EXERCISE TYPE SELECTOR */
+    .mode-selector {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .mode-btn {
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .mode-btn:hover { border-color: var(--accent); color: var(--text); }
+    .mode-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .mode-btn[data-mode="mixed"].active {
+      background: var(--accent2);
+      border-color: var(--accent2);
+      color: #fff;
+    }
+
+    /* STATS BAR */
+    .stats-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 18px;
+      margin-bottom: 20px;
+    }
+    .stat-group { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .stat-val {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .stat-val.timer { color: var(--accent); }
+    .stat-val.score-good { color: var(--correct); }
+    .stat-val.score-bad { color: var(--wrong); }
+    .stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+    }
+    /* DURATION SELECTOR */
+    .duration-selector {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .duration-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    .duration-pills {
+      display: flex;
+      gap: 5px;
+    }
+    .dur-pill {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all .18s;
+    }
+    .dur-pill:hover { border-color: var(--accent); color: var(--text); }
+    .dur-pill.active {
+      background: rgba(108,99,255,.2);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .dur-pill:disabled { opacity: .4; cursor: not-allowed; }
+
+    .ctrl-group { display: flex; gap: 8px; }
+    .btn-start {
+      font-family: var(--sans);
+      font-weight: 700;
+      font-size: 14px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      color: #fff;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+    }
+    .btn-start:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-start:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .btn-reset {
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 14px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-reset:hover { border-color: var(--accent2); color: var(--text); }
+    .btn-reset:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* STREAK */
+    .streak-bar {
+      height: 4px;
+      border-radius: 999px;
+      background: var(--border);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .streak-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent3), var(--accent));
+      transition: width .4s ease;
+    }
+
+    /* MAIN CARD */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(108,99,255,.12), transparent 70%);
+      pointer-events: none;
+    }
+
+    .exercise-type-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(108,99,255,.15);
+      color: var(--accent);
+      margin-bottom: 14px;
+    }
+
+    .question-area {
+      margin-bottom: 20px;
+    }
+    .question-text {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .question-expr {
+      font-family: var(--mono);
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .question-blank {
+      display: inline-block;
+      min-width: 80px;
+      border-bottom: 3px solid var(--accent2);
+      color: var(--accent2);
+      text-align: center;
+      margin: 0 4px;
+      animation: blink 1.2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { border-color: var(--accent2); }
+      50% { border-color: rgba(255,101,132,.3); }
+    }
+
+    /* CHOICES */
+    .choices-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 640px) {
+      .choices-grid.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+      .choices-grid.cols2 { grid-template-columns: 1fr 1fr; }
+    }
+
+    .choice-btn {
+      font-family: var(--mono);
+      font-size: 15px;
+      text-align: left;
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      cursor: pointer;
+      transition: all .18s;
+      line-height: 1.3;
+      white-space: pre-wrap;
+      position: relative;
+      overflow: hidden;
+    }
+    .choice-btn::before {
+      content: attr(data-num);
+      position: absolute;
+      top: 8px; right: 12px;
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--border);
+      transition: color .18s;
+    }
+    .choice-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      background: rgba(108,99,255,.12);
+      transform: translateY(-2px);
+    }
+    .choice-btn:hover:not(:disabled)::before { color: var(--accent); }
+    .choice-btn:disabled { cursor: not-allowed; opacity: .6; }
+    .choice-btn.correct {
+      border-color: var(--correct) !important;
+      background: rgba(67,233,123,.15) !important;
+      color: var(--correct) !important;
+    }
+    .choice-btn.wrong {
+      border-color: var(--wrong) !important;
+      background: rgba(255,101,132,.1) !important;
+      color: var(--wrong) !important;
+    }
+
+    /* FILL IN THE BLANK */
+    .fill-input-wrap {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .fill-input {
+      font-family: var(--mono);
+      font-size: 18px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      width: 200px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .fill-input:focus { border-color: var(--accent); }
+    .fill-input.correct { border-color: var(--correct); color: var(--correct); }
+    .fill-input.wrong { border-color: var(--wrong); color: var(--wrong); }
+    .btn-validate {
+      font-family: var(--sans);
+      font-weight: 700;
+      font-size: 15px;
+      padding: 12px 22px;
+      border-radius: 12px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .btn-validate:hover { opacity: .85; }
+    .btn-validate:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* MATCHING */
+    .match-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+    .match-col { display: flex; flex-direction: column; gap: 8px; }
+    .match-col h4 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+    .match-item {
+      font-family: var(--mono);
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      transition: all .18s;
+      user-select: none;
+    }
+    .match-item:hover { border-color: var(--accent); background: rgba(108,99,255,.1); }
+    .match-item.selected { border-color: var(--accent2); background: rgba(255,101,132,.1); }
+    .match-item.linked-correct { border-color: var(--correct); background: rgba(67,233,123,.1); color: var(--correct); cursor: default; }
+    .match-item.linked-wrong { border-color: var(--wrong); background: rgba(255,101,132,.1); cursor: default; }
+
+    /* FEEDBACK */
+    .feedback {
+      margin-top: 16px;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .feedback-icon { font-size: 22px; }
+    .feedback-text {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .feedback-text.ok { color: var(--correct); }
+    .feedback-text.bad { color: var(--wrong); }
+    .feedback-hint {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    /* PROGRESS DOTS */
+    .progress-dots {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background .3s;
+    }
+    .dot.ok { background: var(--correct); }
+    .dot.bad { background: var(--wrong); }
+
+    /* RECAP */
+    .recap-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+    }
+    .recap-card h2 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--accent3), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .recap-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .recap-stat-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .recap-stat-box .big { font-family: var(--mono); font-size: 28px; font-weight: 700; }
+    .recap-stat-box .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-top: 4px; }
+    .recap-stat-box.good .big { color: var(--correct); }
+    .recap-stat-box.bad .big { color: var(--wrong); }
+    .recap-stat-box.neutral .big { color: var(--accent); }
+
+    .recap-table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+    th { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); font-family: var(--sans); }
+    td.formula { font-family: var(--mono); }
+    tr.ok-row td { }
+    tr.bad-row td { background: rgba(255,101,132,.04); }
+
+    .hidden { display: none !important; }
+
+    /* MOTIVATIONAL */
+    .motivational {
+      text-align: center;
+      padding: 16px;
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+
+    /* Keyboard hint */
+    .kbd-hint {
+      font-size: 12px;
+      color: var(--text-dim);
+      text-align: center;
+      margin-top: 8px;
+    }
+    kbd {
+      display: inline-block;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    @media (max-width: 480px) {
+      .match-grid { grid-template-columns: 1fr; }
+      .fill-input { width: 160px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-header">
+    <h1>Identités Remarquables</h1>
+    <p>Entraîne-toi avec 4 types d'exercices — ou lance le mode mixte 🎲</p>
+  </div>
+
+  <!-- REFERENCE FORMULAS -->
+  <div class="formulas-strip">
+    <div class="formula-ref">
+      <span class="label">Carré somme</span>
+      (a + b)² = a² + 2ab + b²
+    </div>
+    <div class="formula-ref">
+      <span class="label">Carré différence</span>
+      (a − b)² = a² − 2ab + b²
+    </div>
+    <div class="formula-ref">
+      <span class="label">Diff. de carrés</span>
+      (a + b)(a − b) = a² − b²
+    </div>
+  </div>
+
+  <!-- MODE SELECTOR -->
+  <div class="mode-selector">
+    <button class="mode-btn active" data-mode="mcq">QCM : Factoriser</button>
+    <button class="mode-btn" data-mode="expand">QCM : Développer</button>
+    <button class="mode-btn" data-mode="fill">Terme manquant</button>
+    <button class="mode-btn" data-mode="identify">Identifier l'identité</button>
+    <button class="mode-btn" data-mode="mixed" style="border-color:#ff6584;color:#ff6584">🎲 Exercice mixte</button>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat-group">
+      <div class="stat">
+        <span class="stat-val timer" id="timer">03:00</span>
+        <span class="stat-label">Temps</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val" id="countVal">0</span>
+        <span class="stat-label">Réponses</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val score-good" id="correctVal">0</span>
+        <span class="stat-label">Corrects</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val score-bad" id="wrongVal">0</span>
+        <span class="stat-label">Erreurs</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val" id="streakVal">🔥 0</span>
+        <span class="stat-label">Série</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+      <div class="duration-selector">
+        <span class="duration-label">Durée :</span>
+        <div class="duration-pills">
+          <button class="dur-pill" data-sec="60">1 min</button>
+          <button class="dur-pill" data-sec="120">2 min</button>
+          <button class="dur-pill active" data-sec="180">3 min</button>
+          <button class="dur-pill" data-sec="300">5 min</button>
+          <button class="dur-pill" data-sec="600">10 min</button>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <button class="btn-start" id="startBtn">▶ Démarrer</button>
+        <button class="btn-reset" id="resetBtn" disabled>↺ Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STREAK BAR -->
+  <div class="streak-bar"><div class="streak-fill" id="streakFill" style="width:0%"></div></div>
+
+  <!-- PROGRESS DOTS -->
+  <div class="progress-dots" id="progressDots"></div>
+
+  <!-- MAIN EXERCISE CARD -->
+  <div class="card" id="mainCard">
+    <div id="exerciseTypeBadge" class="exercise-type-badge hidden"></div>
+
+    <div class="question-area" id="questionArea">
+      <div class="question-text">Choisis un mode et clique sur "Démarrer"</div>
+      <div class="question-expr" id="questionExpr">🎯 Prêt ?</div>
+    </div>
+
+    <!-- MCQ choices -->
+    <div class="choices-grid cols3" id="choicesGrid">
+      <button class="choice-btn" id="c0" disabled data-num="1"></button>
+      <button class="choice-btn" id="c1" disabled data-num="2"></button>
+      <button class="choice-btn" id="c2" disabled data-num="3"></button>
+    </div>
+
+    <!-- Fill in blank -->
+    <div class="fill-input-wrap hidden" id="fillWrap">
+      <input type="text" class="fill-input" id="fillInput" placeholder="Ta réponse…" disabled autocomplete="off" />
+      <button class="btn-validate" id="fillSubmit" disabled>Valider →</button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+    <div class="kbd-hint" id="kbdHint" style="display:none">Raccourcis : <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> — ou <kbd>Entrée</kbd> pour valider</div>
+  </div>
+
+  <!-- RECAP -->
+  <div class="recap-card hidden" id="recap">
+    <h2>Récapitulatif de session</h2>
+    <div class="recap-stats" id="recapStats"></div>
+    <div class="motivational" id="motivational"></div>
+    <div class="recap-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Type</th>
+            <th>Exercice</th>
+            <th>Ta réponse</th>
+            <th>Bonne réponse</th>
+            <th>✓</th>
+          </tr>
+        </thead>
+        <tbody id="recapBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+  "use strict";
+
+  const MINUS = "−";
+  const DURATION_MS = 3 * 60 * 1000;
+
+  let running = false, startTime = 0, endTime = 0, intervalId = null;
+  let currentMode = "mcq";
+  let current = null;
+  let results = [];
+  let streak = 0;
+  let maxStreak = 0;
+  let deck = [], deckIdx = 0;
+  let answerLocked = false;
+
+  // -----------------------------------------------
+  // MATH HELPERS
+  // -----------------------------------------------
+  const M = {
+    randInt: (a, b) => Math.floor(Math.random() * (b - a + 1)) + a,
+    choice: arr => arr[Math.floor(Math.random() * arr.length)],
+    shuffle: arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; },
+    fmtAx2: A => A === 1 ? "x²" : `${A}x²`,
+    fmtLin: B => {
+      if (!B) return "";
+      const abs = Math.abs(B), core = abs === 1 ? "x" : `${abs}x`;
+      return B > 0 ? ` + ${core}` : ` ${MINUS} ${core}`;
+    },
+    fmtConst: C => !C ? "" : C > 0 ? ` + ${C}` : ` ${MINUS} ${Math.abs(C)}`,
+    parP: (k, c) => `(${k === 1 ? "x" : k+"x"} + ${c})`,
+    parM: (k, c) => `(${k === 1 ? "x" : k+"x"} ${MINUS} ${c})`,
+    sqP: (k, c) => `${M.parP(k, c)}²`,
+    sqM: (k, c) => `${M.parM(k, c)}²`,
+    conj: (k, c) => `${M.parP(k, c)}${M.parM(k, c)}`,
+    trapK: k => {
+      const candidates = [k*2, k-1, k+1, k*k].filter(x => x >= 1 && x <= 15 && x !== k);
+      return candidates.length ? M.choice(candidates) : k+1;
+    },
+    trapC: c => {
+      const candidates = [c+1, c-1, c+2, c*2].filter(x => x >= 1 && x <= 20 && x !== c);
+      return candidates.length ? M.choice(candidates) : c+1;
+    },
+    uniq: arr => [...new Set(arr)]
+  };
+
+  // -----------------------------------------------
+  // RAW ITEM GENERATORS
+  // -----------------------------------------------
+  function makeType1(k, c) {
+    k = k || M.randInt(1, 9); c = c || M.randInt(1, 12);
+    const expr = `${M.fmtAx2(k*k)}${M.fmtLin(2*k*c)}${M.fmtConst(c*c)}`;
+    const correct = M.sqP(k, c);
+    const traps = M.uniq([M.sqM(k,c), M.sqP(M.trapK(k),c), M.sqP(k,M.trapC(c)), M.conj(k,c), M.sqM(M.trapK(k),c)]).filter(x=>x!==correct);
+    return { type: "sum2", k, c, expr, correct, traps, expanded: expr, factored: correct };
+  }
+  function makeType2(k, c) {
+    k = k || M.randInt(1, 9); c = c || M.randInt(1, 12);
+    const expr = `${M.fmtAx2(k*k)}${M.fmtLin(-2*k*c)}${M.fmtConst(c*c)}`;
+    const correct = M.sqM(k, c);
+    const traps = M.uniq([M.sqP(k,c), M.sqM(M.trapK(k),c), M.sqM(k,M.trapC(c)), M.conj(k,c)]).filter(x=>x!==correct);
+    return { type: "diff2", k, c, expr, correct, traps, expanded: expr, factored: correct };
+  }
+  function makeType3(k, c) {
+    k = k || M.randInt(1, 9); c = c || M.randInt(1, 12);
+    const expr = `${M.fmtAx2(k*k)}${M.fmtConst(-(c*c))}`;
+    const correct = M.conj(k, c);
+    const traps = M.uniq([M.sqP(k,c), M.sqM(k,c), M.conj(M.trapK(k),c), M.conj(k,M.trapC(c))]).filter(x=>x!==correct);
+    return { type: "diff_sq", k, c, expr, correct, traps, expanded: expr, factored: correct };
+  }
+
+  function buildDeck(n = 120) {
+    const per = Math.floor(n / 3);
+    const d = [];
+    for (let i = 0; i < per; i++) d.push(makeType1());
+    for (let i = 0; i < per; i++) d.push(makeType2());
+    for (let i = 0; i < per; i++) d.push(makeType3());
+    deck = M.shuffle(d);
+    deckIdx = 0;
+  }
+
+  function nextRaw() {
+    if (deckIdx >= deck.length) buildDeck();
+    return deck[deckIdx++];
+  }
+
+  // -----------------------------------------------
+  // MODE BUILDERS  → returns { label, questionText, questionHTML, options[], correctIndex, correctText, hint }
+  // -----------------------------------------------
+  function buildMCQ(raw) {
+    // Factorisation : given expanded, find factored
+    const pool = raw.traps.filter(t => t !== raw.correct);
+    M.shuffle(pool);
+    const opts = M.uniq([raw.correct, pool[0] || raw.correct + " ", pool[1] || raw.correct + "  "]).slice(0,3);
+    while(opts.length < 3) opts.push(raw.correct + "   ");
+    M.shuffle(opts);
+    return {
+      modeLabel: "Factoriser",
+      questionText: "Quelle est la factorisation de cette expression ?",
+      questionHTML: `<span>${raw.expr}</span>`,
+      options: opts,
+      correctIndex: opts.indexOf(raw.correct),
+      correctText: raw.correct,
+      hint: `Identifie a et b, puis applique l'identité`,
+      inputMode: "mcq"
+    };
+  }
+
+  function buildExpand(raw) {
+    // Développement : given factored, find expanded
+    const factored = raw.factored;
+    // generate wrong expanded forms
+    const k = raw.k, c = raw.c;
+    const wrongs = [];
+    // common errors: forgetting the 2ab, wrong sign
+    if (raw.type === "sum2") {
+      wrongs.push(`${M.fmtAx2(k*k)}${M.fmtConst(c*c)}`); // oubli du 2ab
+      wrongs.push(`${M.fmtAx2(k*k)}${M.fmtLin(k*c)}${M.fmtConst(c*c)}`); // 2ab → ab
+      wrongs.push(`${M.fmtAx2(k*k)}${M.fmtLin(2*k*c)}${M.fmtConst(-(c*c))}`); // signe c²
+      wrongs.push(`${M.fmtAx2(k*k)}${M.fmtLin(-2*k*c)}${M.fmtConst(c*c)}`); // mauvais signe 2ab
+    } else if (raw.type === "diff2") {
+      wrongs.push(`${M.fmtAx2(k*k)}${M.fmtConst(c*c)}`);
+      wrongs.push(`${M.fmtAx2(k*k)}${M.fmtLin(-k*c)}${M.fmtConst(c*c)}`);
+      wrongs.push(`${M.fmtAx2(k*k)}${M.fmtLin(2*k*c)}${M.fmtConst(c*c)}`);
+      wrongs.push(`${M.fmtAx2(k*k)}${M.fmtLin(-2*k*c)}${M.fmtConst(-(c*c))}`);
+    } else {
+      wrongs.push(`${M.fmtAx2(k*k)}${M.fmtConst(c*c)}`); // signe +
+      wrongs.push(`${M.fmtAx2(k*k)}${M.fmtLin(-2*k*c)}${M.fmtConst(-(c*c))}`);
+      wrongs.push(`${M.fmtAx2(k*k)}${M.fmtLin(2*k*c)}${M.fmtConst(-(c*c))}`);
+    }
+    const pool = M.uniq(wrongs).filter(w => w !== raw.expanded);
+    M.shuffle(pool);
+    const opts = M.uniq([raw.expanded, pool[0] || "", pool[1] || " "]).slice(0, 3);
+    while(opts.length < 3) opts.push(raw.expanded + " ");
+    M.shuffle(opts);
+    return {
+      modeLabel: "Développer",
+      questionText: "Quel est le développement de cette expression ?",
+      questionHTML: `<span>${factored}</span>`,
+      options: opts,
+      correctIndex: opts.indexOf(raw.expanded),
+      correctText: raw.expanded,
+      hint: `Applique l'identité et développe`,
+      inputMode: "mcq"
+    };
+  }
+
+  function buildFill(raw) {
+    const k = raw.k, c = raw.c;
+    let answer, questionHTML, questionText;
+
+    if (raw.type === "sum2") {
+      const blankedIndex = M.choice([0, 1, 2]);
+      if (blankedIndex === 0) {
+        answer = `${k*k}`;
+        questionHTML = `<span class="question-blank">?</span>x² + ${2*k*c}x + ${c*c}`;
+        questionText = `Quel est le coefficient de x² ? (carré de somme)`;
+      } else if (blankedIndex === 1) {
+        answer = `${2*k*c}`;
+        questionHTML = `${M.fmtAx2(k*k)} + <span class="question-blank">?</span>x + ${c*c}`;
+        questionText = `Quel est le coefficient de x (terme du milieu) ? (carré de somme)`;
+      } else {
+        answer = `${c*c}`;
+        questionHTML = `${M.fmtAx2(k*k)} + ${2*k*c}x + <span class="question-blank">?</span>`;
+        questionText = `Quelle est la constante c² ? (carré de somme)`;
+      }
+
+    } else if (raw.type === "diff2") {
+      const blankedIndex = M.choice([0, 1, 2]);
+      if (blankedIndex === 0) {
+        answer = `${k*k}`;
+        questionHTML = `<span class="question-blank">?</span>x² ${MINUS} ${2*k*c}x + ${c*c}`;
+        questionText = `Quel est le coefficient de x² ? (carré de différence)`;
+      } else if (blankedIndex === 1) {
+        answer = `${2*k*c}`;
+        questionHTML = `${M.fmtAx2(k*k)} ${MINUS} <span class="question-blank">?</span>x + ${c*c}`;
+        questionText = `Quel est le coefficient de x (terme du milieu) ? (carré de différence)`;
+      } else {
+        answer = `${c*c}`;
+        questionHTML = `${M.fmtAx2(k*k)} ${MINUS} ${2*k*c}x + <span class="question-blank">?</span>`;
+        questionText = `Quelle est la constante c² ? (carré de différence)`;
+      }
+
+    } else {
+      // diff de carrés : on montre la forme factorisée car sans elle c'est impossible
+      const blankedIndex = M.choice([0, 1]);
+      if (blankedIndex === 0) {
+        answer = `${k*k}`;
+        questionHTML = `${M.conj(k,c)} = <span class="question-blank">?</span>x² ${MINUS} ${c*c}`;
+        questionText = `Quel est le coefficient de x² dans ce développement ?`;
+      } else {
+        answer = `${c*c}`;
+        questionHTML = `${M.conj(k,c)} = ${M.fmtAx2(k*k)} ${MINUS} <span class="question-blank">?</span>`;
+        questionText = `Quelle est la constante soustraite (b²) dans ce développement ?`;
+      }
+    }
+
+    return {
+      modeLabel: "Terme manquant",
+      questionText,
+      questionHTML,
+      options: [],
+      correctIndex: -1,
+      correctText: answer,
+      hint: `Développe la forme factorisée pour trouver la valeur manquante`,
+      inputMode: "fill"
+    };
+  }
+
+  function buildIdentify(raw) {
+    // Identify which identity it is
+    const names = {
+      sum2:    "Carré d'une somme — (a+b)²",
+      diff2:   "Carré d'une différence — (a−b)²",
+      diff_sq: "Différence de deux carrés — (a+b)(a−b)"
+    };
+    const correct = names[raw.type];
+    const opts = M.shuffle(Object.values(names));
+    return {
+      modeLabel: "Identifier",
+      questionText: "Quelle identité remarquable reconnaît-tu ?",
+      questionHTML: `<span>${raw.expr}</span>`,
+      options: opts,
+      correctIndex: opts.indexOf(correct),
+      correctText: correct,
+      hint: `Regarde le signe du terme du milieu et la présence de ce terme.`,
+      inputMode: "mcq",
+      noCols: true
+    };
+  }
+
+  // -----------------------------------------------
+  // QUESTION DISPLAY
+  // -----------------------------------------------
+  function generateQuestion() {
+    const raw = nextRaw();
+    let q;
+    const effectiveMode = currentMode === "mixed"
+      ? M.choice(["mcq", "expand", "fill", "identify"])
+      : currentMode;
+    if (effectiveMode === "mcq")        q = buildMCQ(raw);
+    else if (effectiveMode === "expand") q = buildExpand(raw);
+    else if (effectiveMode === "fill")   q = buildFill(raw);
+    else                                 q = buildIdentify(raw);
+    current = q;
+    renderQuestion(q);
+  }
+
+  function renderQuestion(q) {
+    answerLocked = false;
+
+    // badge
+    const badge = document.getElementById("exerciseTypeBadge");
+    badge.textContent = q.modeLabel;
+    badge.classList.remove("hidden");
+
+    // question
+    document.getElementById("questionArea").children[0].textContent = q.questionText;
+    document.getElementById("questionExpr").innerHTML = q.questionHTML;
+
+    // clear feedback
+    showFeedback("", "");
+
+    // MCQ vs Fill
+    const choicesGrid = document.getElementById("choicesGrid");
+    const fillWrap = document.getElementById("fillWrap");
+    const kbdHint = document.getElementById("kbdHint");
+
+    if (q.inputMode === "mcq") {
+      choicesGrid.classList.remove("hidden");
+      fillWrap.classList.add("hidden");
+      kbdHint.style.display = "block";
+
+      choicesGrid.className = `choices-grid ${q.noCols ? "" : "cols3"}`;
+
+      ["c0","c1","c2"].forEach((id, i) => {
+        const btn = document.getElementById(id);
+        btn.textContent = `${i+1}) ${q.options[i] || ""}`;
+        btn.className = "choice-btn";
+        btn.disabled = false;
+      });
+    } else {
+      choicesGrid.classList.add("hidden");
+      fillWrap.classList.remove("hidden");
+      kbdHint.style.display = "block";
+
+      const inp = document.getElementById("fillInput");
+      inp.value = "";
+      inp.className = "fill-input";
+      inp.disabled = false;
+      inp.focus();
+      document.getElementById("fillSubmit").disabled = false;
+    }
+  }
+
+  // -----------------------------------------------
+  // ANSWERING
+  // -----------------------------------------------
+  function answerMCQ(i) {
+    if (!running || answerLocked || current.inputMode !== "mcq") return;
+    answerLocked = true;
+
+    const ok = (i === current.correctIndex);
+    recordResult(current.options[i], ok);
+
+    // color buttons
+    ["c0","c1","c2"].forEach((id, idx) => {
+      const btn = document.getElementById(id);
+      btn.disabled = true;
+      if (idx === current.correctIndex) btn.classList.add("correct");
+      else if (idx === i && !ok) btn.classList.add("wrong");
+    });
+
+    showFeedback(ok, current.correctText, current.hint);
+    updateHeader();
+
+    setTimeout(() => { if (running) generateQuestion(); }, ok ? 500 : 900);
+  }
+
+  function answerFill() {
+    if (!running || answerLocked || current.inputMode !== "fill") return;
+    answerLocked = true;
+
+    const inp = document.getElementById("fillInput");
+    const val = inp.value.trim();
+    const ok = val === current.correctText;
+
+    inp.disabled = true;
+    document.getElementById("fillSubmit").disabled = true;
+    inp.className = "fill-input " + (ok ? "correct" : "wrong");
+
+    recordResult(val, ok);
+    showFeedback(ok, current.correctText, current.hint);
+    updateHeader();
+
+    setTimeout(() => { if (running) generateQuestion(); }, ok ? 500 : 1100);
+  }
+
+  function recordResult(chosen, ok) {
+    if (ok) { streak++; if (streak > maxStreak) maxStreak = streak; }
+    else streak = 0;
+
+    results.push({
+      mode: current.modeLabel,
+      expr: current.questionHTML.replace(/<[^>]+>/g, ''),
+      chosen,
+      correct: current.correctText,
+      ok
+    });
+
+    // progress dot
+    const dot = document.createElement("div");
+    dot.className = "dot " + (ok ? "ok" : "bad");
+    document.getElementById("progressDots").appendChild(dot);
+
+    // streak fill (0-10 streak = 0-100%)
+    document.getElementById("streakFill").style.width = Math.min(streak * 10, 100) + "%";
+  }
+
+  function showFeedback(ok, correct, hint) {
+    const fb = document.getElementById("feedback");
+    if (ok === "") { fb.innerHTML = ""; return; }
+    if (ok) {
+      fb.innerHTML = `<span class="feedback-icon">✅</span><div><div class="feedback-text ok">Correct !</div></div>`;
+    } else {
+      fb.innerHTML = `<span class="feedback-icon">❌</span><div><div class="feedback-text bad">Faux — bonne réponse : <span style="font-family:var(--mono)">${correct}</span></div><div class="feedback-hint">${hint || ""}</div></div>`;
+    }
+  }
+
+  // -----------------------------------------------
+  // TIMER & STATS
+  // -----------------------------------------------
+  function updateHeader() {
+    const cor = results.filter(r => r.ok).length;
+    const tot = results.length;
+    document.getElementById("countVal").textContent = tot;
+    document.getElementById("correctVal").textContent = cor;
+    document.getElementById("wrongVal").textContent = tot - cor;
+    document.getElementById("streakVal").textContent = `🔥 ${streak}`;
+  }
+
+  function tick() {
+    const rem = endTime - Date.now();
+    const totalSec = Math.max(0, Math.ceil(rem / 1000));
+    const mm = String(Math.floor(totalSec / 60)).padStart(2, "0");
+    const ss = String(totalSec % 60).padStart(2, "0");
+    document.getElementById("timer").textContent = `${mm}:${ss}`;
+    if (rem <= 0) finish();
+  }
+
+  // -----------------------------------------------
+  // GAME FLOW
+  // -----------------------------------------------
+  function start() {
+    results = []; streak = 0; maxStreak = 0;
+    answerLocked = false;
+    updateHeader();
+    document.getElementById("progressDots").innerHTML = "";
+    document.getElementById("streakFill").style.width = "0%";
+    document.getElementById("recap").classList.add("hidden");
+
+    buildDeck(120);
+
+    running = true;
+    startTime = Date.now();
+    endTime = startTime + selectedDurationMs;
+
+    document.getElementById("startBtn").disabled = true;
+    document.getElementById("resetBtn").disabled = false;
+    document.querySelectorAll(".mode-btn").forEach(b => b.disabled = true);
+    document.querySelectorAll(".dur-pill").forEach(b => b.disabled = true);
+
+    generateQuestion();
+    tick();
+    intervalId = setInterval(tick, 250);
+  }
+
+  function finish() {
+    if (!running) return;
+    running = false;
+    clearInterval(intervalId); intervalId = null;
+
+    document.getElementById("startBtn").disabled = false;
+    document.getElementById("resetBtn").disabled = false;
+    document.querySelectorAll(".mode-btn").forEach(b => b.disabled = false);
+    document.querySelectorAll(".dur-pill").forEach(b => b.disabled = false);
+
+    document.getElementById("timer").textContent = "00:00";
+    document.getElementById("questionExpr").textContent = "Temps écoulé ! 🎉";
+    document.getElementById("exerciseTypeBadge").classList.add("hidden");
+    document.getElementById("choicesGrid").classList.add("hidden");
+    document.getElementById("fillWrap").classList.add("hidden");
+    showFeedback("", "");
+
+    renderRecap();
+  }
+
+  function resetAll() {
+    running = false;
+    clearInterval(intervalId); intervalId = null;
+    results = []; streak = 0; maxStreak = 0; current = null; deck = []; deckIdx = 0; answerLocked = false;
+
+    // Restore timer display from selected duration
+    const totalSec = Math.round(selectedDurationMs / 1000);
+    const mm = String(Math.floor(totalSec / 60)).padStart(2, "0");
+    const ss = String(totalSec % 60).padStart(2, "0");
+    document.getElementById("timer").textContent = `${mm}:${ss}`;
+    document.getElementById("questionExpr").textContent = "🎯 Prêt ?";
+    document.getElementById("questionArea").children[0].textContent = `Choisis un mode et clique sur "Démarrer"`;
+    document.getElementById("exerciseTypeBadge").classList.add("hidden");
+    document.getElementById("progressDots").innerHTML = "";
+    document.getElementById("streakFill").style.width = "0%";
+    document.getElementById("recap").classList.add("hidden");
+    document.getElementById("choicesGrid").classList.remove("hidden");
+    document.getElementById("fillWrap").classList.add("hidden");
+    ["c0","c1","c2"].forEach(id => {
+      const b = document.getElementById(id);
+      b.textContent = ""; b.disabled = true; b.className = "choice-btn";
+    });
+    document.getElementById("feedback").innerHTML = "";
+    document.getElementById("kbdHint").style.display = "none";
+    document.getElementById("startBtn").disabled = false;
+    document.getElementById("resetBtn").disabled = true;
+    document.querySelectorAll(".mode-btn").forEach(b => b.disabled = false);
+    document.querySelectorAll(".dur-pill").forEach(b => b.disabled = false);
+    updateHeader();
+  }
+
+  // -----------------------------------------------
+  // RECAP
+  // -----------------------------------------------
+  function renderRecap() {
+    const tot = results.length;
+    const cor = results.filter(r => r.ok).length;
+    const pct = tot === 0 ? 0 : Math.round(cor / tot * 100);
+
+    const motivations = [
+      [90, "🏆 Exceptionnel ! Tu maîtrises parfaitement les identités remarquables."],
+      [75, "⭐ Très bien ! Continue comme ça, tu es sur la bonne voie."],
+      [60, "👍 Bien ! Quelques identités à revoir, mais tu progresses."],
+      [40, "💪 Pas mal pour un début. Relis les formules et réessaie !"],
+      [0,  "📚 Continue à t'entraîner — la régularité fait tout !"]
+    ];
+    const msg = motivations.find(([threshold]) => pct >= threshold)[1];
+
+    document.getElementById("recapStats").innerHTML = `
+      <div class="recap-stat-box good"><div class="big">${cor}</div><div class="lbl">Corrects</div></div>
+      <div class="recap-stat-box bad"><div class="big">${tot - cor}</div><div class="lbl">Erreurs</div></div>
+      <div class="recap-stat-box neutral"><div class="big">${pct}%</div><div class="lbl">Réussite</div></div>
+      <div class="recap-stat-box neutral"><div class="big">${maxStreak}🔥</div><div class="lbl">Série max</div></div>
+    `;
+    document.getElementById("motivational").textContent = msg;
+
+    const tbody = document.getElementById("recapBody");
+    tbody.innerHTML = "";
+    results.forEach((r, i) => {
+      const tr = document.createElement("tr");
+      tr.className = r.ok ? "ok-row" : "bad-row";
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${r.mode}</td>
+        <td class="formula">${r.expr}</td>
+        <td class="formula">${r.chosen || "—"}</td>
+        <td class="formula">${r.correct}</td>
+        <td>${r.ok ? "✅" : "❌"}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("recap").classList.remove("hidden");
+  }
+
+  // -----------------------------------------------
+  // EVENTS
+  // -----------------------------------------------
+  document.getElementById("startBtn").addEventListener("click", start);
+  document.getElementById("resetBtn").addEventListener("click", resetAll);
+
+  document.getElementById("c0").addEventListener("click", () => answerMCQ(0));
+  document.getElementById("c1").addEventListener("click", () => answerMCQ(1));
+  document.getElementById("c2").addEventListener("click", () => answerMCQ(2));
+
+  document.getElementById("fillSubmit").addEventListener("click", answerFill);
+  document.getElementById("fillInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") answerFill();
+  });
+
+  document.querySelectorAll(".mode-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (running) return;
+      document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentMode = btn.dataset.mode;
+    });
+  });
+
+  document.addEventListener("keydown", e => {
+    if (!running || answerLocked) return;
+    if (current && current.inputMode === "mcq") {
+      if (e.key === "1") answerMCQ(0);
+      if (e.key === "2") answerMCQ(1);
+      if (e.key === "3") answerMCQ(2);
+    }
+  });
+
+  let selectedDurationMs = 3 * 60 * 1000;
+
+  // Duration pill selection
+  document.querySelectorAll(".dur-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      if (running) return;
+      document.querySelectorAll(".dur-pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      selectedDurationMs = parseInt(pill.dataset.sec) * 1000;
+      // Update timer display to reflect chosen duration
+      const totalSec = parseInt(pill.dataset.sec);
+      const mm = String(Math.floor(totalSec / 60)).padStart(2, "0");
+      const ss = String(totalSec % 60).padStart(2, "0");
+      document.getElementById("timer").textContent = `${mm}:${ss}`;
+    });
+  });
+
+  // init
+  updateHeader();
+  </script>
+</body>
+</html>
