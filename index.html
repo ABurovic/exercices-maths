@@ -6,49 +6,25 @@
   <title>Mes Exercices de Maths</title>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #f7f3ee;
-      --card-shadow: 0 8px 32px rgba(0,0,0,0.13);
-      --radius: 24px;
-    }
-
+    :root { --bg: #f7f3ee; --card-shadow: 0 8px 32px rgba(0,0,0,0.13); --radius: 24px; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Nunito', sans-serif;
-      background: var(--bg);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
+    body { font-family: 'Nunito', sans-serif; background: var(--bg); min-height: 100vh; overflow-x: hidden; }
     body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
+      content: ''; position: fixed; inset: 0;
       background:
         radial-gradient(ellipse 80% 60% at 20% 10%, #ffe0f0 0%, transparent 60%),
         radial-gradient(ellipse 60% 50% at 80% 80%, #dce8ff 0%, transparent 60%),
         radial-gradient(ellipse 50% 40% at 60% 30%, #d4f7e4 0%, transparent 60%);
-      z-index: 0;
-      pointer-events: none;
+      z-index: 0; pointer-events: none;
     }
-
-    .shape {
-      position: fixed; border-radius: 50%; opacity: 0.18;
-      pointer-events: none; z-index: 0; animation: float linear infinite;
-    }
+    .shape { position: fixed; border-radius: 50%; opacity: 0.18; pointer-events: none; z-index: 0; animation: float linear infinite; }
     .s1 { width:120px; height:120px; background:#f39c12; top:5%; left:-30px; animation-duration:18s; border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
     .s2 { width:80px;  height:80px;  background:#3464aa; top:40%; right:-20px; animation-duration:14s; animation-delay:-5s; }
     .s3 { width:60px;  height:60px;  background:#e74c3c; bottom:15%; left:10%; animation-duration:20s; animation-delay:-9s; border-radius: 50% 20% 50% 20%; }
     .s4 { width:100px; height:100px; background:#6c63ff; bottom:5%; right:5%; animation-duration:16s; animation-delay:-3s; }
+    @keyframes float { 0% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-30px) rotate(180deg); } 100% { transform: translateY(0) rotate(360deg); } }
 
-    @keyframes float {
-      0%   { transform: translateY(0) rotate(0deg); }
-      50%  { transform: translateY(-30px) rotate(180deg); }
-      100% { transform: translateY(0) rotate(360deg); }
-    }
-
-    /* ══ ÉCRAN MOT DE PASSE ══ */
+    /* LOCK */
     #lock-screen {
       position: fixed; inset: 0; z-index: 100;
       display: flex; align-items: center; justify-content: center; padding: 24px;
@@ -58,206 +34,67 @@
         radial-gradient(ellipse 50% 40% at 60% 30%, #d4f7e4 0%, transparent 60%),
         #f7f3ee;
     }
-
-    .lock-card {
-      background: #fff;
-      border-radius: 28px;
-      padding: 40px 32px;
-      box-shadow: 0 12px 48px rgba(0,0,0,0.14);
-      max-width: 360px; width: 100%;
-      text-align: center;
-      animation: popIn .4s cubic-bezier(.34,1.56,.64,1) both;
-    }
-
-    @keyframes popIn {
-      from { opacity: 0; transform: scale(0.85); }
-      to   { opacity: 1; transform: scale(1); }
-    }
-
-    .lock-emoji {
-      font-size: 3.5rem; display: block; margin-bottom: 12px;
-      animation: bounce 2.5s ease-in-out infinite;
-    }
-
-    .lock-card h2 {
-      font-family: 'Baloo 2', cursive;
-      font-size: 1.6rem; font-weight: 900; color: #1a2340;
-      line-height: 1.1; margin-bottom: 6px;
-    }
-
-    .lock-card p {
-      font-size: 0.88rem; color: #7a8aaa; font-weight: 600;
-      margin-bottom: 24px; line-height: 1.5;
-    }
-
+    .lock-card { background: #fff; border-radius: 28px; padding: 40px 32px; box-shadow: 0 12px 48px rgba(0,0,0,0.14); max-width: 360px; width: 100%; text-align: center; animation: popIn .4s cubic-bezier(.34,1.56,.64,1) both; }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+    .lock-emoji { font-size: 3.5rem; display: block; margin-bottom: 12px; animation: bounce 2.5s ease-in-out infinite; }
+    .lock-card h2 { font-family: 'Baloo 2', cursive; font-size: 1.6rem; font-weight: 900; color: #1a2340; line-height: 1.1; margin-bottom: 6px; }
+    .lock-card p { font-size: 0.88rem; color: #7a8aaa; font-weight: 600; margin-bottom: 24px; line-height: 1.5; }
     .lock-input-wrap { position: relative; margin-bottom: 14px; }
-
-    .lock-input-wrap input {
-      width: 100%;
-      font-family: 'Nunito', sans-serif;
-      font-size: 1.1rem; font-weight: 800;
-      letter-spacing: 4px; text-align: center;
-      border: 2.5px solid #d0daf0; border-radius: 14px;
-      padding: 14px 20px; color: #1a2340; outline: none;
-      transition: border-color .2s, box-shadow .2s;
-      background: #f7f9ff;
-    }
-    .lock-input-wrap input:focus {
-      border-color: #3464aa;
-      box-shadow: 0 0 0 4px rgba(52,100,170,0.1);
-    }
-    .lock-input-wrap input.wrong {
-      border-color: #e74c3c;
-      box-shadow: 0 0 0 4px rgba(231,76,60,0.1);
-      animation: shake .35s ease;
-    }
-
-    @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      20%      { transform: translateX(-8px); }
-      40%      { transform: translateX(8px); }
-      60%      { transform: translateX(-5px); }
-      80%      { transform: translateX(5px); }
-    }
-
-    .lock-btn {
-      width: 100%;
-      font-family: 'Baloo 2', cursive;
-      font-size: 1.1rem; font-weight: 800;
-      background: linear-gradient(135deg, #3464aa, #6c63ff);
-      color: #fff; border: none; border-radius: 14px;
-      padding: 14px; cursor: pointer;
-      transition: transform .15s, opacity .2s;
-      box-shadow: 0 4px 16px rgba(52,100,170,0.3);
-    }
+    .lock-input-wrap input { width: 100%; font-family: 'Nunito', sans-serif; font-size: 1.1rem; font-weight: 800; letter-spacing: 4px; text-align: center; border: 2.5px solid #d0daf0; border-radius: 14px; padding: 14px 20px; color: #1a2340; outline: none; transition: border-color .2s, box-shadow .2s; background: #f7f9ff; }
+    .lock-input-wrap input:focus { border-color: #3464aa; box-shadow: 0 0 0 4px rgba(52,100,170,0.1); }
+    .lock-input-wrap input.wrong { border-color: #e74c3c; box-shadow: 0 0 0 4px rgba(231,76,60,0.1); animation: shake .35s ease; }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
+    .lock-btn { width: 100%; font-family: 'Baloo 2', cursive; font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, #3464aa, #6c63ff); color: #fff; border: none; border-radius: 14px; padding: 14px; cursor: pointer; transition: transform .15s, opacity .2s; box-shadow: 0 4px 16px rgba(52,100,170,0.3); }
     .lock-btn:active { transform: scale(0.97); }
+    .lock-error { margin-top: 12px; font-size: 0.82rem; font-weight: 700; color: #e74c3c; min-height: 20px; }
 
-    .lock-error {
-      margin-top: 12px; font-size: 0.82rem; font-weight: 700;
-      color: #e74c3c; min-height: 20px;
-    }
-
-    /* ══ CONTENU PRINCIPAL ══ */
+    /* MAIN */
     #main-content { display: none; }
-
-    .wrapper {
-      position: relative; z-index: 1;
-      max-width: 480px; margin: 0 auto;
-      padding: 32px 20px 60px;
-    }
-
-    .header {
-      text-align: center; margin-bottom: 36px;
-      animation: slideDown .6s ease both;
-    }
-    .header .emoji-big {
-      font-size: 4rem; display: block; margin-bottom: 8px;
-      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
-      animation: bounce 2.5s ease-in-out infinite;
-    }
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50%       { transform: translateY(-10px); }
-    }
-    .header h1 {
-      font-family: 'Baloo 2', cursive;
-      font-size: 2rem; font-weight: 900; color: #1a2340; line-height: 1.1;
-    }
-    .header h1 span {
-      background: linear-gradient(135deg, #3464aa, #6c63ff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    }
+    .wrapper { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 32px 20px 60px; }
+    .header { text-align: center; margin-bottom: 36px; animation: slideDown .6s ease both; }
+    .header .emoji-big { font-size: 4rem; display: block; margin-bottom: 8px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15)); animation: bounce 2.5s ease-in-out infinite; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    .header h1 { font-family: 'Baloo 2', cursive; font-size: 2rem; font-weight: 900; color: #1a2340; line-height: 1.1; }
+    .header h1 span { background: linear-gradient(135deg, #3464aa, #6c63ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .header p { margin-top: 8px; color: #7a8aaa; font-size: 0.95rem; font-weight: 600; }
-
-    .section-label {
-      font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
-      letter-spacing: 2px; color: #aab0c4; margin-bottom: 14px; padding-left: 4px;
-      animation: slideDown .6s .1s ease both;
-    }
-
+    .section-label { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #aab0c4; margin-bottom: 14px; padding-left: 4px; animation: slideDown .6s .1s ease both; }
     .cards { display: flex; flex-direction: column; gap: 18px; }
 
-    .card {
-      display: block; text-decoration: none;
-      border-radius: var(--radius); padding: 24px 22px;
-      position: relative; overflow: hidden;
-      box-shadow: var(--card-shadow);
-      transition: transform .2s ease, box-shadow .2s ease;
-      -webkit-tap-highlight-color: transparent;
-    }
+    /* CARDS */
+    .card { display: block; text-decoration: none; border-radius: var(--radius); padding: 24px 22px; position: relative; overflow: hidden; box-shadow: var(--card-shadow); transition: transform .2s ease, box-shadow .2s ease; -webkit-tap-highlight-color: transparent; }
     .card:active { transform: scale(0.97); }
-
     .card-geo    { background: linear-gradient(135deg, #3464aa 0%, #5b8de8 100%); animation: slideUp .5s .2s ease both; }
     .card-prio   { background: linear-gradient(135deg, #1a1a2e 0%, #3b3b6e 100%); animation: slideUp .5s .3s ease both; }
     .card-ident  { background: linear-gradient(135deg, #b5451b 0%, #e8834a 100%); animation: slideUp .5s .4s ease both; }
     .card-arcade { background: linear-gradient(135deg, #0f5c3a 0%, #27ae60 100%); animation: slideUp .5s .5s ease both; }
-    .card-puiss  { background: linear-gradient(135deg, #b45309 0%, #10b981 100%); animation: slideUp .5s .6s ease both; }
-
-    .card::before {
-      content: ''; position: absolute;
-      width: 180px; height: 180px; border-radius: 50%;
-      background: rgba(255,255,255,0.08); top: -60px; right: -40px; pointer-events: none;
-    }
-    .card::after {
-      content: ''; position: absolute;
-      width: 100px; height: 100px; border-radius: 50%;
-      background: rgba(255,255,255,0.06); bottom: -30px; left: 20px; pointer-events: none;
-    }
-
+    .card-perim  { background: linear-gradient(135deg, #144BA5 0%, #147D32 100%); animation: slideUp .5s .6s ease both; }
+    .card::before { content: ''; position: absolute; width: 180px; height: 180px; border-radius: 50%; background: rgba(255,255,255,0.08); top: -60px; right: -40px; pointer-events: none; }
+    .card::after  { content: ''; position: absolute; width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,0.06); bottom: -30px; left: 20px; pointer-events: none; }
     .card-inner { display: flex; align-items: center; gap: 18px; position: relative; z-index: 1; }
     .card-icon { font-size: 3.2rem; flex-shrink: 0; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.3)); line-height: 1; }
     .card-text { flex: 1; }
-    .card-tag {
-      display: inline-block; background: rgba(255,255,255,0.2);
-      color: rgba(255,255,255,0.85); font-size: 0.68rem; font-weight: 800;
-      text-transform: uppercase; letter-spacing: 1.5px;
-      padding: 3px 10px; border-radius: 20px; margin-bottom: 6px;
-    }
+    .card-tag { display: inline-block; background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.85); font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; padding: 3px 10px; border-radius: 20px; margin-bottom: 6px; }
     .card-title { font-family: 'Baloo 2', cursive; font-size: 1.3rem; font-weight: 800; color: #fff; line-height: 1.15; }
     .card-desc { margin-top: 4px; color: rgba(255,255,255,0.75); font-size: 0.82rem; font-weight: 600; line-height: 1.4; }
     .card-arrow { font-size: 1.6rem; color: rgba(255,255,255,0.5); flex-shrink: 0; transition: transform .2s; }
     .card:hover .card-arrow { transform: translateX(5px); }
 
-    /* ── QR Box ── */
-    .qr-box {
-      margin-top: 24px; background: #fff; border-radius: 18px;
-      padding: 22px 20px; box-shadow: 0 2px 16px rgba(0,0,0,0.07);
-      text-align: center; animation: slideUp .5s .7s ease both;
-    }
+    /* QR */
+    .qr-box { margin-top: 24px; background: #fff; border-radius: 18px; padding: 22px 20px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); text-align: center; animation: slideUp .5s .75s ease both; }
     .qr-box .qr-title { font-family: 'Baloo 2', cursive; font-size: 1rem; font-weight: 800; color: #1a2340; margin-bottom: 4px; }
     .qr-box .qr-sub { font-size: 0.78rem; color: #7a8aaa; font-weight: 600; margin-bottom: 16px; }
     .qr-input-row { display: flex; gap: 8px; margin-bottom: 16px; }
-    .qr-input-row input {
-      flex: 1; font-family: 'Nunito', sans-serif; font-size: 0.85rem; font-weight: 700;
-      border: 2px solid #d0daf0; border-radius: 12px; padding: 10px 14px;
-      color: #1a2340; outline: none; transition: border-color .2s;
-    }
+    .qr-input-row input { flex: 1; font-family: 'Nunito', sans-serif; font-size: 0.85rem; font-weight: 700; border: 2px solid #d0daf0; border-radius: 12px; padding: 10px 14px; color: #1a2340; outline: none; transition: border-color .2s; }
     .qr-input-row input:focus { border-color: #3464aa; }
-    .qr-input-row button {
-      font-family: 'Nunito', sans-serif; font-size: 0.85rem; font-weight: 800;
-      background: linear-gradient(135deg, #3464aa, #6c63ff); color: #fff;
-      border: none; border-radius: 12px; padding: 10px 16px;
-      cursor: pointer; transition: opacity .2s, transform .15s; white-space: nowrap;
-    }
+    .qr-input-row button { font-family: 'Nunito', sans-serif; font-size: 0.85rem; font-weight: 800; background: linear-gradient(135deg, #3464aa, #6c63ff); color: #fff; border: none; border-radius: 12px; padding: 10px 16px; cursor: pointer; transition: opacity .2s, transform .15s; white-space: nowrap; }
     .qr-input-row button:active { transform: scale(0.95); }
     #qr-output { display: flex; justify-content: center; align-items: center; min-height: 60px; }
     #qr-output canvas, #qr-output img { border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
     .qr-hint { margin-top: 12px; font-size: 0.75rem; color: #aab0c4; font-weight: 700; }
 
-    .footer {
-      text-align: center; margin-top: 36px; color: #bbb;
-      font-size: 0.75rem; font-weight: 700; letter-spacing: 1px;
-      animation: slideUp .5s .75s ease both;
-    }
-
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    .footer { text-align: center; margin-top: 36px; color: #bbb; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; animation: slideUp .5s .8s ease both; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp   { from { opacity: 0; transform: translateY(20px); }  to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
@@ -267,7 +104,7 @@
   <div class="shape s3"></div>
   <div class="shape s4"></div>
 
-  <!-- ══ ÉCRAN MOT DE PASSE ══ -->
+  <!-- LOCK -->
   <div id="lock-screen">
     <div class="lock-card">
       <span class="lock-emoji">🔐</span>
@@ -282,7 +119,7 @@
     </div>
   </div>
 
-  <!-- ══ CONTENU PRINCIPAL ══ -->
+  <!-- MAIN -->
   <div id="main-content">
     <div class="wrapper">
 
@@ -344,13 +181,13 @@
           </div>
         </a>
 
-        <a class="card card-puiss" href="puissances-racinesV1.html">
+        <a class="card card-perim" href="perimetres-aires.html">
           <div class="card-inner">
-            <div class="card-icon">⚡</div>
+            <div class="card-icon">📏</div>
             <div class="card-text">
-              <span class="card-tag">Arithmétique</span>
-              <div class="card-title">Puissances &amp; Racines</div>
-              <div class="card-desc">Règles de calcul, simplification et rapidité mentale</div>
+              <span class="card-tag">Géométrie</span>
+              <div class="card-title">Périmètres &amp; Aires</div>
+              <div class="card-desc">Cours complet, exercices progressifs, quiz chronométré et calculateur interactif</div>
             </div>
             <div class="card-arrow">›</div>
           </div>
@@ -376,7 +213,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script>
-    // ══ CHANGEZ LE MOT DE PASSE ICI ══
     const MOT_DE_PASSE = "ACCES2026";
 
     function checkPwd() {
@@ -411,3 +247,4 @@
   </script>
 </body>
 </html>
+
