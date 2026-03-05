@@ -144,7 +144,6 @@
     .q-expr sup { font-size: .65em; vertical-align: super; }
     .q-expr .sq { font-size: 1.15em; color: var(--root); }
     .q-expr .unknown { color: var(--pow); font-weight: 800; }
-    /* Speed big question */
     .q-expr.speed-q { font-size: clamp(42px,11vw,68px); margin-bottom: 16px; min-height: 90px; letter-spacing: -1px; }
     .q-expr.speed-q .sq { font-size: 1em; }
 
@@ -282,9 +281,9 @@
       <div class="ctrl-row">
         <span class="ctrl-label">Durée</span>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="dur-pill"       data-sec="120">2 min</button>
+          <button class="dur-pill"        data-sec="120">2 min</button>
           <button class="dur-pill active" data-sec="300">5 min</button>
-          <button class="dur-pill"       data-sec="600">10 min</button>
+          <button class="dur-pill"        data-sec="600">10 min</button>
         </div>
       </div>
       <div class="start-row">
@@ -348,11 +347,10 @@
     <details class="ref-table">
       <summary>📖 Table de référence — valeurs à connaître par cœur</summary>
       <div class="ref-inner">
-        <div><div class="ref-section-title">⚡ Carrés parfaits — n² et √(n²) pour n = 1 à 20</div><div class="ref-grid cols5" id="refSquares"></div></div>
-        <div><div class="ref-section-title">🔵 Puissances de 2 — 2ⁿ pour n = 1 à 10</div><div class="ref-grid cols5" id="refPow2"></div></div>
-        <div><div class="ref-section-title">🟠 Puissances de 3 — 3ⁿ pour n = 1 à 6</div><div class="ref-grid cols3" id="refPow3"></div></div>
-        <div><div class="ref-section-title">🔷 Cubes — n³ pour n = 1 à 10</div><div class="ref-grid cols5" id="refCubes"></div></div>
-        <div><div class="ref-section-title">🟡 Puissances de 5 — 5ⁿ pour n = 1 à 5</div><div class="ref-grid cols5" id="refPow5"></div></div>
+        <div><div class="ref-section-title">⚡ Carrés parfaits — n² et √(n²) pour n = 0 à 20</div><div class="ref-grid cols5" id="refSquares"></div></div>
+        <div><div class="ref-section-title">🔵 Puissances de 2 — 2ⁿ pour n = 0 à 6</div><div class="ref-grid cols4" id="refPow2"></div></div>
+        <div><div class="ref-section-title">🟠 Puissances de 3 — 3ⁿ pour n = 0 à 4</div><div class="ref-grid cols5" id="refPow3"></div></div>
+        <div><div class="ref-section-title">🟡 Puissances de 5 — 5ⁿ pour n = 0 à 4</div><div class="ref-grid cols5" id="refPow5"></div></div>
       </div>
     </details>
 
@@ -365,7 +363,6 @@
           <button class="speed-cat-btn" data-cat="racines">√n</button>
           <button class="speed-cat-btn" data-cat="puiss2">2ⁿ</button>
           <button class="speed-cat-btn" data-cat="puiss3">3ⁿ</button>
-          <button class="speed-cat-btn" data-cat="cubes">n³</button>
           <button class="speed-cat-btn" data-cat="puiss5">5ⁿ</button>
         </div>
       </div>
@@ -465,13 +462,18 @@ const GENS_MIX=[...GENS_POW,...GENS_ROOT];
 function buildDeckT(topic,n=150){const pool=topic==='puissances'?GENS_POW:topic==='racines'?GENS_ROOT:GENS_MIX;return Array.from({length:n},()=>RC(pool)());}
 
 /* ────────────────────────────────────────────────
-   SPEED GENERATORS — par cœur
+   SPEED GENERATORS — valeurs par cœur
+   Plages corrigées :
+     n²  et √n  : n de 0 à 20
+     2ⁿ         : n de 0 à 6
+     3ⁿ         : n de 0 à 4
+     5ⁿ         : n de 0 à 4
+   (catégorie "cubes" supprimée du mode rapidité)
    ──────────────────────────────────────────────── */
-const SQ_LIST  = Array.from({length:20},(_,i)=>[i+1,(i+1)*(i+1)]);
-const POW2_LIST= Array.from({length:10},(_,i)=>[i+1,Math.pow(2,i+1)]);
-const POW3_LIST= Array.from({length:6}, (_,i)=>[i+1,Math.pow(3,i+1)]);
-const CUBE_LIST = Array.from({length:10},(_,i)=>[i+1,Math.pow(i+1,3)]);
-const POW5_LIST= Array.from({length:5}, (_,i)=>[i+1,Math.pow(5,i+1)]);
+const SQ_LIST   = Array.from({length:21}, (_,i) => [i, i*i]);           // n = 0..20
+const POW2_LIST = Array.from({length:7},  (_,i) => [i, Math.pow(2,i)]); // n = 0..6
+const POW3_LIST = Array.from({length:5},  (_,i) => [i, Math.pow(3,i)]); // n = 0..4
+const POW5_LIST = Array.from({length:5},  (_,i) => [i, Math.pow(5,i)]); // n = 0..4
 
 function mkSpeed(label,qHTML,answer,hint){
   return {badgeLabel:label,badgeClass:'speed',qText:'Calcule mentalement.',qHTML,correct:String(answer),fillAnswer:String(answer),hint,inputMode:'fill'};
@@ -493,22 +495,17 @@ function genSpdPow3(){
   const[n,v]=RC(POW3_LIST);
   return mkSpeed('3ⁿ',`3<sup>${n}</sup> = ?`,v,`3<sup>${n}</sup> = <strong>${v}</strong>`);
 }
-function genSpdCube(){
-  const[n,v]=RC(CUBE_LIST);
-  return mkSpeed('n³',`${n}<sup>3</sup> = ?`,v,`${n}×${n}×${n} = <strong>${v}</strong>`);
-}
 function genSpdPow5(){
   const[n,v]=RC(POW5_LIST);
   return mkSpeed('5ⁿ',`5<sup>${n}</sup> = ?`,v,`5<sup>${n}</sup> = <strong>${v}</strong>`);
 }
 
 const GENS_SPEED={
-  tout:   [genSpdCarre,genSpdRacine,genSpdPow2,genSpdPow3,genSpdCube,genSpdPow5],
+  tout:   [genSpdCarre,genSpdRacine,genSpdPow2,genSpdPow3,genSpdPow5],
   carres: [genSpdCarre],
   racines:[genSpdRacine],
   puiss2: [genSpdPow2],
   puiss3: [genSpdPow3],
-  cubes:  [genSpdCube],
   puiss5: [genSpdPow5]
 };
 
@@ -615,26 +612,27 @@ function resetS(){S.running=false;clearInterval(S.intv);Object.assign(S,{results
 function recapS(){const tot=S.results.length,cor=S.results.filter(r=>r.ok).length,pct=tot===0?0:Math.round(cor/tot*100);const el=Math.max(1,(S.endTime-S.startTime)/60000),rpm=Math.round(cor/el);const msgs=[[95,'🏆 Parfait ! Mémoire de champion !'],[80,'⭐ Excellent ! Tu les connais par cœur.'],[65,'👍 Bien ! Encore quelques valeurs à consolider.'],[45,'💪 Continue ! La répétition construit les réflexes.'],[0,'📚 Consulte la table de référence et réentraîne-toi !']];document.getElementById('recapStatsS').innerHTML=`<div class="recap-box ok"><div class="big">${cor}</div><div class="lbl">Corrects</div></div><div class="recap-box bad"><div class="big">${tot-cor}</div><div class="lbl">Erreurs</div></div><div class="recap-box"><div class="big">${pct}%</div><div class="lbl">Réussite</div></div><div class="recap-box sp"><div class="big">${rpm}</div><div class="lbl">Rép/min</div></div>`;document.getElementById('motivS').textContent=msgs.find(([t])=>pct>=t)[1];const tb=document.getElementById('recapBodyS');tb.innerHTML='';S.results.forEach((r,i)=>{const tr=document.createElement('tr');tr.className=r.ok?'ok-row':'bad-row';tr.innerHTML=`<td>${i+1}</td><td>${r.badge}</td><td class="formula">${r.expr}</td><td class="formula">${r.chosen||'—'}</td><td class="formula">${r.correct}</td><td>${r.ok?'✅':'❌'}</td>`;tb.appendChild(tr);});document.getElementById('recapS').classList.remove('hidden');document.getElementById('recapS').scrollIntoView({behavior:'smooth',block:'start'});}
 
 /* ────────────────────────────────────────────────
-   TABLE DE RÉFÉRENCE
+   TABLE DE RÉFÉRENCE (mise à jour avec nouvelles plages)
    ──────────────────────────────────────────────── */
 function buildRef(){
+  // n² et √n : n = 0 à 20
   const sq=document.getElementById('refSquares');
-  for(let n=1;n<=20;n++){const c=document.createElement('div');c.className='ref-cell sq';c.innerHTML=`<div class="rc-top">${n}²&nbsp;|&nbsp;√${n*n}</div><div class="rc-val">${n*n}</div>`;sq.appendChild(c);}
+  for(let n=0;n<=20;n++){const c=document.createElement('div');c.className='ref-cell sq';c.innerHTML=`<div class="rc-top">${n}²&nbsp;|&nbsp;√${n*n}</div><div class="rc-val">${n*n}</div>`;sq.appendChild(c);}
+  // 2ⁿ : n = 0 à 6
   const p2=document.getElementById('refPow2');
-  for(let n=1;n<=10;n++){const c=document.createElement('div');c.className='ref-cell p2';c.innerHTML=`<div class="rc-top">2<sup>${n}</sup></div><div class="rc-val">${Math.pow(2,n)}</div>`;p2.appendChild(c);}
+  for(let n=0;n<=6;n++){const c=document.createElement('div');c.className='ref-cell p2';c.innerHTML=`<div class="rc-top">2<sup>${n}</sup></div><div class="rc-val">${Math.pow(2,n)}</div>`;p2.appendChild(c);}
+  // 3ⁿ : n = 0 à 4
   const p3=document.getElementById('refPow3');
-  for(let n=1;n<=6;n++){const c=document.createElement('div');c.className='ref-cell p3';c.innerHTML=`<div class="rc-top">3<sup>${n}</sup></div><div class="rc-val">${Math.pow(3,n)}</div>`;p3.appendChild(c);}
-  const cb=document.getElementById('refCubes');
-  for(let n=1;n<=10;n++){const c=document.createElement('div');c.className='ref-cell cb';c.innerHTML=`<div class="rc-top">${n}³</div><div class="rc-val">${Math.pow(n,3)}</div>`;cb.appendChild(c);}
+  for(let n=0;n<=4;n++){const c=document.createElement('div');c.className='ref-cell p3';c.innerHTML=`<div class="rc-top">3<sup>${n}</sup></div><div class="rc-val">${Math.pow(3,n)}</div>`;p3.appendChild(c);}
+  // 5ⁿ : n = 0 à 4
   const p5=document.getElementById('refPow5');
-  for(let n=1;n<=5;n++){const c=document.createElement('div');c.className='ref-cell p2';c.innerHTML=`<div class="rc-top">5<sup>${n}</sup></div><div class="rc-val">${Math.pow(5,n)}</div>`;p5.appendChild(c);}
+  for(let n=0;n<=4;n++){const c=document.createElement('div');c.className='ref-cell p2';c.innerHTML=`<div class="rc-top">5<sup>${n}</sup></div><div class="rc-val">${Math.pow(5,n)}</div>`;p5.appendChild(c);}
 }
 buildRef();
 
 /* ────────────────────────────────────────────────
    EVENTS
    ──────────────────────────────────────────────── */
-// Tabs
 document.querySelectorAll('.mode-tab').forEach(tab=>{
   tab.addEventListener('click',()=>{
     document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
@@ -645,7 +643,6 @@ document.querySelectorAll('.mode-tab').forEach(tab=>{
   });
 });
 
-// Training
 document.getElementById('startBtnT').addEventListener('click',startT);
 document.getElementById('resetBtnT').addEventListener('click',resetT);
 document.getElementById('tc0').addEventListener('click',()=>ansMCQT(0));
@@ -663,7 +660,6 @@ document.addEventListener('keydown',e=>{
   if(T.running&&!T.locked&&T.current&&T.current.isVF){if(e.key==='v'||e.key==='V')ansVFT('Vrai');if(e.key==='f'||e.key==='F')ansVFT('Faux');}
 });
 
-// Speed
 document.getElementById('startBtnS').addEventListener('click',startS);
 document.getElementById('resetBtnS').addEventListener('click',resetS);
 document.getElementById('fillSubS').addEventListener('click',ansFillS);
