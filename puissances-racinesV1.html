@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Puissances &amp; Racines — Entraînement</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #0b0c14;
+      --surface: #14151f;
+      --surf2:   #1c1d2a;
+      --border:  #282a3a;
+      --pow:     #f59e0b;
+      --root:    #10b981;
+      --mix:     #8b5cf6;
+      --speed:   #f43f5e;
+      --text:    #e8eaf6;
+      --dim:     #8b8fa8;
+      --ok:      #10b981;
+      --err:     #ef4444;
+      --mono:    'Space Mono', monospace;
+      --sans:    'Syne', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px 16px 60px; }
+    .wrap { max-width: 680px; margin: 0 auto; }
+
+    .app-header { text-align: center; margin-bottom: 18px; }
+    .app-header h1 { font-size: clamp(22px,5vw,36px); font-weight: 800; background: linear-gradient(135deg, var(--pow) 0%, var(--root) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .app-header p { color: var(--dim); font-size: 13px; margin-top: 4px; }
+    .back-link { display: inline-block; margin-bottom: 14px; font-size: 13px; font-weight: 700; color: var(--dim); text-decoration: none; transition: color .2s; }
+    .back-link:hover { color: var(--pow); }
+
+    /* TABS */
+    .mode-tabs { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 18px; }
+    .mode-tab { flex: 1; padding: 13px 10px; text-align: center; font-family: var(--sans); font-size: 14px; font-weight: 700; cursor: pointer; border: none; background: transparent; color: var(--dim); transition: all .2s; }
+    .mode-tab:not(:last-child) { border-right: 1px solid var(--border); }
+    .mode-tab.active[data-tab="training"] { color: var(--pow); background: rgba(245,158,11,.07); }
+    .mode-tab.active[data-tab="speed"]    { color: var(--speed); background: rgba(244,63,94,.08); }
+
+    /* COLLAPSIBLE */
+    details.aide { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 18px; overflow: hidden; }
+    details.aide summary { cursor: pointer; padding: 12px 16px; font-size: 13px; font-weight: 700; color: var(--dim); display: flex; align-items: center; gap: 8px; user-select: none; list-style: none; }
+    details.aide summary::-webkit-details-marker { display: none; }
+    details.aide summary::after { content: "▾"; margin-left: auto; transition: transform .2s; }
+    details.aide[open] summary::after { transform: rotate(180deg); }
+    .aide-inner { padding: 4px 14px 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    @media (max-width:480px) { .aide-inner { grid-template-columns: 1fr; } }
+    .aide-group .aide-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--pow); font-weight: 700; margin-bottom: 6px; }
+    .aide-group.roots .aide-title { color: var(--root); }
+    .aide-pill { font-family: var(--mono); font-size: 11px; color: var(--dim); background: var(--surf2); border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; margin-bottom: 4px; display: block; line-height: 1.5; }
+
+    /* REF TABLE */
+    details.ref-table { background: var(--surface); border: 1px solid rgba(244,63,94,.25); border-radius: 14px; margin-bottom: 18px; overflow: hidden; }
+    details.ref-table summary { cursor: pointer; padding: 12px 16px; font-size: 13px; font-weight: 700; color: var(--speed); display: flex; align-items: center; gap: 8px; user-select: none; list-style: none; }
+    details.ref-table summary::-webkit-details-marker { display: none; }
+    details.ref-table summary::after { content: "▾"; margin-left: auto; transition: transform .2s; }
+    details.ref-table[open] summary::after { transform: rotate(180deg); }
+    .ref-inner { padding: 6px 14px 16px; display: flex; flex-direction: column; gap: 14px; }
+    .ref-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; margin-bottom: 8px; color: var(--dim); }
+    .ref-grid { display: grid; gap: 4px; }
+    .ref-grid.cols5 { grid-template-columns: repeat(5,1fr); }
+    .ref-grid.cols4 { grid-template-columns: repeat(4,1fr); }
+    .ref-grid.cols3 { grid-template-columns: repeat(3,1fr); }
+    @media (max-width:440px) { .ref-grid.cols5{grid-template-columns:repeat(4,1fr);} .ref-grid.cols4{grid-template-columns:repeat(3,1fr);} }
+    .ref-cell { font-family: var(--mono); font-size: 11px; text-align: center; background: var(--surf2); border: 1px solid var(--border); border-radius: 7px; padding: 5px 4px; line-height: 1.4; }
+    .ref-cell .rc-top { color: var(--dim); font-size: 10px; }
+    .ref-cell .rc-val { color: var(--text); font-weight: 700; font-size: 12px; }
+    .ref-cell.sq .rc-top { color: var(--pow); }
+    .ref-cell.rt .rc-top { color: var(--root); }
+    .ref-cell.p2 .rc-top { color: var(--mix); }
+    .ref-cell.p3 .rc-top { color: #fb923c; }
+    .ref-cell.cb .rc-top { color: #38bdf8; }
+
+    /* CONTROLS */
+    .controls-card, .speed-controls { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .speed-controls { border-color: rgba(244,63,94,.3); }
+    .ctrl-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .ctrl-label { font-size: 11px; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 1.2px; white-space: nowrap; }
+    .topic-btn, .input-btn, .speed-cat-btn {
+      font-family: var(--sans); font-size: 13px; font-weight: 700; padding: 8px 14px;
+      border-radius: 999px; border: 1.5px solid var(--border); background: var(--surf2);
+      color: var(--dim); cursor: pointer; transition: all .2s;
+    }
+    .topic-btn:hover     { border-color: var(--pow);   color: var(--text); }
+    .input-btn:hover     { border-color: var(--mix);   color: var(--text); }
+    .speed-cat-btn:hover { border-color: var(--speed); color: var(--text); }
+    .topic-btn.active[data-topic="puissances"] { background: rgba(245,158,11,.15); border-color: var(--pow); color: var(--pow); }
+    .topic-btn.active[data-topic="racines"]    { background: rgba(16,185,129,.15); border-color: var(--root); color: var(--root); }
+    .topic-btn.active[data-topic="melange"]    { background: rgba(139,92,246,.15); border-color: var(--mix); color: var(--mix); }
+    .input-btn.active    { background: rgba(139,92,246,.15); border-color: var(--mix); color: var(--mix); }
+    .speed-cat-btn.active { background: rgba(244,63,94,.15); border-color: var(--speed); color: var(--speed); }
+    .dur-pill, .speed-dur-pill {
+      font-family: var(--mono); font-size: 12px; font-weight: 700; padding: 6px 12px;
+      border-radius: 8px; border: 1.5px solid var(--border); background: var(--surf2);
+      color: var(--dim); cursor: pointer; transition: all .2s;
+    }
+    .dur-pill:hover, .speed-dur-pill:hover { border-color: var(--text); color: var(--text); }
+    .dur-pill.active, .speed-dur-pill.active { border-color: var(--text); color: var(--text); background: #22243a; }
+    .start-row { display: flex; gap: 10px; align-items: center; }
+    .btn-start { font-family: var(--sans); font-size: 14px; font-weight: 800; padding: 12px 28px; border-radius: 12px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--pow), var(--root)); color: #fff; box-shadow: 0 4px 20px rgba(245,158,11,.25); transition: opacity .2s, transform .15s; }
+    .btn-start:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+    .btn-start:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-start-speed { font-family: var(--sans); font-size: 14px; font-weight: 800; padding: 12px 28px; border-radius: 12px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--speed), #f59e0b); color: #fff; box-shadow: 0 4px 20px rgba(244,63,94,.3); transition: opacity .2s, transform .15s; }
+    .btn-start-speed:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+    .btn-start-speed:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-reset { font-family: var(--sans); font-size: 13px; font-weight: 700; padding: 10px 18px; border-radius: 12px; border: 1.5px solid var(--border); background: transparent; color: var(--dim); cursor: pointer; transition: all .2s; }
+    .btn-reset:hover:not(:disabled) { border-color: var(--err); color: var(--err); }
+    .btn-reset:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* STATS */
+    .stats-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 10px 18px; margin-bottom: 12px; }
+    .stat-group { display: flex; gap: 18px; }
+    .stat { display: flex; flex-direction: column; align-items: center; }
+    .stat-val { font-family: var(--mono); font-size: 20px; font-weight: 700; }
+    .stat-val.timer       { color: var(--pow); }
+    .stat-val.speed-timer { color: var(--speed); }
+    .stat-val.s-ok  { color: var(--ok); }
+    .stat-val.s-err { color: var(--err); }
+    .stat-val.s-str { color: var(--mix); }
+    .stat-val.s-rpm { color: var(--speed); }
+    .stat-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); margin-top: 2px; }
+
+    .streak-bar { height: 4px; background: var(--surf2); border-radius: 4px; margin-bottom: 10px; overflow: hidden; }
+    .streak-fill { height: 100%; background: linear-gradient(90deg, var(--pow), var(--root)); border-radius: 4px; transition: width .3s; }
+    .streak-fill.speed-fill { background: linear-gradient(90deg, var(--speed), #f59e0b); }
+    .progress-dots { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 14px; min-height: 12px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.ok  { background: var(--ok); }
+    .dot.bad { background: var(--err); }
+
+    /* CARDS */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 24px 20px; margin-bottom: 20px; animation: popIn .25s ease; }
+    .card.speed-card { border-color: rgba(244,63,94,.3); }
+    .topic-badge { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; padding: 4px 12px; border-radius: 999px; margin-bottom: 16px; border: 1px solid var(--border); color: var(--dim); background: var(--surf2); }
+    .topic-badge.pow   { border-color: var(--pow);   color: var(--pow);   background: rgba(245,158,11,.1); }
+    .topic-badge.root  { border-color: var(--root);  color: var(--root);  background: rgba(16,185,129,.1); }
+    .topic-badge.mix   { border-color: var(--mix);   color: var(--mix);   background: rgba(139,92,246,.1); }
+    .topic-badge.speed { border-color: var(--speed); color: var(--speed); background: rgba(244,63,94,.1); }
+    .topic-badge.hidden { display: none; }
+    .q-text { font-size: 13px; color: var(--dim); margin-bottom: 12px; }
+    .q-expr { font-family: var(--mono); font-size: clamp(20px,5vw,30px); color: var(--text); text-align: center; margin-bottom: 24px; line-height: 1.5; min-height: 50px; }
+    .q-expr sup { font-size: .65em; vertical-align: super; }
+    .q-expr .sq { font-size: 1.15em; color: var(--root); }
+    .q-expr .unknown { color: var(--pow); font-weight: 800; }
+    /* Speed big question */
+    .q-expr.speed-q { font-size: clamp(42px,11vw,68px); margin-bottom: 16px; min-height: 90px; letter-spacing: -1px; }
+    .q-expr.speed-q .sq { font-size: 1em; }
+
+    /* MCQ */
+    .choices-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+    .choice-btn { font-family: var(--mono); font-size: 14px; font-weight: 700; padding: 14px 10px; border-radius: 12px; text-align: center; border: 2px solid var(--border); background: var(--surf2); color: var(--text); cursor: pointer; transition: border-color .15s, background .15s, transform .1s; line-height: 1.4; }
+    .choice-btn:hover:not(:disabled) { border-color: var(--pow); background: rgba(245,158,11,.08); transform: translateY(-2px); }
+    .choice-btn.correct { border-color: var(--ok);  background: rgba(16,185,129,.15); color: var(--ok); }
+    .choice-btn.wrong   { border-color: var(--err); background: rgba(239,68,68,.12);  color: var(--err); }
+    .choice-btn:disabled { cursor: default; }
+    /* VF */
+    .vf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .vf-btn { font-family: var(--sans); font-size: 15px; font-weight: 800; padding: 16px; border-radius: 14px; border: 2px solid var(--border); background: var(--surf2); cursor: pointer; transition: all .15s; }
+    .vf-btn.vf-true  { color: var(--ok); }
+    .vf-btn.vf-false { color: var(--err); }
+    .vf-btn.vf-true:hover:not(:disabled)  { border-color: var(--ok);  background: rgba(16,185,129,.12); }
+    .vf-btn.vf-false:hover:not(:disabled) { border-color: var(--err); background: rgba(239,68,68,.1); }
+    .vf-btn.correct { border-color: var(--ok);  background: rgba(16,185,129,.2); }
+    .vf-btn.wrong   { border-color: var(--err); background: rgba(239,68,68,.15); }
+    .vf-btn:disabled { cursor: default; }
+    /* Fill */
+    .fill-wrap { margin-bottom: 16px; }
+    .fill-lbl { font-size: 12px; color: var(--dim); margin-bottom: 8px; font-weight: 600; }
+    .fill-row { display: flex; gap: 10px; }
+    .fill-input { flex: 1; font-family: var(--mono); font-size: 18px; font-weight: 700; background: var(--surf2); border: 2px solid var(--border); border-radius: 12px; padding: 12px 16px; color: var(--text); outline: none; transition: border-color .2s; }
+    .fill-input:focus { border-color: var(--pow); }
+    .fill-input.correct { border-color: var(--ok);  background: rgba(16,185,129,.08); }
+    .fill-input.wrong   { border-color: var(--err); background: rgba(239,68,68,.08); }
+    .fill-input:disabled { opacity: .7; }
+    .fill-input.speed-input { font-size: 32px; text-align: center; border-color: rgba(244,63,94,.4); letter-spacing: 2px; }
+    .fill-input.speed-input:focus { border-color: var(--speed); box-shadow: 0 0 0 3px rgba(244,63,94,.15); }
+    .btn-validate { font-family: var(--sans); font-size: 18px; font-weight: 800; padding: 12px 20px; border-radius: 12px; border: none; background: linear-gradient(135deg, var(--pow), var(--root)); color: #fff; cursor: pointer; transition: opacity .2s; }
+    .btn-validate:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-validate.speed-val { background: linear-gradient(135deg, var(--speed), #f59e0b); }
+    /* Feedback */
+    .feedback { display: flex; align-items: flex-start; gap: 10px; min-height: 36px; }
+    .feedback-icon { font-size: 20px; }
+    .feedback-text { font-size: 14px; font-weight: 700; }
+    .feedback-text.ok  { color: var(--ok); }
+    .feedback-text.bad { color: var(--err); }
+    .feedback-hint { font-size: 12px; color: var(--dim); margin-top: 4px; line-height: 1.5; }
+    .kbd-hint { font-size: 11px; color: var(--dim); text-align: center; margin-top: 10px; }
+    kbd { font-family: var(--mono); font-size: 10px; background: var(--surf2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 5px; color: var(--text); }
+    /* Combo */
+    .combo-display { text-align: center; font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--dim); margin-bottom: 10px; min-height: 20px; transition: all .2s; }
+    .combo-display.active { color: var(--speed); font-size: 16px; }
+    /* Flash */
+    @keyframes flashOk  { 0%,100%{background:var(--surface);}40%{background:rgba(16,185,129,.18);} }
+    @keyframes flashErr { 0%,100%{background:var(--surface);}40%{background:rgba(239,68,68,.15);} }
+    .card.flash-ok  { animation: flashOk  .35s ease; }
+    .card.flash-err { animation: flashErr .45s ease; }
+    /* Recap */
+    .recap-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 24px 20px; margin-top: 20px; }
+    .recap-card h2 { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+    .recap-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
+    @media (max-width:420px) { .recap-stats{grid-template-columns:repeat(2,1fr);} }
+    .recap-box { background: var(--surf2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
+    .recap-box .big { font-family: var(--mono); font-size: 26px; font-weight: 700; }
+    .recap-box .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); margin-top: 4px; }
+    .recap-box.ok  { border-color: var(--ok);    } .recap-box.ok  .big { color: var(--ok);    }
+    .recap-box.bad { border-color: var(--err);   } .recap-box.bad .big { color: var(--err);   }
+    .recap-box.sp  { border-color: var(--speed); } .recap-box.sp  .big { color: var(--speed); }
+    .motivational { font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 18px; color: var(--pow); }
+    .recap-table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    thead tr { background: var(--surf2); }
+    th { padding: 10px 8px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); white-space: nowrap; }
+    td { padding: 8px 8px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+    td.formula { font-family: var(--mono); }
+    tr.ok-row  td { background: rgba(16,185,129,.04); }
+    tr.bad-row td { background: rgba(239,68,68,.05); }
+    .hidden { display: none !important; }
+    @keyframes popIn { from{opacity:0;transform:scale(.92);}to{opacity:1;transform:scale(1);} }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="index.html">← Retour au menu</a>
+
+  <div class="app-header">
+    <h1>⚡ Puissances &amp; √ Racines</h1>
+    <p>Entraînement progressif · Rapidité mentale</p>
+  </div>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-tab="training">🧠 Entraînement</button>
+    <button class="mode-tab"        data-tab="speed">🚀 Rapidité</button>
+  </div>
+
+  <!-- ═══ PANNEAU ENTRAÎNEMENT ═══ -->
+  <div id="panelTraining">
+    <details class="aide">
+      <summary>📋 Aide-mémoire — propriétés essentielles</summary>
+      <div class="aide-inner">
+        <div class="aide-group">
+          <div class="aide-title">⚡ Puissances</div>
+          <span class="aide-pill">aᵐ × aⁿ = aᵐ⁺ⁿ</span>
+          <span class="aide-pill">aᵐ ÷ aⁿ = aᵐ⁻ⁿ</span>
+          <span class="aide-pill">(aᵐ)ⁿ = aᵐⁿ</span>
+          <span class="aide-pill">(ab)ⁿ = aⁿ · bⁿ</span>
+          <span class="aide-pill">a⁰ = 1 (a ≠ 0)</span>
+          <span class="aide-pill">a⁻ⁿ = 1 / aⁿ</span>
+          <span class="aide-pill">(−a)² = +a² (pair)</span>
+          <span class="aide-pill">(−a)³ = −a³ (impair)</span>
+        </div>
+        <div class="aide-group roots">
+          <div class="aide-title">√ Racines</div>
+          <span class="aide-pill">√(ab) = √a · √b (a,b ≥ 0)</span>
+          <span class="aide-pill">√a / √b = √(a/b) (b &gt; 0)</span>
+          <span class="aide-pill">(√a)² = a</span>
+          <span class="aide-pill">√(a²) = |a| ≥ 0</span>
+          <span class="aide-pill">√a + √b ≠ √(a+b) !</span>
+          <span class="aide-pill">√(−n) n'existe pas dans ℝ</span>
+          <span class="aide-pill">Simplifier : √12 = 2√3</span>
+        </div>
+      </div>
+    </details>
+
+    <div class="controls-card">
+      <div class="ctrl-row">
+        <span class="ctrl-label">Thème</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="topic-btn active" data-topic="puissances">⚡ Puissances</button>
+          <button class="topic-btn"        data-topic="racines">√ Racines</button>
+          <button class="topic-btn"        data-topic="melange">🔀 Mélange</button>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">Mode</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="input-btn active" data-input="mcq">🎯 QCM</button>
+          <button class="input-btn"        data-input="fill">✏️ Saisie libre</button>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">Durée</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="dur-pill"       data-sec="120">2 min</button>
+          <button class="dur-pill active" data-sec="300">5 min</button>
+          <button class="dur-pill"       data-sec="600">10 min</button>
+        </div>
+      </div>
+      <div class="start-row">
+        <button class="btn-start" id="startBtnT">▶ Démarrer</button>
+        <button class="btn-reset" id="resetBtnT" disabled>↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-group">
+        <div class="stat"><span class="stat-val timer" id="timerT">05:00</span><span class="stat-lbl">Temps</span></div>
+        <div class="stat"><span class="stat-val" id="countT">0</span><span class="stat-lbl">Questions</span></div>
+      </div>
+      <div class="stat-group">
+        <div class="stat"><span class="stat-val s-ok"  id="okT">0</span><span class="stat-lbl">Corrects</span></div>
+        <div class="stat"><span class="stat-val s-err" id="errT">0</span><span class="stat-lbl">Erreurs</span></div>
+        <div class="stat"><span class="stat-val s-str" id="streakT">🔥 0</span><span class="stat-lbl">Série</span></div>
+      </div>
+    </div>
+    <div class="streak-bar"><div class="streak-fill" id="streakFillT" style="width:0%"></div></div>
+    <div class="progress-dots" id="dotsT"></div>
+
+    <div class="card" id="mainCardT">
+      <div class="topic-badge hidden" id="badgeT"></div>
+      <div class="q-text" id="qtextT">Choisis un thème et clique sur "Démarrer"</div>
+      <div class="q-expr" id="qexprT">🎯 Prêt ?</div>
+      <div class="choices-grid" id="choicesT">
+        <button class="choice-btn" id="tc0" disabled></button>
+        <button class="choice-btn" id="tc1" disabled></button>
+        <button class="choice-btn" id="tc2" disabled></button>
+      </div>
+      <div class="vf-grid hidden" id="vfT">
+        <button class="vf-btn vf-true"  id="tvfTrue"  disabled>✓ Vrai</button>
+        <button class="vf-btn vf-false" id="tvfFalse" disabled>✗ Faux</button>
+      </div>
+      <div class="fill-wrap hidden" id="fillWT">
+        <div class="fill-lbl" id="fillLblT"></div>
+        <div class="fill-row">
+          <input type="text" class="fill-input" id="fillInpT" placeholder="Ta réponse…" disabled autocomplete="off" inputmode="decimal"/>
+          <button class="btn-validate" id="fillSubT" disabled>→</button>
+        </div>
+      </div>
+      <div class="feedback" id="fbT"></div>
+      <div class="kbd-hint" id="kbdT" style="display:none">Raccourcis : <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> ou <kbd>Entrée</kbd></div>
+    </div>
+
+    <div class="recap-card hidden" id="recapT">
+      <h2>📊 Récapitulatif — Entraînement</h2>
+      <div class="recap-stats" id="recapStatsT"></div>
+      <div class="motivational" id="motivT"></div>
+      <div class="recap-table-wrap">
+        <table><thead><tr><th>#</th><th>Type</th><th>Question</th><th>Ta réponse</th><th>Bonne réponse</th><th>✓</th></tr></thead>
+        <tbody id="recapBodyT"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PANNEAU RAPIDITÉ ═══ -->
+  <div id="panelSpeed" class="hidden">
+
+    <details class="ref-table">
+      <summary>📖 Table de référence — valeurs à connaître par cœur</summary>
+      <div class="ref-inner">
+        <div><div class="ref-section-title">⚡ Carrés parfaits — n² et √(n²) pour n = 1 à 20</div><div class="ref-grid cols5" id="refSquares"></div></div>
+        <div><div class="ref-section-title">🔵 Puissances de 2 — 2ⁿ pour n = 1 à 10</div><div class="ref-grid cols5" id="refPow2"></div></div>
+        <div><div class="ref-section-title">🟠 Puissances de 3 — 3ⁿ pour n = 1 à 6</div><div class="ref-grid cols3" id="refPow3"></div></div>
+        <div><div class="ref-section-title">🔷 Cubes — n³ pour n = 1 à 10</div><div class="ref-grid cols5" id="refCubes"></div></div>
+        <div><div class="ref-section-title">🟡 Puissances de 5 — 5ⁿ pour n = 1 à 5</div><div class="ref-grid cols5" id="refPow5"></div></div>
+      </div>
+    </details>
+
+    <div class="speed-controls">
+      <div class="ctrl-row">
+        <span class="ctrl-label">Catégorie</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="speed-cat-btn active" data-cat="tout">🔀 Tout</button>
+          <button class="speed-cat-btn" data-cat="carres">n²</button>
+          <button class="speed-cat-btn" data-cat="racines">√n</button>
+          <button class="speed-cat-btn" data-cat="puiss2">2ⁿ</button>
+          <button class="speed-cat-btn" data-cat="puiss3">3ⁿ</button>
+          <button class="speed-cat-btn" data-cat="cubes">n³</button>
+          <button class="speed-cat-btn" data-cat="puiss5">5ⁿ</button>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">Durée</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="speed-dur-pill active" data-sec="60">1 min</button>
+          <button class="speed-dur-pill"        data-sec="120">2 min</button>
+          <button class="speed-dur-pill"        data-sec="180">3 min</button>
+        </div>
+      </div>
+      <div class="start-row">
+        <button class="btn-start-speed" id="startBtnS">⚡ Lancer le chrono</button>
+        <button class="btn-reset"       id="resetBtnS" disabled>↺ Reset</button>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-group">
+        <div class="stat"><span class="stat-val speed-timer" id="timerS">01:00</span><span class="stat-lbl">Temps</span></div>
+        <div class="stat"><span class="stat-val" id="countS">0</span><span class="stat-lbl">Questions</span></div>
+      </div>
+      <div class="stat-group">
+        <div class="stat"><span class="stat-val s-ok"  id="okS">0</span><span class="stat-lbl">Corrects</span></div>
+        <div class="stat"><span class="stat-val s-err" id="errS">0</span><span class="stat-lbl">Erreurs</span></div>
+        <div class="stat"><span class="stat-val s-rpm" id="rpmS">—</span><span class="stat-lbl">Rép/min</span></div>
+      </div>
+    </div>
+    <div class="streak-bar"><div class="streak-fill speed-fill" id="streakFillS" style="width:0%"></div></div>
+    <div class="progress-dots" id="dotsS"></div>
+
+    <div class="card speed-card" id="mainCardS">
+      <div class="topic-badge hidden" id="badgeS"></div>
+      <div class="q-text"           id="qtextS">Choisis une catégorie et lance le chrono !</div>
+      <div class="q-expr speed-q"  id="qexprS">🚀</div>
+      <div class="combo-display"   id="comboS"></div>
+      <div class="fill-wrap">
+        <div class="fill-row">
+          <input type="text" class="fill-input speed-input" id="fillInpS" placeholder="?" disabled autocomplete="off" inputmode="decimal"/>
+          <button class="btn-validate speed-val" id="fillSubS" disabled>→</button>
+        </div>
+      </div>
+      <div class="feedback" id="fbS"></div>
+    </div>
+
+    <div class="recap-card hidden" id="recapS">
+      <h2>🏁 Récapitulatif — Rapidité</h2>
+      <div class="recap-stats" id="recapStatsS"></div>
+      <div class="motivational" id="motivS"></div>
+      <div class="recap-table-wrap">
+        <table><thead><tr><th>#</th><th>Type</th><th>Question</th><th>Ta réponse</th><th>Bonne réponse</th><th>✓</th></tr></thead>
+        <tbody id="recapBodyS"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const RI  = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const RC  = arr=>arr[Math.floor(Math.random()*arr.length)];
+const SHF = arr=>{const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const UNQ = arr=>[...new Set(arr.map(String))];
+const HP  = (b,e)=>e===1?`${b}`:e<0?`${b}<sup>−${Math.abs(e)}</sup>`:`${b}<sup>${e}</sup>`;
+const HPN = (b,e)=>e<0?`(−${b})<sup>−${Math.abs(e)}</sup>`:`(−${b})<sup>${e}</sup>`;
+const HR  = n=>`<span class="sq">√</span><span class="radicand">${n}</span>`;
+const HKR = (k,m)=>k===1?HR(m):`${k}${HR(m)}`;
+function dist(c,cs,n=2){return UNQ(cs).filter(d=>String(d)!==String(c)).slice(0,n);}
+
+/* ────────────────────────────────────────────────
+   TRAINING GENERATORS
+   ──────────────────────────────────────────────── */
+const BASES=[2,3,5,7,10];
+const PERF_SQ={4:2,9:3,16:4,25:5,36:6,49:7,64:8,81:9,100:10,121:11,144:12};
+const SIMPLIF={8:[2,2],12:[2,3],18:[3,2],20:[2,5],27:[3,3],32:[4,2],45:[3,5],48:[4,3],50:[5,2],72:[6,2],75:[5,3],98:[7,2],200:[10,2]};
+const PROD_PAIRS=[[3,12,6],[5,20,10],[6,24,12],[7,28,14],[2,8,4],[2,18,6],[2,32,8],[3,27,9],[5,45,15],[8,2,4]];
+const SUM_ROOTS=[[8,18,[2,2],[3,2],5,2],[12,27,[2,3],[3,3],5,3],[50,2,[5,2],[1,2],6,2],[48,3,[4,3],[1,3],5,3],[75,12,[5,3],[2,3],7,3],[20,45,[2,5],[3,5],5,5],[32,8,[4,2],[2,2],6,2]];
+
+function genProduit(){const a=RC(BASES),m=RI(0,7),n=RI(1,6),c=m+n;const ws=dist(c,[m*n,m-n,c+2,c-1,m*2]);const opts=SHF([String(c),...ws]).slice(0,3);return{badgeLabel:'⚡ Produit',badgeClass:'pow',qText:"Quel est l'exposant du résultat ?",qHTML:`${HP(a,m)} × ${HP(a,n)} = ${a}<sup><span class="unknown">?</span></sup>`,correct:String(c),opts,hint:`Même base → additionner les exposants : ${m}+${n} = <strong>${c}</strong>`,fillAnswer:String(c),fillLbl:"Quel est l'exposant ?",inputMode:'mcq'};}
+function genDivision(){const a=RC(BASES),n=RI(1,5),m=n+RI(0,5),c=m-n;const ws=dist(c,[m+n,m*n,c+1,c-1,n-m]);const opts=SHF([String(c),...ws]).slice(0,3);return{badgeLabel:'⚡ Division',badgeClass:'pow',qText:"Quel est l'exposant ?",qHTML:`${HP(a,m)} ÷ ${HP(a,n)} = ${a}<sup><span class="unknown">?</span></sup>`,correct:String(c),opts,hint:`Même base → soustraire : ${m}−${n} = <strong>${c}</strong>`,fillAnswer:String(c),fillLbl:"Exposant ?",inputMode:'mcq'};}
+function genPuissPuiss(){const a=RC(BASES),m=RI(2,5),n=RI(2,4),c=m*n;const ws=dist(c,[m+n,m*2,n*3,c+1,c-2]);const opts=SHF([String(c),...ws]).slice(0,3);return{badgeLabel:'⚡ Puissance²',badgeClass:'pow',qText:"Quel est l'exposant ?",qHTML:`(${HP(a,m)})<sup>${n}</sup> = ${a}<sup><span class="unknown">?</span></sup>`,correct:String(c),opts,hint:`Multiplier les exposants : ${m}×${n} = <strong>${c}</strong>`,fillAnswer:String(c),fillLbl:"Exposant ?",inputMode:'mcq'};}
+function genExp0(){const a=RC([2,3,5,7,9,10,11,15]);const opts=SHF(['1','0',String(a)]);return{badgeLabel:'⚡ Exposant 0',badgeClass:'pow',qText:'Calcule.',qHTML:`${HP(a,0)} = ?`,correct:'1',opts,hint:`Tout nombre non nul à la puissance 0 vaut <strong>1</strong>.`,fillAnswer:'1',fillLbl:'Valeur ?',inputMode:'mcq'};}
+function genExpNeg(){const a=RC([2,3,5,10]),n=RI(1,4),c=String(n);const ws=dist(c,['-'+n,n+1,n-1,n*2]);const opts=SHF([c,...ws]).slice(0,3);return{badgeLabel:'⚡ Exp. négatif',badgeClass:'pow',qText:"Exposant au dénominateur ?",qHTML:`${a}<sup>−${n}</sup> = 1 / ${a}<sup><span class="unknown">?</span></sup>`,correct:c,opts,hint:`${HP(a,-n)} = 1/${HP(a,n)} → exposant = <strong>${n}</strong>`,fillAnswer:c,fillLbl:"Exposant ?",inputMode:'mcq'};}
+function genPuissProduit(){const pairs=[[2,3],[2,5],[3,4],[3,5],[2,7]];const[a,b]=RC(pairs),n=RI(2,4);const anbn=`${HP(a,n)} × ${HP(b,n)}`,w1=`${HP(a,n)} + ${HP(b,n)}`,w2=`${HP(a*n,1)} × ${HP(b*n,1)}`;const opts=SHF([anbn,w1,w2]);return{badgeLabel:'⚡ (ab)ⁿ',badgeClass:'pow',qText:'Développe sous la forme aⁿ × bⁿ.',qHTML:`(${a}×${b})<sup>${n}</sup> = ?`,correct:anbn,opts,hint:`(${a}×${b})<sup>${n}</sup> = ${HP(a,n)} × ${HP(b,n)}`,fillAnswer:String(Math.pow(a,n)*Math.pow(b,n)),fillLbl:'Valeur ?',inputMode:'mcq'};}
+function genBaseNeg(){const a=RC([2,3,4,5]),n=RI(2,5),ie=n%2===0,c=ie?Math.pow(a,n):-Math.pow(a,n);const ws=dist(c,[-c,a*n,Math.pow(a,n),-(a*n)]);const opts=SHF([String(c),...ws]).slice(0,3);return{badgeLabel:'⚡ Base négative',badgeClass:'pow',qText:'Calcule. Attention aux parenthèses !',qHTML:HPN(a,n)+' = ?',correct:String(c),opts,hint:ie?`Exposant pair → positif : +${Math.pow(a,n)}`:`Exposant impair → négatif : −${Math.pow(a,n)}`,fillAnswer:String(c),fillLbl:'Valeur ?',inputMode:'mcq'};}
+function genCompareNeg(){const a=RC([2,3,4]),n=RI(2,4),noP=-Math.pow(a,n),wP=n%2===0?Math.pow(a,n):-Math.pow(a,n);const ws=dist(String(noP),[String(wP),String(Math.pow(a,n)),String(a*n)]);const opts=SHF([String(noP),...ws]).slice(0,3);return{badgeLabel:'⚡ Priorité signes',badgeClass:'pow',qText:`La puissance s'applique uniquement à ${a}.`,qHTML:`−${HP(a,n)} = ?`,correct:String(noP),opts,hint:`−${HP(a,n)} = −(${a}<sup>${n}</sup>) = −${Math.pow(a,n)} vs ${HPN(a,n)} = ${wP>0?'+':''}${wP}`,fillAnswer:String(noP),fillLbl:'Valeur ?',inputMode:'mcq'};}
+function genRacineSimple(){const perf=Object.entries(PERF_SQ),[nStr,root]=RC(perf),n=parseInt(nStr);const ws=dist(root,[root+1,root-1,root+2,root*2,n]);const opts=SHF([String(root),...ws]).slice(0,3);return{badgeLabel:'√ Valeur exacte',badgeClass:'root',qText:'Calcule.',qHTML:HR(n)+' = ?',correct:String(root),opts,hint:`${root}×${root}=${n} → ${HR(n)} = <strong>${root}</strong>`,fillAnswer:String(root),fillLbl:'Valeur ?',inputMode:'mcq'};}
+function genRacineSimplif(){const entries=Object.entries(SIMPLIF),[nStr,[k,m]]=RC(entries),n=parseInt(nStr),c=`${k}√${m}`;const ws=[`${k+1}√${m}`,`${k-1}√${m}`,`${k}√${m+1}`,`√${n}`].filter(w=>w!==c&&!w.includes('-1'));const opts=SHF([c,...SHF(ws).slice(0,2)]).slice(0,3);return{badgeLabel:'√ Simplification',badgeClass:'root',qText:'Simplifie (forme k√m).',qHTML:HR(n)+' = ?',correct:c,opts,hint:`${HR(n)} = ${k}×${HR(m)} = <strong>${c}</strong>`,fillAnswer:String(k),fillLbl:`Si k√${m}, valeur de k ?`,inputMode:'mcq'};}
+function genRacineProduit(){const[a,b,r]=RC(PROD_PAIRS);const ws=dist(r,[a*b,r+1,r-1,r+2]);const opts=SHF([String(r),...ws]).slice(0,3);return{badgeLabel:'√ Produit',badgeClass:'root',qText:'Calcule.',qHTML:HR(a)+' × '+HR(b)+' = ?',correct:String(r),opts,hint:`${HR(a*b)} = <strong>${r}</strong>`,fillAnswer:String(r),fillLbl:'Valeur ?',inputMode:'mcq'};}
+function genRacineSomme(){const[n1,n2,[k1,m1],[k2,m2],kR,mR]=RC(SUM_ROOTS);const c=`${kR}√${mR}`;const ws=[`${kR+1}√${mR}`,`${kR-1}√${mR}`,`${k1+k2}√${n1+n2}`].filter(w=>w!==c);const opts=SHF([c,...SHF(ws).slice(0,2)]).slice(0,3);return{badgeLabel:'√ Addition',badgeClass:'root',qText:'Simplifie puis additionne.',qHTML:HR(n1)+' + '+HR(n2)+' = ?',correct:c,opts,hint:`${HKR(k1,mR)} + ${HKR(k2,mR)} = <strong>${c}</strong>`,fillAnswer:String(kR),fillLbl:`Si k√${mR}, valeur de k ?`,inputMode:'mcq'};}
+function genVFPuissances(){const POOL=[()=>{const a=RC([2,3,5,7]);return{q:`${HP(a,0)} = 0`,ok:false,expl:`${HP(a,0)} = <strong>1</strong> — tout nombre non nul à la puissance 0 vaut 1.`};},()=>{const a=RC([2,3,4,5]),n=RI(2,4),e=n%2===0;return{q:`${HPN(a,n)} = −${HP(a,n)}`,ok:!e,expl:e?`Faux : exposant pair → +${Math.pow(a,n)}`:`Vrai : exposant impair.`};},()=>{const[a,b]=RC([[2,3],[2,5],[3,4]]),n=RI(2,4);return{q:`(${a}×${b})<sup>${n}</sup> = ${HP(a,n)} × ${HP(b,n)}`,ok:true,expl:`Vrai : puissance d'un produit.`};},()=>{const[a,b]=RC([[2,3],[1,4],[2,5]]),n=RI(2,3);return{q:`(${a}+${b})<sup>${n}</sup> = ${HP(a,n)} + ${HP(b,n)}`,ok:false,expl:`Faux : (${a}+${b})<sup>${n}</sup> = ${Math.pow(a+b,n)} ≠ ${Math.pow(a,n)+Math.pow(b,n)}.`};},()=>{const a=RC([2,3,5]),n=RI(1,4);return{q:`${a}<sup>−${n}</sup> = −${HP(a,n)}`,ok:false,expl:`Faux : c'est 1/${HP(a,n)} (positif !).`};},()=>{const a=RC([2,3,5]),m=RI(2,5),n=RI(2,4);return{q:`(${HP(a,m)})<sup>${n}</sup> = ${HP(a,m*n)}`,ok:true,expl:`Vrai : ${m}×${n} = ${m*n}.`};}];const{q,ok,expl}=RC(POOL)();return{badgeLabel:'⚡ Vrai/Faux',badgeClass:'pow',qText:'Cette égalité est-elle vraie ou fausse ?',qHTML:q,correct:ok?'Vrai':'Faux',opts:['Vrai','Faux'],hint:expl,fillAnswer:ok?'vrai':'faux',fillLbl:'Tape "vrai" ou "faux"',inputMode:'vf',isVF:true};}
+function genVFRacines(){const POOL=[()=>({q:`${HR(25)} = −5`,ok:false,expl:`Faux : √25 = 5 (toujours positif).`}),()=>({q:`${HR(0)} = 0`,ok:true,expl:`Vrai : 0×0 = 0.`}),()=>{const[a,b]=RC([[4,9],[9,16],[1,25]]),sa=Math.sqrt(a),sb=Math.sqrt(b);return{q:`${HR(a+b)} = ${HR(a)} + ${HR(b)}`,ok:false,expl:`Faux : √${a+b} ≠ ${sa+sb}.`};},()=>{const[a,b]=RC([[4,9],[9,16],[4,25]]);return{q:`${HR(a)} × ${HR(b)} = ${HR(a*b)}`,ok:true,expl:`Vrai : √a×√b = √(ab).`};},()=>({q:`${HR(-4)} existe dans les réels`,ok:false,expl:`Faux : pas de racine carrée d'un négatif dans ℝ.`}),()=>{const a=RC([3,4,5,7]);return{q:`${HR(a*a)} = ${a}`,ok:true,expl:`Vrai : ${a}²=${a*a}.`};}];const{q,ok,expl}=RC(POOL)();return{badgeLabel:'√ Vrai/Faux',badgeClass:'root',qText:'Vraie ou fausse ?',qHTML:q,correct:ok?'Vrai':'Faux',opts:['Vrai','Faux'],hint:expl,fillAnswer:ok?'vrai':'faux',fillLbl:'Tape "vrai" ou "faux"',inputMode:'vf',isVF:true};}
+
+const GENS_POW=[genProduit,genDivision,genPuissPuiss,genExp0,genExpNeg,genPuissProduit,genBaseNeg,genCompareNeg,genVFPuissances];
+const GENS_ROOT=[genRacineSimple,genRacineSimplif,genRacineProduit,genRacineSomme,genVFRacines];
+const GENS_MIX=[...GENS_POW,...GENS_ROOT];
+function buildDeckT(topic,n=150){const pool=topic==='puissances'?GENS_POW:topic==='racines'?GENS_ROOT:GENS_MIX;return Array.from({length:n},()=>RC(pool)());}
+
+/* ────────────────────────────────────────────────
+   SPEED GENERATORS — par cœur
+   ──────────────────────────────────────────────── */
+const SQ_LIST  = Array.from({length:20},(_,i)=>[i+1,(i+1)*(i+1)]);
+const POW2_LIST= Array.from({length:10},(_,i)=>[i+1,Math.pow(2,i+1)]);
+const POW3_LIST= Array.from({length:6}, (_,i)=>[i+1,Math.pow(3,i+1)]);
+const CUBE_LIST = Array.from({length:10},(_,i)=>[i+1,Math.pow(i+1,3)]);
+const POW5_LIST= Array.from({length:5}, (_,i)=>[i+1,Math.pow(5,i+1)]);
+
+function mkSpeed(label,qHTML,answer,hint){
+  return {badgeLabel:label,badgeClass:'speed',qText:'Calcule mentalement.',qHTML,correct:String(answer),fillAnswer:String(answer),hint,inputMode:'fill'};
+}
+
+function genSpdCarre(){
+  const[n,v]=RC(SQ_LIST);
+  return mkSpeed('⚡ Carré',`${n}<sup>2</sup> = ?`,v,`${n} × ${n} = <strong>${v}</strong>`);
+}
+function genSpdRacine(){
+  const[n,v]=RC(SQ_LIST);
+  return mkSpeed('√ Racine',HR(v)+' = ?',n,`${n} × ${n} = ${v} → <strong>${n}</strong>`);
+}
+function genSpdPow2(){
+  const[n,v]=RC(POW2_LIST);
+  return mkSpeed('2ⁿ',`2<sup>${n}</sup> = ?`,v,`2<sup>${n}</sup> = <strong>${v}</strong>`);
+}
+function genSpdPow3(){
+  const[n,v]=RC(POW3_LIST);
+  return mkSpeed('3ⁿ',`3<sup>${n}</sup> = ?`,v,`3<sup>${n}</sup> = <strong>${v}</strong>`);
+}
+function genSpdCube(){
+  const[n,v]=RC(CUBE_LIST);
+  return mkSpeed('n³',`${n}<sup>3</sup> = ?`,v,`${n}×${n}×${n} = <strong>${v}</strong>`);
+}
+function genSpdPow5(){
+  const[n,v]=RC(POW5_LIST);
+  return mkSpeed('5ⁿ',`5<sup>${n}</sup> = ?`,v,`5<sup>${n}</sup> = <strong>${v}</strong>`);
+}
+
+const GENS_SPEED={
+  tout:   [genSpdCarre,genSpdRacine,genSpdPow2,genSpdPow3,genSpdCube,genSpdPow5],
+  carres: [genSpdCarre],
+  racines:[genSpdRacine],
+  puiss2: [genSpdPow2],
+  puiss3: [genSpdPow3],
+  cubes:  [genSpdCube],
+  puiss5: [genSpdPow5]
+};
+
+/* ────────────────────────────────────────────────
+   TRAINING STATE
+   ──────────────────────────────────────────────── */
+const T={running:false,startTime:0,endTime:0,intv:null,topic:'puissances',input:'mcq',durMs:5*60*1000,current:null,deck:[],idx:0,results:[],streak:0,maxStreak:0,locked:false};
+
+function updT(){const c=T.results.filter(r=>r.ok).length,tot=T.results.length;document.getElementById('countT').textContent=tot;document.getElementById('okT').textContent=c;document.getElementById('errT').textContent=tot-c;document.getElementById('streakT').textContent=`🔥 ${T.streak}`;}
+
+function rndQT(){
+  if(T.idx>=T.deck.length)T.deck=buildDeckT(T.topic,150);
+  T.current=T.deck[T.idx++];T.locked=false;
+  const q=T.current;
+  const badge=document.getElementById('badgeT');badge.textContent=q.badgeLabel;badge.className=`topic-badge ${q.badgeClass}`;
+  document.getElementById('qtextT').textContent=q.qText;
+  document.getElementById('qexprT').innerHTML=q.qHTML;
+  document.getElementById('fbT').innerHTML='';
+  const isVF=q.isVF,isFill=!isVF&&T.input==='fill';
+  ['choicesT','vfT','fillWT'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  if(isVF){document.getElementById('vfT').classList.remove('hidden');['tvfTrue','tvfFalse'].forEach(id=>{const b=document.getElementById(id);b.disabled=false;b.className=b.id==='tvfTrue'?'vf-btn vf-true':'vf-btn vf-false';});document.getElementById('kbdT').style.display='none';}
+  else if(isFill){document.getElementById('fillWT').classList.remove('hidden');document.getElementById('fillLblT').innerHTML=q.fillLbl;const inp=document.getElementById('fillInpT');inp.value='';inp.className='fill-input';inp.disabled=false;document.getElementById('fillSubT').disabled=false;inp.focus();document.getElementById('kbdT').style.display='none';}
+  else{document.getElementById('choicesT').classList.remove('hidden');['tc0','tc1','tc2'].forEach((id,i)=>{const b=document.getElementById(id);b.innerHTML=`${i+1}) ${q.opts[i]||''}`;b.className='choice-btn';b.disabled=false;});document.getElementById('kbdT').style.display='block';}
+}
+
+function fbShowT(ok,c,hint){document.getElementById('fbT').innerHTML=ok?`<span class="feedback-icon">✅</span><div><div class="feedback-text ok">Correct !</div></div>`:`<span class="feedback-icon">❌</span><div><div class="feedback-text bad">Bonne réponse : <span style="font-family:var(--mono);color:var(--ok)">${c}</span></div><div class="feedback-hint">${hint||''}</div></div>`;}
+
+function recT(chosen,ok){ok?T.streak++:T.streak=0;if(T.streak>T.maxStreak)T.maxStreak=T.streak;T.results.push({badge:T.current.badgeLabel,expr:T.current.qHTML.replace(/<[^>]+>/g,''),chosen,correct:T.current.correct,ok});const d=document.createElement('div');d.className='dot '+(ok?'ok':'bad');document.getElementById('dotsT').appendChild(d);document.getElementById('streakFillT').style.width=Math.min(T.streak*10,100)+'%';updT();}
+
+function ansMCQT(i){if(!T.running||T.locked)return;T.locked=true;const ok=T.current.opts[i]===T.current.correct;['tc0','tc1','tc2'].forEach((id,idx)=>{const b=document.getElementById(id);b.disabled=true;if(T.current.opts[idx]===T.current.correct)b.classList.add('correct');else if(idx===i&&!ok)b.classList.add('wrong');});recT(T.current.opts[i],ok);fbShowT(ok,T.current.correct,T.current.hint);setTimeout(()=>{if(T.running)rndQT();},ok?500:1100);}
+function ansVFT(ch){if(!T.running||T.locked)return;T.locked=true;const ok=ch===T.current.correct;document.getElementById('tvfTrue').disabled=true;document.getElementById('tvfFalse').disabled=true;const id=T.current.correct==='Vrai'?'tvfTrue':'tvfFalse';document.getElementById(id).classList.add('correct');if(!ok)document.getElementById(T.current.correct==='Vrai'?'tvfFalse':'tvfTrue').classList.add('wrong');recT(ch,ok);fbShowT(ok,T.current.correct,T.current.hint);setTimeout(()=>{if(T.running)rndQT();},ok?600:1300);}
+function ansFillT(){if(!T.running||T.locked)return;T.locked=true;const inp=document.getElementById('fillInpT');const val=inp.value.trim().replace(/\s/g,'').replace(/−/g,'-');const ok=val.toLowerCase()===T.current.fillAnswer.trim().toLowerCase();inp.disabled=true;document.getElementById('fillSubT').disabled=true;inp.className='fill-input '+(ok?'correct':'wrong');recT(val,ok);fbShowT(ok,T.current.fillAnswer,T.current.hint);setTimeout(()=>{if(T.running)rndQT();},ok?500:1200);}
+
+function tickT(){const rem=T.endTime-Date.now(),s=Math.max(0,Math.ceil(rem/1000));document.getElementById('timerT').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;if(rem<=0)finT();}
+
+function startT(){T.results=[];T.streak=0;T.maxStreak=0;T.locked=false;document.getElementById('dotsT').innerHTML='';document.getElementById('streakFillT').style.width='0%';document.getElementById('recapT').classList.add('hidden');updT();T.deck=buildDeckT(T.topic,150);T.idx=0;T.running=true;T.startTime=Date.now();T.endTime=T.startTime+T.durMs;document.getElementById('startBtnT').disabled=true;document.getElementById('resetBtnT').disabled=false;document.querySelectorAll('.topic-btn,.input-btn,.dur-pill').forEach(b=>b.disabled=true);rndQT();tickT();T.intv=setInterval(tickT,250);}
+function finT(){if(!T.running)return;T.running=false;clearInterval(T.intv);document.getElementById('startBtnT').disabled=false;document.getElementById('resetBtnT').disabled=false;document.querySelectorAll('.topic-btn,.input-btn,.dur-pill').forEach(b=>b.disabled=false);document.getElementById('timerT').textContent='00:00';document.getElementById('qexprT').textContent='Temps écoulé ! 🎉';document.getElementById('qtextT').textContent='Consulte le récapitulatif.';document.getElementById('badgeT').classList.add('hidden');['choicesT','vfT','fillWT'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('kbdT').style.display='none';document.getElementById('fbT').innerHTML='';recapT();}
+function resetT(){T.running=false;clearInterval(T.intv);Object.assign(T,{results:[],streak:0,maxStreak:0,current:null,deck:[],idx:0,locked:false});const s=Math.round(T.durMs/1000);document.getElementById('timerT').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;document.getElementById('qexprT').innerHTML='🎯 Prêt ?';document.getElementById('qtextT').textContent='Choisis un thème et clique sur "Démarrer"';document.getElementById('badgeT').classList.add('hidden');document.getElementById('dotsT').innerHTML='';document.getElementById('streakFillT').style.width='0%';document.getElementById('recapT').classList.add('hidden');document.getElementById('choicesT').classList.remove('hidden');['tc0','tc1','tc2'].forEach(id=>{const b=document.getElementById(id);b.textContent='';b.disabled=true;b.className='choice-btn';});['vfT','fillWT'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('kbdT').style.display='none';document.getElementById('fbT').innerHTML='';document.getElementById('startBtnT').disabled=false;document.getElementById('resetBtnT').disabled=true;document.querySelectorAll('.topic-btn,.input-btn,.dur-pill').forEach(b=>b.disabled=false);updT();}
+function recapT(){const tot=T.results.length,cor=T.results.filter(r=>r.ok).length,pct=tot===0?0:Math.round(cor/tot*100);const msgs=[[90,'🏆 Exceptionnel !'],[75,'⭐ Très bien !'],[60,'👍 Bien !'],[40,'💪 Continue !'],[0,'📚 Entraîne-toi régulièrement !']];document.getElementById('recapStatsT').innerHTML=`<div class="recap-box ok"><div class="big">${cor}</div><div class="lbl">Corrects</div></div><div class="recap-box bad"><div class="big">${tot-cor}</div><div class="lbl">Erreurs</div></div><div class="recap-box"><div class="big">${pct}%</div><div class="lbl">Réussite</div></div><div class="recap-box"><div class="big">${T.maxStreak}🔥</div><div class="lbl">Série max</div></div>`;document.getElementById('motivT').textContent=msgs.find(([t])=>pct>=t)[1];const tb=document.getElementById('recapBodyT');tb.innerHTML='';T.results.forEach((r,i)=>{const tr=document.createElement('tr');tr.className=r.ok?'ok-row':'bad-row';tr.innerHTML=`<td>${i+1}</td><td>${r.badge}</td><td class="formula">${r.expr}</td><td class="formula">${r.chosen||'—'}</td><td class="formula">${r.correct}</td><td>${r.ok?'✅':'❌'}</td>`;tb.appendChild(tr);});document.getElementById('recapT').classList.remove('hidden');document.getElementById('recapT').scrollIntoView({behavior:'smooth',block:'start'});}
+
+/* ────────────────────────────────────────────────
+   SPEED STATE
+   ──────────────────────────────────────────────── */
+const S={running:false,startTime:0,endTime:0,intv:null,cat:'tout',durMs:60*1000,current:null,deck:[],idx:0,results:[],streak:0,maxStreak:0,locked:false};
+
+function updS(){const c=S.results.filter(r=>r.ok).length,tot=S.results.length;document.getElementById('countS').textContent=tot;document.getElementById('okS').textContent=c;document.getElementById('errS').textContent=tot-c;if(S.running&&tot>0){const el=(Date.now()-S.startTime)/60000;document.getElementById('rpmS').textContent=Math.round(c/el);}}
+
+function buildDeckS(){const pool=GENS_SPEED[S.cat];S.deck=Array.from({length:300},()=>RC(pool)());S.idx=0;}
+
+function rndQS(){
+  if(S.idx>=S.deck.length)buildDeckS();
+  S.current=S.deck[S.idx++];S.locked=false;
+  const q=S.current;
+  const badge=document.getElementById('badgeS');badge.textContent=q.badgeLabel;badge.className='topic-badge speed';
+  document.getElementById('qtextS').textContent=q.qText;
+  document.getElementById('qexprS').innerHTML=q.qHTML;
+  document.getElementById('fbS').innerHTML='';
+  document.getElementById('comboS').textContent='';
+  document.getElementById('comboS').classList.remove('active');
+  const inp=document.getElementById('fillInpS');
+  inp.value='';inp.className='fill-input speed-input';inp.disabled=false;
+  document.getElementById('fillSubS').disabled=false;
+  inp.focus();
+}
+
+function flashS(ok){
+  const c=document.getElementById('mainCardS');
+  c.classList.remove('flash-ok','flash-err');
+  void c.offsetWidth;
+  c.classList.add(ok?'flash-ok':'flash-err');
+}
+
+function recS(chosen,ok){
+  ok?S.streak++:S.streak=0;
+  if(S.streak>S.maxStreak)S.maxStreak=S.streak;
+  S.results.push({badge:S.current.badgeLabel,expr:S.current.qHTML.replace(/<[^>]+>/g,''),chosen,correct:S.current.correct,ok});
+  const d=document.createElement('div');d.className='dot '+(ok?'ok':'bad');
+  document.getElementById('dotsS').appendChild(d);
+  document.getElementById('streakFillS').style.width=Math.min(S.streak*10,100)+'%';
+  const combo=document.getElementById('comboS');
+  if(S.streak>=3){combo.textContent=`🔥 ×${S.streak}`;combo.classList.add('active');}
+  else{combo.textContent='';combo.classList.remove('active');}
+  updS();
+}
+
+function ansFillS(){
+  if(!S.running||S.locked)return;S.locked=true;
+  const inp=document.getElementById('fillInpS');
+  const val=inp.value.trim().replace(/\s/g,'');
+  const ok=val===S.current.fillAnswer;
+  flashS(ok);
+  inp.disabled=true;document.getElementById('fillSubS').disabled=true;
+  inp.className='fill-input speed-input '+(ok?'correct':'wrong');
+  if(!ok){document.getElementById('fbS').innerHTML=`<span class="feedback-icon">❌</span><div><div class="feedback-text bad">Bonne réponse : <span style="font-family:var(--mono);color:var(--ok);font-size:20px">${S.current.fillAnswer}</span></div><div class="feedback-hint">${S.current.hint}</div></div>`;}
+  recS(val,ok);
+  setTimeout(()=>{if(S.running)rndQS();},ok?260:850);
+}
+
+function tickS(){const rem=S.endTime-Date.now(),s=Math.max(0,Math.ceil(rem/1000));document.getElementById('timerS').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;if(rem<=0)finS();if(S.running)updS();}
+
+function startS(){S.results=[];S.streak=0;S.maxStreak=0;S.locked=false;document.getElementById('dotsS').innerHTML='';document.getElementById('streakFillS').style.width='0%';document.getElementById('recapS').classList.add('hidden');updS();buildDeckS();S.running=true;S.startTime=Date.now();S.endTime=S.startTime+S.durMs;document.getElementById('startBtnS').disabled=true;document.getElementById('resetBtnS').disabled=false;document.querySelectorAll('.speed-cat-btn,.speed-dur-pill').forEach(b=>b.disabled=true);rndQS();tickS();S.intv=setInterval(tickS,250);}
+function finS(){if(!S.running)return;S.running=false;clearInterval(S.intv);document.getElementById('startBtnS').disabled=false;document.getElementById('resetBtnS').disabled=false;document.querySelectorAll('.speed-cat-btn,.speed-dur-pill').forEach(b=>b.disabled=false);document.getElementById('timerS').textContent='00:00';document.getElementById('qexprS').textContent='🏁 Terminé !';document.getElementById('qtextS').textContent='Consulte ton récapitulatif.';document.getElementById('badgeS').classList.add('hidden');document.getElementById('fillInpS').disabled=true;document.getElementById('fillSubS').disabled=true;recapS();}
+function resetS(){S.running=false;clearInterval(S.intv);Object.assign(S,{results:[],streak:0,maxStreak:0,current:null,deck:[],idx:0,locked:false});const sec=Math.round(S.durMs/1000);document.getElementById('timerS').textContent=`${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`;document.getElementById('qexprS').innerHTML='🚀';document.getElementById('qexprS').className='q-expr speed-q';document.getElementById('qtextS').textContent='Choisis une catégorie et lance le chrono !';document.getElementById('badgeS').classList.add('hidden');document.getElementById('dotsS').innerHTML='';document.getElementById('streakFillS').style.width='0%';document.getElementById('recapS').classList.add('hidden');document.getElementById('comboS').textContent='';document.getElementById('fbS').innerHTML='';document.getElementById('rpmS').textContent='—';const inp=document.getElementById('fillInpS');inp.value='';inp.className='fill-input speed-input';inp.disabled=true;document.getElementById('fillSubS').disabled=true;document.getElementById('startBtnS').disabled=false;document.getElementById('resetBtnS').disabled=true;document.querySelectorAll('.speed-cat-btn,.speed-dur-pill').forEach(b=>b.disabled=false);updS();}
+function recapS(){const tot=S.results.length,cor=S.results.filter(r=>r.ok).length,pct=tot===0?0:Math.round(cor/tot*100);const el=Math.max(1,(S.endTime-S.startTime)/60000),rpm=Math.round(cor/el);const msgs=[[95,'🏆 Parfait ! Mémoire de champion !'],[80,'⭐ Excellent ! Tu les connais par cœur.'],[65,'👍 Bien ! Encore quelques valeurs à consolider.'],[45,'💪 Continue ! La répétition construit les réflexes.'],[0,'📚 Consulte la table de référence et réentraîne-toi !']];document.getElementById('recapStatsS').innerHTML=`<div class="recap-box ok"><div class="big">${cor}</div><div class="lbl">Corrects</div></div><div class="recap-box bad"><div class="big">${tot-cor}</div><div class="lbl">Erreurs</div></div><div class="recap-box"><div class="big">${pct}%</div><div class="lbl">Réussite</div></div><div class="recap-box sp"><div class="big">${rpm}</div><div class="lbl">Rép/min</div></div>`;document.getElementById('motivS').textContent=msgs.find(([t])=>pct>=t)[1];const tb=document.getElementById('recapBodyS');tb.innerHTML='';S.results.forEach((r,i)=>{const tr=document.createElement('tr');tr.className=r.ok?'ok-row':'bad-row';tr.innerHTML=`<td>${i+1}</td><td>${r.badge}</td><td class="formula">${r.expr}</td><td class="formula">${r.chosen||'—'}</td><td class="formula">${r.correct}</td><td>${r.ok?'✅':'❌'}</td>`;tb.appendChild(tr);});document.getElementById('recapS').classList.remove('hidden');document.getElementById('recapS').scrollIntoView({behavior:'smooth',block:'start'});}
+
+/* ────────────────────────────────────────────────
+   TABLE DE RÉFÉRENCE
+   ──────────────────────────────────────────────── */
+function buildRef(){
+  const sq=document.getElementById('refSquares');
+  for(let n=1;n<=20;n++){const c=document.createElement('div');c.className='ref-cell sq';c.innerHTML=`<div class="rc-top">${n}²&nbsp;|&nbsp;√${n*n}</div><div class="rc-val">${n*n}</div>`;sq.appendChild(c);}
+  const p2=document.getElementById('refPow2');
+  for(let n=1;n<=10;n++){const c=document.createElement('div');c.className='ref-cell p2';c.innerHTML=`<div class="rc-top">2<sup>${n}</sup></div><div class="rc-val">${Math.pow(2,n)}</div>`;p2.appendChild(c);}
+  const p3=document.getElementById('refPow3');
+  for(let n=1;n<=6;n++){const c=document.createElement('div');c.className='ref-cell p3';c.innerHTML=`<div class="rc-top">3<sup>${n}</sup></div><div class="rc-val">${Math.pow(3,n)}</div>`;p3.appendChild(c);}
+  const cb=document.getElementById('refCubes');
+  for(let n=1;n<=10;n++){const c=document.createElement('div');c.className='ref-cell cb';c.innerHTML=`<div class="rc-top">${n}³</div><div class="rc-val">${Math.pow(n,3)}</div>`;cb.appendChild(c);}
+  const p5=document.getElementById('refPow5');
+  for(let n=1;n<=5;n++){const c=document.createElement('div');c.className='ref-cell p2';c.innerHTML=`<div class="rc-top">5<sup>${n}</sup></div><div class="rc-val">${Math.pow(5,n)}</div>`;p5.appendChild(c);}
+}
+buildRef();
+
+/* ────────────────────────────────────────────────
+   EVENTS
+   ──────────────────────────────────────────────── */
+// Tabs
+document.querySelectorAll('.mode-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    const w=tab.dataset.tab;
+    document.getElementById('panelTraining').classList.toggle('hidden',w!=='training');
+    document.getElementById('panelSpeed').classList.toggle('hidden',w!=='speed');
+  });
+});
+
+// Training
+document.getElementById('startBtnT').addEventListener('click',startT);
+document.getElementById('resetBtnT').addEventListener('click',resetT);
+document.getElementById('tc0').addEventListener('click',()=>ansMCQT(0));
+document.getElementById('tc1').addEventListener('click',()=>ansMCQT(1));
+document.getElementById('tc2').addEventListener('click',()=>ansMCQT(2));
+document.getElementById('tvfTrue').addEventListener('click',()=>ansVFT('Vrai'));
+document.getElementById('tvfFalse').addEventListener('click',()=>ansVFT('Faux'));
+document.getElementById('fillSubT').addEventListener('click',ansFillT);
+document.getElementById('fillInpT').addEventListener('keydown',e=>{if(e.key==='Enter')ansFillT();});
+document.querySelectorAll('.topic-btn').forEach(btn=>btn.addEventListener('click',()=>{if(T.running)return;document.querySelectorAll('.topic-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');T.topic=btn.dataset.topic;}));
+document.querySelectorAll('.input-btn').forEach(btn=>btn.addEventListener('click',()=>{if(T.running)return;document.querySelectorAll('.input-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');T.input=btn.dataset.input;}));
+document.querySelectorAll('.dur-pill').forEach(pill=>pill.addEventListener('click',()=>{if(T.running)return;document.querySelectorAll('.dur-pill').forEach(p=>p.classList.remove('active'));pill.classList.add('active');T.durMs=parseInt(pill.dataset.sec)*1000;const s=parseInt(pill.dataset.sec);document.getElementById('timerT').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}));
+document.addEventListener('keydown',e=>{
+  if(T.running&&!T.locked&&T.current&&!T.current.isVF&&T.input!=='fill'){if(e.key==='1')ansMCQT(0);if(e.key==='2')ansMCQT(1);if(e.key==='3')ansMCQT(2);}
+  if(T.running&&!T.locked&&T.current&&T.current.isVF){if(e.key==='v'||e.key==='V')ansVFT('Vrai');if(e.key==='f'||e.key==='F')ansVFT('Faux');}
+});
+
+// Speed
+document.getElementById('startBtnS').addEventListener('click',startS);
+document.getElementById('resetBtnS').addEventListener('click',resetS);
+document.getElementById('fillSubS').addEventListener('click',ansFillS);
+document.getElementById('fillInpS').addEventListener('keydown',e=>{if(e.key==='Enter')ansFillS();});
+document.querySelectorAll('.speed-cat-btn').forEach(btn=>btn.addEventListener('click',()=>{if(S.running)return;document.querySelectorAll('.speed-cat-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');S.cat=btn.dataset.cat;}));
+document.querySelectorAll('.speed-dur-pill').forEach(pill=>pill.addEventListener('click',()=>{if(S.running)return;document.querySelectorAll('.speed-dur-pill').forEach(p=>p.classList.remove('active'));pill.classList.add('active');S.durMs=parseInt(pill.dataset.sec)*1000;const s=parseInt(pill.dataset.sec);document.getElementById('timerS').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}));
+
+updT(); updS();
+</script>
+</body>
+</html>
