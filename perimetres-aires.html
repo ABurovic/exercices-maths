@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Périmètres & Aires</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+<style>
+:root{
+  --bleu:#144BA5; --bluebg:#E8F1FF;
+  --vert:#147D32; --vertbg:#E1F8E6;
+  --orange:#BE5000; --orangebg:#FFF2DC;
+  --violet:#6E1996; --violetbg:#F3E8FF;
+  --rouge:#A50A0A; --rougebg:#FFE8E8;
+  --jaune:#9B7300; --jaunebg:#FFFCD7;
+  --rose:#B40064; --rosebg:#FFE6F5;
+  --cyan:#00788C; --cyanbg:#DCF8FC;
+  --gris:#888; --grisbg:#EFEFEF;
+  --white:#fff; --bg:#F7F8FC;
+  --shadow:0 2px 12px rgba(0,0,0,.09);
+  --radius:12px;
+  --nav-h:62px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:#1a1a2e;line-height:1.6;font-size:15px}
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bleu);height:var(--nav-h);display:flex;align-items:center;padding:0 20px;box-shadow:0 2px 16px rgba(20,75,165,.35)}
+.nav-title{font-family:'Playfair Display',serif;color:#fff;font-size:1.15rem;font-weight:700;letter-spacing:-.3px;white-space:nowrap;margin-right:24px}
+.nav-tabs{display:flex;gap:4px;flex-wrap:wrap}
+.nav-tab{background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:.85rem;font-weight:600;transition:all .2s;white-space:nowrap}
+.nav-tab:hover{background:rgba(255,255,255,.22);color:#fff}
+.nav-tab.active{background:#fff;color:var(--bleu)}
+/* ── MAIN ── */
+main{margin-top:var(--nav-h);min-height:calc(100vh - var(--nav-h))}
+.tab-content{display:none;padding:28px 20px 60px;max-width:960px;margin:0 auto}
+.tab-content.active{display:block}
+/* ── HERO ── */
+.hero{background:linear-gradient(135deg,var(--bleu) 0%,#1e6bb8 100%);border-radius:var(--radius);padding:36px 32px;color:#fff;margin-bottom:28px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;right:-40px;top:-40px;width:220px;height:220px;background:rgba(255,255,255,.06);border-radius:50%}
+.hero::after{content:'';position:absolute;right:60px;bottom:-60px;width:160px;height:160px;background:rgba(255,255,255,.04);border-radius:50%}
+.hero h1{font-family:'Playfair Display',serif;font-size:2rem;margin-bottom:6px}
+.hero p{opacity:.85;font-size:.95rem;max-width:520px}
+/* ── SHAPE MOSAIC ── */
+.shape-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px}
+.shape-card{flex:1;min-width:120px;background:#fff;border-radius:10px;padding:16px 12px 12px;text-align:center;box-shadow:var(--shadow);cursor:pointer;transition:transform .18s,box-shadow .18s;border-top:3px solid var(--c,#ccc)}
+.shape-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.13)}
+.shape-card svg{display:block;margin:0 auto 8px}
+.shape-card .sc-name{font-weight:700;font-size:.82rem;color:var(--c)}
+.shape-card .sc-formula{font-size:.78rem;color:#555;margin-top:3px}
+/* ── BOXES ── */
+.box{border-radius:var(--radius);padding:20px;margin-bottom:18px;border-left:4px solid}
+.box-def{background:var(--bluebg);border-color:var(--bleu)}
+.box-formula{background:var(--vertbg);border-color:var(--vert)}
+.box-method{background:var(--orangebg);border-color:var(--orange)}
+.box-warn{background:var(--jaunebg);border-color:var(--jaune)}
+.box-adv{background:var(--violetbg);border-color:var(--violet)}
+.box-ex{background:#f8f9fa;border-color:#ccc}
+.box-info{background:var(--cyanbg);border-color:var(--cyan)}
+.box-expert{background:var(--rosebg);border-color:var(--rose)}
+.box-corr{background:#fff;border-color:var(--rouge)}
+.box h3{font-family:'Playfair Display',serif;font-size:1rem;margin-bottom:10px}
+.box-def h3{color:var(--bleu)}
+.box-formula h3{color:var(--vert)}
+.box-method h3{color:var(--orange)}
+.box-warn h3{color:var(--jaune)}
+.box-adv h3{color:var(--violet)}
+.box-info h3{color:var(--cyan)}
+.box-expert h3{color:var(--rose)}
+.box-corr h3{color:var(--rouge)}
+/* ── SECTION HEADERS ── */
+.section-part{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--bleu);margin:32px 0 18px;padding-bottom:8px;border-bottom:2px solid var(--bluebg)}
+.section-sub{font-family:'Playfair Display',serif;font-size:1.1rem;color:#333;margin:24px 0 12px;display:flex;align-items:center;gap:10px}
+.section-sub .num{background:var(--bleu);color:#fff;width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0}
+/* ── FORMULA GRID ── */
+.formula-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:24px}
+.formula-card{background:#fff;border-radius:10px;padding:16px;box-shadow:var(--shadow);border-top:3px solid var(--c,#ccc);text-align:center}
+.formula-card .fc-name{font-weight:700;font-size:.9rem;color:var(--c);margin-bottom:8px}
+.formula-card .fc-body{font-size:.88rem;color:#444;line-height:1.7}
+.formula-card .fc-p{color:var(--rouge);font-weight:600}
+.formula-card .fc-a{color:var(--vert);font-weight:600}
+/* ── TABLE ── */
+.synth-table{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px}
+.synth-table th{background:var(--bleu);color:#fff;padding:11px 14px;text-align:center;font-size:.85rem;font-weight:700}
+.synth-table td{padding:10px 14px;text-align:center;border-bottom:1px solid #eee;font-size:.88rem}
+.synth-table tr:hover td{background:#f0f5ff}
+.synth-table tr:last-child td{border-bottom:none}
+.p-val{color:var(--rouge);font-weight:600}
+.a-val{color:var(--vert);font-weight:600}
+/* ── 2-COL ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px}
+@media(max-width:600px){.two-col{grid-template-columns:1fr}}
+/* ── SVG FIGURES ── */
+.fig-wrap{background:#fff;border-radius:8px;padding:12px;box-shadow:var(--shadow);margin-bottom:12px;text-align:center}
+/* ── EXERCISES ── */
+.level-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.lvl-btn{padding:7px 18px;border-radius:20px;border:2px solid var(--bleu);background:#fff;color:var(--bleu);font-weight:700;font-size:.85rem;cursor:pointer;transition:all .18s}
+.lvl-btn:hover,.lvl-btn.active{background:var(--bleu);color:#fff}
+.exo-block{background:#fff;border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);margin-bottom:18px}
+.exo-block h4{color:var(--bleu);font-size:.95rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.lvl-badge{background:var(--bleu);color:#fff;padding:2px 10px;border-radius:12px;font-size:.75rem;font-weight:700}
+.exo-item{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.exo-item label{flex:1;min-width:240px;font-size:.9rem}
+.exo-input{width:90px;padding:6px 10px;border:2px solid #ddd;border-radius:7px;font-size:.9rem;font-family:inherit;transition:border-color .2s;text-align:center}
+.exo-input:focus{outline:none;border-color:var(--bleu)}
+.exo-input.correct{border-color:var(--vert);background:#e8f8ec}
+.exo-input.wrong{border-color:var(--rouge);background:#ffe8e8}
+.exo-unit{font-size:.85rem;color:#666}
+.btn-check{background:var(--bleu);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:.88rem;transition:background .2s;margin-top:8px}
+.btn-check:hover{background:#0e3a8a}
+.btn-sol{background:#fff;color:var(--orange);border:2px solid var(--orange);padding:8px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:.85rem;transition:all .2s;margin-top:8px;margin-left:8px}
+.btn-sol:hover{background:var(--orangebg)}
+.solution{background:var(--grisbg);border-radius:8px;padding:14px;margin-top:12px;font-size:.88rem;display:none;border-left:3px solid var(--orange)}
+.solution.visible{display:block}
+.feedback{font-size:.85rem;font-weight:600;margin-top:6px}
+.feedback.ok{color:var(--vert)}
+.feedback.ko{color:var(--rouge)}
+/* ── CALCULATOR ── */
+.calc-wrap{background:#fff;border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);max-width:560px}
+.calc-shape-sel{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.sh-btn{padding:8px 14px;border-radius:8px;border:2px solid #ddd;background:#fff;cursor:pointer;font-size:.82rem;font-weight:600;color:#555;transition:all .18s}
+.sh-btn.active{border-color:var(--bleu);background:var(--bluebg);color:var(--bleu)}
+.calc-inputs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.calc-field label{display:block;font-size:.8rem;font-weight:600;color:#555;margin-bottom:4px}
+.calc-field input{width:100%;padding:9px 12px;border:2px solid #ddd;border-radius:8px;font-size:.95rem;font-family:inherit;transition:border-color .2s}
+.calc-field input:focus{outline:none;border-color:var(--bleu)}
+.btn-calc{width:100%;background:var(--bleu);color:#fff;border:none;padding:12px;border-radius:9px;font-weight:700;font-size:1rem;cursor:pointer;font-family:inherit;transition:background .2s;margin-bottom:16px}
+.btn-calc:hover{background:#0e3a8a}
+.calc-results{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.result-card{border-radius:10px;padding:16px;text-align:center}
+.result-p{background:var(--rougebg)}
+.result-a{background:var(--vertbg)}
+.result-card .rc-label{font-size:.78rem;font-weight:700;color:#555;margin-bottom:4px}
+.result-card .rc-val{font-size:1.4rem;font-weight:700}
+.result-p .rc-val{color:var(--rouge)}
+.result-a .rc-val{color:var(--vert)}
+.result-card .rc-unit{font-size:.78rem;color:#777;margin-top:2px}
+/* ── UNIT CONVERTER ── */
+.unit-conv{background:#fff;border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);max-width:560px;margin-top:20px}
+.unit-chain{display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:center;margin:16px 0;gap:2px}
+.unit-node{padding:8px 12px;border-radius:7px;font-weight:700;font-size:.88rem;text-align:center;min-width:50px}
+.unit-node.ref{background:var(--rougebg);color:var(--rouge)}
+.unit-node.sec{background:var(--vertbg);color:var(--vert)}
+.unit-node.norm{background:var(--bluebg);color:var(--bleu)}
+.unit-arrow{font-size:.7rem;color:var(--rouge);font-weight:700;text-align:center;line-height:1.1;padding:0 2px}
+/* ── MISC ── */
+strong{font-weight:700}
+.tag-rouge{color:var(--rouge);font-weight:700}
+.tag-vert{color:var(--vert);font-weight:700}
+.warn-note{background:var(--jaunebg);border-radius:8px;padding:12px 14px;border-left:3px solid var(--jaune);font-size:.88rem;margin:10px 0}
+.plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px}
+@media(max-width:500px){.plan-grid{grid-template-columns:1fr}}
+.plan-list{font-size:.88rem}
+.plan-list li{padding:3px 0;list-style:none;padding-left:18px;position:relative}
+.plan-list li::before{content:'›';position:absolute;left:0;color:var(--bleu);font-weight:700}
+footer{text-align:center;padding:20px;color:#aaa;font-size:.8rem}
+/* ── QUIZ ── */
+.quiz-hero{background:linear-gradient(135deg,#6E1996,#9b2ad4);border-radius:var(--radius);padding:36px 32px;color:#fff;margin-bottom:28px;position:relative;overflow:hidden}
+.quiz-hero::before{content:'';position:absolute;right:-40px;top:-40px;width:220px;height:220px;background:rgba(255,255,255,.07);border-radius:50%}
+.quiz-hero h1{font-family:'Playfair Display',serif;font-size:2rem;margin-bottom:6px}
+.quiz-hero p{opacity:.85;font-size:.95rem}
+.quiz-setup{background:#fff;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);max-width:600px;margin:0 auto}
+.quiz-setup h3{font-family:'Playfair Display',serif;color:var(--violet);margin-bottom:16px;font-size:1.1rem}
+.quiz-cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.cat-btn{padding:12px 16px;border-radius:10px;border:2px solid #ddd;background:#fff;cursor:pointer;font-size:.88rem;font-weight:600;color:#555;transition:all .18s;text-align:left;display:flex;align-items:center;gap:8px}
+.cat-btn.selected{border-color:var(--violet);background:var(--violetbg);color:var(--violet)}
+.cat-btn .cat-icon{font-size:1.2rem}
+.quiz-diff-row{display:flex;gap:8px;margin-bottom:20px}
+.diff-btn{flex:1;padding:10px;border-radius:8px;border:2px solid #ddd;background:#fff;cursor:pointer;font-size:.85rem;font-weight:700;color:#555;transition:all .18s;text-align:center}
+.diff-btn.selected{border-color:var(--bleu);background:var(--bluebg);color:var(--bleu)}
+.btn-start{width:100%;background:linear-gradient(135deg,#6E1996,#9b2ad4);color:#fff;border:none;padding:14px;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;font-family:inherit;transition:opacity .2s;letter-spacing:.3px}
+.btn-start:hover{opacity:.88}
+/* quiz game */
+.quiz-game{max-width:680px;margin:0 auto;display:none}
+.quiz-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.quiz-progress-wrap{flex:1;min-width:180px}
+.quiz-progress-bar{height:8px;background:#e0e0e0;border-radius:4px;overflow:hidden}
+.quiz-progress-fill{height:100%;background:linear-gradient(90deg,var(--violet),var(--bleu));border-radius:4px;transition:width .4s}
+.quiz-q-count{font-size:.82rem;color:#666;margin-top:4px}
+.quiz-score-badge{background:var(--violetbg);color:var(--violet);font-weight:700;padding:6px 16px;border-radius:20px;font-size:.9rem}
+.quiz-timer{font-size:1.2rem;font-weight:700;color:var(--rouge);width:42px;text-align:center;background:var(--rougebg);border-radius:8px;padding:4px 0}
+.quiz-timer.warn{animation:timerPulse .5s infinite alternate}
+@keyframes timerPulse{from{transform:scale(1)}to{transform:scale(1.15)}}
+.quiz-card{background:#fff;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:16px;position:relative;overflow:hidden}
+.quiz-card .q-cat{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--violet);margin-bottom:10px}
+.quiz-card .q-text{font-size:1.05rem;font-weight:600;color:#1a1a2e;line-height:1.55;margin-bottom:6px}
+.quiz-card .q-hint{font-size:.83rem;color:#777;font-style:italic;margin-bottom:16px}
+.quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:500px){.quiz-options{grid-template-columns:1fr}}
+.q-opt{padding:13px 16px;border-radius:10px;border:2px solid #e0e0e0;background:#fafafa;cursor:pointer;font-size:.92rem;font-weight:500;transition:all .18s;text-align:left;font-family:inherit;color:#1a1a2e;position:relative;overflow:hidden}
+.q-opt:hover:not(:disabled){border-color:var(--violet);background:var(--violetbg);color:var(--violet)}
+.q-opt.correct{border-color:var(--vert)!important;background:#d8f5de!important;color:var(--vert)!important;font-weight:700}
+.q-opt.wrong{border-color:var(--rouge)!important;background:var(--rougebg)!important;color:var(--rouge)!important;font-weight:700}
+.q-opt.reveal{border-color:var(--vert)!important;background:#d8f5de!important;color:var(--vert)!important}
+.q-opt:disabled{cursor:default}
+.quiz-feedback-bar{border-radius:10px;padding:14px 18px;margin-top:12px;font-size:.9rem;font-weight:600;display:none;animation:slideIn .25s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.quiz-feedback-bar.ok{background:#d8f5de;color:var(--vert);border-left:4px solid var(--vert)}
+.quiz-feedback-bar.ko{background:var(--rougebg);color:var(--rouge);border-left:4px solid var(--rouge)}
+.btn-next{background:var(--violet);color:#fff;border:none;padding:11px 28px;border-radius:9px;font-weight:700;cursor:pointer;font-family:inherit;font-size:.9rem;transition:opacity .2s;margin-top:12px;display:none}
+.btn-next:hover{opacity:.85}
+/* results */
+.quiz-results{max-width:600px;margin:0 auto;display:none;text-align:center}
+.quiz-score-circle{width:140px;height:140px;border-radius:50%;margin:0 auto 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:2.5rem;font-weight:900;font-family:'Playfair Display',serif;position:relative}
+.quiz-score-circle.great{background:linear-gradient(135deg,#d8f5de,#a8eebb);color:var(--vert);border:4px solid var(--vert)}
+.quiz-score-circle.good{background:linear-gradient(135deg,var(--bluebg),#c0d8ff);color:var(--bleu);border:4px solid var(--bleu)}
+.quiz-score-circle.ok{background:linear-gradient(135deg,var(--jaunebg),#ffe9a0);color:var(--jaune);border:4px solid var(--jaune)}
+.quiz-score-circle.poor{background:linear-gradient(135deg,var(--rougebg),#ffbdbd);color:var(--rouge);border:4px solid var(--rouge)}
+.quiz-score-circle .sc-sub{font-size:.85rem;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;margin-top:2px}
+.quiz-verdict{font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:8px;color:#1a1a2e}
+.quiz-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.qd-card{background:#fff;border-radius:10px;padding:14px;box-shadow:var(--shadow);text-align:center}
+.qd-card .qdc-val{font-size:1.6rem;font-weight:800;font-family:'Playfair Display',serif}
+.qd-card .qdc-label{font-size:.78rem;color:#888;margin-top:3px}
+.btn-retry{background:linear-gradient(135deg,#6E1996,#9b2ad4);color:#fff;border:none;padding:13px 32px;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;font-family:inherit;margin-top:8px;margin-right:8px;transition:opacity .2s}
+.btn-retry:hover{opacity:.85}
+.quiz-history{text-align:left;margin-top:20px}
+.qh-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;margin-bottom:6px;font-size:.88rem;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.qh-item .qhi-icon{font-size:1.1rem;flex-shrink:0}
+.qh-item .qhi-q{flex:1;color:#333}
+.qh-item .qhi-ans{font-weight:700}
+.qh-item.qh-ok .qhi-ans{color:var(--vert)}
+.qh-item.qh-ko .qhi-ans{color:var(--rouge)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-title">📐 Périmètres & Aires</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('accueil')">Accueil</button>
+    <button class="nav-tab" onclick="showTab('cours')">Cours</button>
+    <button class="nav-tab" onclick="showTab('formules')">Formules</button>
+    <button class="nav-tab" onclick="showTab('exercices')">Exercices</button>
+    <button class="nav-tab" onclick="showTab('calculateur')">Calculateur</button>
+    <button class="nav-tab" onclick="showTab('quiz')">🎯 Quiz</button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════ ACCUEIL ═══════════════════════ -->
+<div id="tab-accueil" class="tab-content active">
+  <div class="hero">
+    <h1>Périmètres & Aires</h1>
+    <p>Du carré aux figures composées — méthodes, formules et applications interactives.</p>
+  </div>
+
+  <!-- Shape mosaic -->
+  <div class="shape-row">
+    <div class="shape-card" style="--c:var(--bleu)" onclick="showTab('cours')">
+      <svg width="60" height="50"><rect x="5" y="5" width="50" height="40" fill="#dce9ff" stroke="#144BA5" stroke-width="2.5" rx="2"/><text x="30" y="29" text-anchor="middle" fill="#144BA5" font-size="10" font-weight="bold">A = c²</text></svg>
+      <div class="sc-name">Carré</div><div class="sc-formula">$\mathcal{P}=4c$</div>
+    </div>
+    <div class="shape-card" style="--c:var(--vert)" onclick="showTab('cours')">
+      <svg width="70" height="50"><rect x="3" y="10" width="64" height="30" fill="#d8f5de" stroke="#147D32" stroke-width="2.5" rx="2"/><text x="35" y="30" text-anchor="middle" fill="#147D32" font-size="9" font-weight="bold">A=L×ℓ</text></svg>
+      <div class="sc-name">Rectangle</div><div class="sc-formula">$\mathcal{P}=2(L+\ell)$</div>
+    </div>
+    <div class="shape-card" style="--c:var(--orange)" onclick="showTab('cours')">
+      <svg width="70" height="55"><polygon points="35,5 5,50 65,50" fill="#ffe8cc" stroke="#BE5000" stroke-width="2.5"/><line x1="35" y1="5" x2="35" y2="50" stroke="#BE5000" stroke-width="1.5" stroke-dasharray="4,3"/><text x="42" y="35" fill="#BE5000" font-size="9" font-weight="bold">bh/2</text></svg>
+      <div class="sc-name">Triangle</div><div class="sc-formula">$\mathcal{A}=\frac{b\times h}{2}$</div>
+    </div>
+    <div class="shape-card" style="--c:var(--violet)" onclick="showTab('cours')">
+      <svg width="60" height="55"><circle cx="30" cy="28" r="23" fill="#eedcff" stroke="#6E1996" stroke-width="2.5"/><line x1="30" y1="28" x2="53" y2="28" stroke="#A50A0A" stroke-width="2"/><text x="42" y="23" fill="#A50A0A" font-size="9" font-weight="bold">r</text></svg>
+      <div class="sc-name">Disque</div><div class="sc-formula">$\mathcal{A}=\pi r^2$</div>
+    </div>
+    <div class="shape-card" style="--c:var(--rose)" onclick="showTab('cours')">
+      <svg width="70" height="55"><polygon points="5,48 65,48 58,10 18,10" fill="#ffdcef" stroke="#B40064" stroke-width="2.5"/><text x="35" y="34" text-anchor="middle" fill="#B40064" font-size="9" font-weight="bold">(B+b)h/2</text></svg>
+      <div class="sc-name">Trapèze</div><div class="sc-formula">$\mathcal{A}=\frac{(B+b)h}{2}$</div>
+    </div>
+    <div class="shape-card" style="--c:var(--cyan)" onclick="showTab('cours')">
+      <svg width="65" height="55"><polygon points="32,5 62,28 32,50 2,28" fill="#c8f5fa" stroke="#00788C" stroke-width="2.5"/><line x1="2" y1="28" x2="62" y2="28" stroke="#00788C" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="32" y1="5" x2="32" y2="50" stroke="#00788C" stroke-width="1.5" stroke-dasharray="4,3"/></svg>
+      <div class="sc-name">Losange</div><div class="sc-formula">$\mathcal{A}=\frac{d_1 d_2}{2}$</div>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="box box-def">
+    <h3>📋 Plan du cours</h3>
+    <div class="plan-grid">
+      <div>
+        <strong style="color:var(--bleu)">Partie A — Figures de base</strong>
+        <ul class="plan-list" style="margin-top:8px">
+          <li>Périmètre vs Aire : différence fondamentale</li>
+          <li>Carré et rectangle</li>
+          <li>Triangle</li>
+          <li>Disque et cercle</li>
+          <li>Parallélogramme</li>
+          <li>Trapèze et losange</li>
+        </ul>
+      </div>
+      <div>
+        <strong style="color:var(--bleu)">Partie B — Approfondissement</strong>
+        <ul class="plan-list" style="margin-top:8px">
+          <li>Tableau synthèse des formules</li>
+          <li>Figures composées</li>
+          <li>Figures avec trous (anneau…)</li>
+          <li>Changements d'unités</li>
+          <li>Applications et problèmes</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+    <div class="box box-formula" style="margin:0;cursor:pointer" onclick="showTab('cours')">
+      <h3>📖 Cours complet</h3>
+      <p style="font-size:.88rem">Toutes les définitions, formules illustrées et exemples résolus.</p>
+    </div>
+    <div class="box box-method" style="margin:0;cursor:pointer" onclick="showTab('exercices')">
+      <h3>✏️ Exercices</h3>
+      <p style="font-size:.88rem">6 niveaux progressifs avec correction automatique.</p>
+    </div>
+    <div class="box box-info" style="margin:0;cursor:pointer" onclick="showTab('calculateur')">
+      <h3>🔢 Calculateur</h3>
+      <p style="font-size:.88rem">Calcule instant de $\mathcal{P}$ et $\mathcal{A}$ pour toute figure.</p>
+    </div>
+    <div class="box box-adv" style="margin:0;cursor:pointer" onclick="showTab('formules')">
+      <h3>📋 Formules</h3>
+      <p style="font-size:.88rem">Tableau de synthèse et conversions d'unités.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ COURS ═══════════════════════ -->
+<div id="tab-cours" class="tab-content">
+
+  <h2 class="section-part">Partie A — Figures de base</h2>
+
+  <!-- 1. Périmètre vs Aire -->
+  <div class="section-sub"><span class="num">1</span>Périmètre et aire : quelle différence ?</div>
+  <div class="box box-def">
+    <h3>Définitions fondamentales</h3>
+    <div class="two-col">
+      <div>
+        <p><strong style="color:var(--rouge)">Périmètre</strong> = longueur du <strong>contour</strong> d'une figure.</p>
+        <p style="margin-top:8px;font-size:.88rem">C'est la distance que parcourt une fourmi qui fait le tour complet de la figure.</p>
+        <p style="margin-top:6px;font-size:.88rem"><strong>Unité :</strong> mètres (m), cm, mm, km…</p>
+        <div class="fig-wrap" style="margin-top:12px">
+          <svg width="160" height="90" viewBox="0 0 160 90">
+            <rect x="15" y="15" width="130" height="60" fill="#ffe8e8" rx="2"/>
+            <rect x="15" y="15" width="130" height="60" fill="none" stroke="#A50A0A" stroke-width="4" rx="2"/>
+            <circle cx="15" cy="15" r="5" fill="#A50A0A"/>
+            <path d="M20,20 L140,20 L140,70 L20,70 L20,21" stroke="#ff6666" stroke-width="1.8" fill="none" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+            <text x="80" y="85" text-anchor="middle" fill="#A50A0A" font-size="10" font-weight="bold" font-family="Plus Jakarta Sans,sans-serif">P = contour</text>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <p><strong style="color:var(--vert)">Aire</strong> = mesure de la <strong>surface intérieure</strong> d'une figure.</p>
+        <p style="margin-top:8px;font-size:.88rem">C'est la quantité de peinture nécessaire pour couvrir la figure.</p>
+        <p style="margin-top:6px;font-size:.88rem"><strong>Unité :</strong> m², cm², mm², km²…</p>
+        <div class="fig-wrap" style="margin-top:12px">
+          <svg width="160" height="90" viewBox="0 0 160 90">
+            <rect x="15" y="15" width="130" height="60" fill="#c8f0d2"/>
+            <line x1="45" y1="15" x2="45" y2="75" stroke="#6EC88A" stroke-width="0.8"/>
+            <line x1="75" y1="15" x2="75" y2="75" stroke="#6EC88A" stroke-width="0.8"/>
+            <line x1="105" y1="15" x2="105" y2="75" stroke="#6EC88A" stroke-width="0.8"/>
+            <line x1="135" y1="15" x2="135" y2="75" stroke="#6EC88A" stroke-width="0.8"/>
+            <line x1="15" y1="45" x2="145" y2="45" stroke="#6EC88A" stroke-width="0.8"/>
+            <rect x="15" y="15" width="130" height="60" fill="none" stroke="#888" stroke-width="1.2"/>
+            <text x="80" y="85" text-anchor="middle" fill="#147D32" font-size="10" font-weight="bold" font-family="Plus Jakarta Sans,sans-serif">A = surface</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="warn-note" style="margin-top:12px">
+      ⚠️ <strong>Attention !</strong> Périmètre et aire sont deux mesures indépendantes. Deux figures avec le même périmètre peuvent avoir des aires différentes, et inversement.
+    </div>
+  </div>
+
+  <!-- 2. Carré et Rectangle -->
+  <div class="section-sub"><span class="num">2</span>Carré et Rectangle</div>
+  <div class="box box-formula">
+    <h3>Formules — Carré et Rectangle</h3>
+    <div class="two-col">
+      <div>
+        <div class="fig-wrap">
+          <svg width="140" height="130" viewBox="0 0 140 130">
+            <rect x="25" y="15" width="90" height="90" fill="#dce9ff" stroke="#144BA5" stroke-width="2.5"/>
+            <line x1="55" y1="105" x2="55" y2="110" stroke="#144BA5" stroke-width="1.5"/>
+            <line x1="85" y1="105" x2="85" y2="110" stroke="#144BA5" stroke-width="1.5"/>
+            <line x1="115" y1="45" x2="120" y2="45" stroke="#144BA5" stroke-width="1.5"/>
+            <line x1="115" y1="75" x2="120" y2="75" stroke="#144BA5" stroke-width="1.5"/>
+            <text x="70" y="65" text-anchor="middle" fill="#144BA5" font-size="11" font-weight="bold" font-family="Plus Jakarta Sans,sans-serif">Carré</text>
+            <text x="70" y="122" text-anchor="middle" fill="#144BA5" font-size="10" font-family="Plus Jakarta Sans,sans-serif" font-style="italic">c</text>
+          </svg>
+        </div>
+        <div style="background:#fff;border:2px solid var(--bleu);border-radius:8px;padding:12px;text-align:center">
+          <span class="tag-rouge">$\mathcal{P}_\square = 4c$</span><br>
+          <span class="tag-vert">$\mathcal{A}_\square = c^2$</span>
+        </div>
+      </div>
+      <div>
+        <div class="fig-wrap">
+          <svg width="160" height="100" viewBox="0 0 160 100">
+            <rect x="10" y="15" width="140" height="65" fill="#d8f5de" stroke="#147D32" stroke-width="2.5"/>
+            <text x="80" y="52" text-anchor="middle" fill="#147D32" font-size="11" font-weight="bold" font-family="Plus Jakarta Sans,sans-serif">Rectangle</text>
+            <text x="80" y="92" text-anchor="middle" fill="#147D32" font-size="10" font-style="italic" font-family="Plus Jakarta Sans,sans-serif">L (longueur)</text>
+            <text x="155" y="55" fill="#147D32" font-size="10" font-style="italic" font-family="Plus Jakarta Sans,sans-serif">ℓ</text>
+          </svg>
+        </div>
+        <div style="background:#fff;border:2px solid var(--vert);border-radius:8px;padding:12px;text-align:center">
+          <span class="tag-rouge">$\mathcal{P}_{rect} = 2(L+\ell)$</span><br>
+          <span class="tag-vert">$\mathcal{A}_{rect} = L \times \ell$</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="box box-ex">
+    <h3>Exemples résolus</h3>
+    <div class="two-col">
+      <div><strong>Carré de côté $7$ cm :</strong><br>
+        $\mathcal{P} = 4 \times 7 =$ <span class="tag-rouge">$28$ cm</span><br>
+        $\mathcal{A} = 7^2 =$ <span class="tag-vert">$49$ cm²</span>
+      </div>
+      <div><strong>Rectangle $L=12$ cm, $\ell=5$ cm :</strong><br>
+        $\mathcal{P} = 2(12+5) = 2\times17 =$ <span class="tag-rouge">$34$ cm</span><br>
+        $\mathcal{A} = 12 \times 5 =$ <span class="tag-vert">$60$ cm²</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Triangle -->
+  <div class="section-sub"><span class="num">3</span>Triangle</div>
+  <div class="box box-formula">
+    <h3>Formules — Triangle</h3>
+    <div class="two-col">
+      <div class="fig-wrap">
+        <svg width="200" height="130" viewBox="0 0 200 130">
+          <polygon points="20,115 180,115 80,15" fill="#ffe8cc" stroke="#BE5000" stroke-width="2.5"/>
+          <line x1="80" y1="15" x2="80" y2="115" stroke="#BE5000" stroke-width="1.5" stroke-dasharray="5,4"/>
+          <rect x="80" y="105" width="10" height="10" fill="none" stroke="#144BA5" stroke-width="1.5"/>
+          <text x="100" y="112" fill="#147D32" font-size="10" font-style="italic" font-family="Plus Jakarta Sans,sans-serif">a (base)</text>
+          <text x="38" y="68" fill="#BE5000" font-size="10" font-style="italic" font-family="Plus Jakarta Sans,sans-serif">b</text>
+          <text x="130" y="68" fill="#BE5000" font-size="10" font-style="italic" font-family="Plus Jakarta Sans,sans-serif">c</text>
+          <text x="62" y="65" fill="#A50A0A" font-size="10" font-style="italic" font-family="Plus Jakarta Sans,sans-serif">h</text>
+          <line x1="55" y1="15" x2="55" y2="115" stroke="#A50A0A" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="15" y="128" fill="#147D32" font-size="9" font-family="Plus Jakarta Sans,sans-serif" font-style="italic">←——— a ———→</text>
+        </svg>
+      </div>
+      <div>
+        <div style="background:#fff;border:2px solid var(--orange);border-radius:8px;padding:14px;text-align:center">
+          <strong>Périmètre :</strong><br>
+          $\mathcal{P} = a + b + c$<br><br>
+          <strong>Aire :</strong><br>
+          $\mathcal{A} = \dfrac{a \times h}{2}$
+        </div>
+        <p style="font-size:.82rem;color:#555;margin-top:10px;font-style:italic">La hauteur $h$ est <strong>perpendiculaire</strong> à la base. Elle peut tomber à l'extérieur du triangle (triangle obtus) !</p>
+      </div>
+    </div>
+  </div>
+  <div class="box box-warn">
+    <h3>⚠️ Attention — Quelle hauteur pour quelle base ?</h3>
+    <p style="font-size:.88rem">À chaque base correspond <strong>une seule</strong> hauteur associée, toujours perpendiculaire à cette base.</p>
+    <p style="margin-top:8px;text-align:center">$\mathcal{A} = \dfrac{a \cdot h_a}{2} = \dfrac{b \cdot h_b}{2} = \dfrac{c \cdot h_c}{2}$</p>
+    <p style="font-size:.83rem;color:#555;margin-top:6px;text-align:center;font-style:italic">Les trois formules donnent le même résultat !</p>
+  </div>
+  <div class="box box-ex">
+    <h3>Exemples résolus</h3>
+    <div class="two-col">
+      <div><strong>Triangle base $8$ cm, hauteur $5$ cm, côtés $6$ et $7$ cm :</strong><br>
+        $\mathcal{P} = 8+6+7 =$ <span class="tag-rouge">$21$ cm</span><br>
+        $\mathcal{A} = \frac{8\times5}{2} =$ <span class="tag-vert">$20$ cm²</span>
+      </div>
+      <div><strong>Triangle rectangle, cathètes $6$ et $4$ cm :</strong><br>
+        <em>Les deux cathètes sont base et hauteur !</em><br>
+        $\mathcal{A} = \frac{6\times4}{2} =$ <span class="tag-vert">$12$ cm²</span><br>
+        $\text{Hyp.} = \sqrt{52} \approx 7{,}21$ cm<br>
+        $\mathcal{P} \approx$ <span class="tag-rouge">$17{,}21$ cm</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Disque et cercle -->
+  <div class="section-sub"><span class="num">4</span>Disque et cercle</div>
+  <div class="box box-formula">
+    <h3>Formules — Cercle et Disque</h3>
+    <div class="two-col">
+      <div class="fig-wrap">
+        <svg width="160" height="150" viewBox="0 0 160 150">
+          <circle cx="80" cy="70" r="58" fill="#eedcff"/>
+          <circle cx="80" cy="70" r="58" fill="none" stroke="#6E1996" stroke-width="2.5"/>
+          <line x1="80" y1="70" x2="138" y2="70" stroke="#A50A0A" stroke-width="2"/>
+          <circle cx="80" cy="70" r="4" fill="#6E1996"/>
+          <text x="109" y="62" fill="#A50A0A" font-size="11" font-style="italic" font-weight="bold" font-family="Plus Jakarta Sans,sans-serif">r</text>
+          <line x1="22" y1="70" x2="138" y2="70" stroke="#144BA5" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <text x="80" y="145" text-anchor="middle" fill="#144BA5" font-size="10" font-family="Plus Jakarta Sans,sans-serif">d = 2r</text>
+          <text x="10" y="75" fill="#6E1996" font-size="10" font-weight="bold" font-family="Plus Jakarta Sans,sans-serif">Disque</text>
+        </svg>
+      </div>
+      <div>
+        <div style="background:#fff;border:2px solid var(--violet);border-radius:8px;padding:14px;text-align:center">
+          <strong>Périmètre (circonférence) :</strong><br>
+          $\mathcal{P} = 2\pi r = \pi d$<br><br>
+          <strong>Aire du disque :</strong><br>
+          $\mathcal{A} = \pi r^2$
+        </div>
+        <div class="warn-note" style="margin-top:10px">
+          <strong>Rappel :</strong> On utilisera $\pi \approx 3$ (sans calculatrice). La valeur exacte est $\pi \approx 3{,}14159\ldots$
+        </div>
+        <p style="font-size:.83rem;margin-top:8px">Le <strong>cercle</strong> est le contour (la ligne) ; le <strong>disque</strong> est la surface pleine.</p>
+      </div>
+    </div>
+  </div>
+  <div class="box box-ex">
+    <h3>Exemples résolus</h3>
+    <div class="two-col">
+      <div><strong>Rayon $r = 5$ cm (avec $\pi\approx3$) :</strong><br>
+        $\mathcal{P} = 2\times3\times5 =$ <span class="tag-rouge">$30$ cm</span><br>
+        $\mathcal{A} = 3\times5^2 = 3\times25 =$ <span class="tag-vert">$75$ cm²</span>
+      </div>
+      <div><strong>Diamètre $d = 6$ cm, donc $r=3$ cm :</strong><br>
+        $\mathcal{P} = 3\times6 =$ <span class="tag-rouge">$18$ cm</span><br>
+        $\mathcal{A} = 3\times3^2 = 3\times9 =$ <span class="tag-vert">$27$ cm²</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Parallélogramme -->
+  <div class="section-sub"><span class="num">5</span>Parallélogramme</div>
+  <div class="box box-formula">
+    <h3>Formules — Parallélogramme</h3>
+    <div class="two-col">
+      <div class="fig-wrap">
+        <svg width="190" height="110" viewBox="0 0 190 110">
+          <polygon points="30,95 160,95 175,20 45,20" fill="#fff3d0" stroke="#9B7300" stroke-width="2.5"/>
+          <line x1="45" y1="20" x2="45" y2="95" stroke="#A50A0A" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <rect x="45" y="85" width="10" height="10" fill="none" stroke="#144BA5" stroke-width="1.5"/>
+          <text x="95" y="108" text-anchor="middle" fill="#147D32" font-size="10" font-style="italic" font-family="Plus Jakarta Sans,sans-serif">b (base)</text>
+          <text x="15" y="60" fill="#A50A0A" font-size="10" font-style="italic" font-family="Plus Jakarta Sans,sans-serif">h</text>
+          <text x="32" y="60" fill="#9B7300" font-size="10" font-style="italic" font-family="Plus Jakarta Sans,sans-serif">a</text>
+        </svg>
+      </div>
+      <div>
+        <div style="background:#fff;border:2px solid var(--jaune);border-radius:8px;padding:14px;text-align:center">
+          $\mathcal{P} = 2(a+b)$<br><br>
+          $\mathcal{A} = b \times h$<br>
+          <em style="font-size:.82rem">($h$ = hauteur perpendiculaire à $b$)</em>
+        </div>
+        <p style="font-size:.83rem;margin-top:10px;color:#555;font-style:italic">Remarque : le rectangle est un cas particulier de parallélogramme où $h = a$.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Trapèze et Losange -->
+  <div class="section-sub"><span class="num">6</span>Trapèze et Losange</div>
+  <div class="box box-formula">
+    <h3>Formules — Trapèze et Losange</h3>
+    <div class="two-col">
+      <div>
+        <strong style="color:var(--rose)">Trapèze</strong> (une paire de côtés parallèles)
+        <div class="fig-wrap" style="margin-top:8px">
+          <svg width="180" height="110" viewBox="0 0 180 110">
+            <polygon points="10,90 170,90 145,20 45,20" fill="#ffdcef" stroke="#B40064" stroke-width="2"/>
+            <line x1="45" y1="20" x2="45" y2="90" stroke="#A50A0A" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <rect x="45" y="80" width="10" height="10" fill="none" stroke="#144BA5" stroke-width="1.5"/>
+            <text x="90" y="105" text-anchor="middle" fill="#B40064" font-size="10" font-family="Plus Jakarta Sans,sans-serif">B (grande base)</text>
+            <text x="95" y="14" text-anchor="middle" fill="#B40064" font-size="10" font-family="Plus Jakarta Sans,sans-serif">b (petite base)</text>
+            <text x="2" y="60" fill="#A50A0A" font-size="10" font-style="italic" font-family="Plus Jakarta Sans,sans-serif">h</text>
+          </svg>
+        </div>
+        <div style="background:#fff;border:2px solid var(--rose);border-radius:8px;padding:10px;text-align:center;font-size:.88rem">
+          <span class="tag-vert">$\mathcal{A} = \dfrac{(B+b)\times h}{2}$</span><br>
+          <span class="tag-rouge" style="font-size:.82rem">$\mathcal{P} = a_1+B+a_2+b$</span>
+        </div>
+      </div>
+      <div>
+        <strong style="color:var(--cyan)">Losange</strong> (4 côtés égaux)
+        <div class="fig-wrap" style="margin-top:8px">
+          <svg width="160" height="110" viewBox="0 0 160 110">
+            <polygon points="80,8 155,55 80,102 5,55" fill="#c8f5fa" stroke="#00788C" stroke-width="2"/>
+            <line x1="5" y1="55" x2="155" y2="55" stroke="#A50A0A" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <line x1="80" y1="8" x2="80" y2="102" stroke="#144BA5" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <circle cx="80" cy="55" r="3" fill="#888"/>
+            <text x="80" y="62" text-anchor="middle" fill="#A50A0A" font-size="10" font-style="italic" font-family="Plus Jakarta Sans,sans-serif">d₁</text>
+            <text x="86" y="30" fill="#144BA5" font-size="10" font-style="italic" font-family="Plus Jakarta Sans,sans-serif">d₂</text>
+            <text x="102" y="28" fill="#00788C" font-size="10" font-style="italic" font-family="Plus Jakarta Sans,sans-serif">c</text>
+          </svg>
+        </div>
+        <div style="background:#fff;border:2px solid var(--cyan);border-radius:8px;padding:10px;text-align:center;font-size:.88rem">
+          <span class="tag-vert">$\mathcal{A} = \dfrac{d_1 \times d_2}{2}$</span><br>
+          <span class="tag-rouge" style="font-size:.82rem">$\mathcal{P} = 4c$</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-part">Partie B — Approfondissement</h2>
+
+  <!-- 8. Figures composées -->
+  <div class="section-sub"><span class="num">8</span>Figures composées</div>
+  <div class="box box-method">
+    <h3>Méthode — Figures composées</h3>
+    <ol style="padding-left:20px;font-size:.9rem;line-height:2">
+      <li><strong>Décomposer</strong> la figure en figures simples connues (rectangles, triangles, demi-cercles…)</li>
+      <li><strong>Calculer</strong> l'aire de chaque partie séparément</li>
+      <li><strong>Additionner</strong> les aires (ou soustraire si une partie est enlevée)</li>
+    </ol>
+    <div class="warn-note" style="margin-top:10px">
+      <strong>Attention pour le périmètre :</strong> compter uniquement les côtés qui sont <strong>sur le contour extérieur</strong>. Les côtés intérieurs (lignes de décomposition) ne font pas partie du périmètre.
+    </div>
+  </div>
+
+  <!-- 9. Figures avec trous -->
+  <div class="section-sub"><span class="num">9</span>Figures avec trous</div>
+  <div class="box box-adv">
+    <h3>Principe — Soustraire une aire</h3>
+    <p style="font-size:.9rem;margin-bottom:10px">Quand une figure est évidée (trou, ouverture) :</p>
+    <p style="text-align:center;font-size:1.1rem">$\mathcal{A}_\text{finale} = \mathcal{A}_\text{extérieure} - \mathcal{A}_\text{intérieure}$</p>
+  </div>
+  <div class="box box-ex">
+    <h3>Exemple — Anneau circulaire</h3>
+    <div class="two-col">
+      <div class="fig-wrap">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="60" fill="#eedcff"/>
+          <circle cx="70" cy="70" r="32" fill="white"/>
+          <circle cx="70" cy="70" r="60" fill="none" stroke="#6E1996" stroke-width="2.5"/>
+          <circle cx="70" cy="70" r="32" fill="none" stroke="#6E1996" stroke-width="2" stroke-dasharray="5,3"/>
+          <line x1="70" y1="70" x2="130" y2="70" stroke="#A50A0A" stroke-width="1.8"/>
+          <line x1="70" y1="70" x2="93" y2="47" stroke="#144BA5" stroke-width="1.8"/>
+          <text x="100" y="65" fill="#A50A0A" font-size="11" font-weight="bold" font-family="Plus Jakarta Sans,sans-serif">R</text>
+          <text x="76" y="55" fill="#144BA5" font-size="11" font-weight="bold" font-family="Plus Jakarta Sans,sans-serif">r</text>
+          <circle cx="70" cy="70" r="3" fill="#333"/>
+        </svg>
+      </div>
+      <div>
+        <p style="font-size:.9rem">$\mathcal{A}_\text{anneau} = \pi R^2 - \pi r^2 = \pi(R^2-r^2)$</p>
+        <p style="font-size:.88rem;margin-top:8px"><strong>Exemple :</strong> $R=5$ cm, $r=3$ cm :</p>
+        <p style="font-size:.88rem">$\mathcal{A} = 3\times(25-9) = 3\times16 =$ <span class="tag-vert">$48$ cm²</span></p>
+        <p style="font-size:.88rem;margin-top:6px">$\mathcal{P} = 2\times3\times5 + 2\times3\times3 = 30+18 =$ <span class="tag-rouge">$48$ cm</span></p>
+        <div class="warn-note" style="margin-top:10px;font-size:.82rem">
+          💡 Lien avec les identités remarquables : $R^2-r^2 = (R-r)(R+r)$
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. Conversions -->
+  <div class="section-sub"><span class="num">10</span>Changements d'unités</div>
+  <div class="box box-info">
+    <h3>Conversions d'unités d'aire</h3>
+    <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px;margin:14px 0">
+      <div class="unit-node norm">km²</div>
+      <div class="unit-arrow">×100<br>→<br>←<br>÷100</div>
+      <div class="unit-node norm">hm²</div>
+      <div class="unit-arrow">×100<br>→<br>←<br>÷100</div>
+      <div class="unit-node norm">dam²</div>
+      <div class="unit-arrow">×100<br>→<br>←<br>÷100</div>
+      <div class="unit-node ref">m²</div>
+      <div class="unit-arrow">×100<br>→<br>←<br>÷100</div>
+      <div class="unit-node norm">dm²</div>
+      <div class="unit-arrow">×100<br>→<br>←<br>÷100</div>
+      <div class="unit-node sec">cm²</div>
+      <div class="unit-arrow">×100<br>→<br>←<br>÷100</div>
+      <div class="unit-node norm">mm²</div>
+    </div>
+    <div class="warn-note">
+      <strong>Règle clé :</strong> pour les aires, on multiplie ou divise par <strong>100</strong> (et non 10 !) à chaque changement d'unité.
+    </div>
+    <div class="two-col" style="margin-top:12px">
+      <div style="font-size:.88rem">
+        <strong>À retenir :</strong><br>
+        $1$ m² = $100$ dm² = $10{,}000$ cm²<br>
+        $1$ cm² = $100$ mm²<br>
+        $1$ km² = $1{,}000{,}000$ m²<br>
+        $1$ ha = $10{,}000$ m²
+      </div>
+      <div style="font-size:.88rem">
+        <strong>Exemples :</strong><br>
+        $3{,}5$ m² = $3{,}5 \times 10{,}000 =$ <span class="tag-rouge">$35{,}000$ cm²</span><br>
+        $450$ mm² = $450 \div 100 =$ <span class="tag-rouge">$4{,}5$ cm²</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════ FORMULES ═══════════════════════ -->
+<div id="tab-formules" class="tab-content">
+  <div class="hero" style="background:linear-gradient(135deg,#147D32,#1a9e42)">
+    <h1>Tableau de synthèse</h1>
+    <p>Toutes les formules de périmètre et d'aire en un coup d'œil.</p>
+  </div>
+
+  <div class="box box-info" style="margin-bottom:20px">
+    <h3>Rappel couleurs</h3>
+    <p style="font-size:.88rem"><span class="tag-rouge">Rouge = Périmètre $\mathcal{P}$</span> &nbsp;|&nbsp; <span class="tag-vert">Vert = Aire $\mathcal{A}$</span> &nbsp;|&nbsp; $\pi \approx 3$ (sans calculatrice)</p>
+  </div>
+
+  <div style="overflow-x:auto">
+  <table class="synth-table">
+    <thead><tr>
+      <th>Figure</th><th>Données</th><th>Périmètre $\mathcal{P}$</th><th>Aire $\mathcal{A}$</th>
+    </tr></thead>
+    <tbody>
+      <tr><td><strong>Carré</strong></td><td>$c$</td><td class="p-val">$4c$</td><td class="a-val">$c^2$</td></tr>
+      <tr><td><strong>Rectangle</strong></td><td>$L, \ell$</td><td class="p-val">$2(L+\ell)$</td><td class="a-val">$L \times \ell$</td></tr>
+      <tr><td><strong>Triangle</strong></td><td>$a,b,c,h$</td><td class="p-val">$a+b+c$</td><td class="a-val">$\dfrac{a \times h}{2}$</td></tr>
+      <tr><td><strong>Cercle / Disque</strong></td><td>$r$</td><td class="p-val">$2\pi r$</td><td class="a-val">$\pi r^2$</td></tr>
+      <tr><td><strong>Parallélogramme</strong></td><td>$a,b,h$</td><td class="p-val">$2(a+b)$</td><td class="a-val">$b \times h$</td></tr>
+      <tr><td><strong>Trapèze</strong></td><td>$B,b,h$</td><td class="p-val">somme des 4 côtés</td><td class="a-val">$\dfrac{(B+b) \times h}{2}$</td></tr>
+      <tr><td><strong>Losange</strong></td><td>$d_1,d_2,c$</td><td class="p-val">$4c$</td><td class="a-val">$\dfrac{d_1 \times d_2}{2}$</td></tr>
+      <tr><td><strong>Secteur angulaire</strong></td><td>$r,\alpha$</td><td class="p-val">$2r + \dfrac{\alpha}{360}\times2\pi r$</td><td class="a-val">$\dfrac{\alpha}{360}\times\pi r^2$</td></tr>
+      <tr><td><strong>Anneau</strong></td><td>$R,r$</td><td class="p-val">$2\pi R + 2\pi r$</td><td class="a-val">$\pi(R^2-r^2)$</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 style="color:var(--bleu);font-family:'Playfair Display',serif;margin:24px 0 14px">Cartes formules</h3>
+  <div class="formula-grid">
+    <div class="formula-card" style="--c:var(--bleu)">
+      <div class="fc-name">Carré</div>
+      <svg width="70" height="60" style="margin:0 auto 8px"><rect x="10" y="5" width="50" height="50" fill="#dce9ff" stroke="#144BA5" stroke-width="2" rx="1"/><text x="35" y="35" text-anchor="middle" fill="#144BA5" font-size="10" font-family="Plus Jakarta Sans,sans-serif" font-style="italic">c</text></svg>
+      <div class="fc-body"><span class="fc-p">P = 4c</span><br><span class="fc-a">A = c²</span></div>
+    </div>
+    <div class="formula-card" style="--c:var(--vert)">
+      <div class="fc-name">Rectangle</div>
+      <svg width="80" height="55" style="margin:0 auto 8px"><rect x="5" y="10" width="70" height="35" fill="#d8f5de" stroke="#147D32" stroke-width="2" rx="1"/><text x="40" y="32" text-anchor="middle" fill="#147D32" font-size="10" font-family="Plus Jakarta Sans,sans-serif">L × ℓ</text></svg>
+      <div class="fc-body"><span class="fc-p">P = 2(L+ℓ)</span><br><span class="fc-a">A = L × ℓ</span></div>
+    </div>
+    <div class="formula-card" style="--c:var(--orange)">
+      <div class="fc-name">Triangle</div>
+      <svg width="80" height="60" style="margin:0 auto 8px"><polygon points="40,5 5,55 75,55" fill="#ffe8cc" stroke="#BE5000" stroke-width="2"/><line x1="40" y1="5" x2="40" y2="55" stroke="#BE5000" stroke-width="1.5" stroke-dasharray="3,2"/></svg>
+      <div class="fc-body"><span class="fc-p">P = a+b+c</span><br><span class="fc-a">A = (b×h)/2</span></div>
+    </div>
+    <div class="formula-card" style="--c:var(--violet)">
+      <div class="fc-name">Disque</div>
+      <svg width="70" height="60" style="margin:0 auto 8px"><circle cx="35" cy="30" r="28" fill="#eedcff" stroke="#6E1996" stroke-width="2"/><line x1="35" y1="30" x2="63" y2="30" stroke="#A50A0A" stroke-width="2"/><text x="49" y="24" fill="#A50A0A" font-size="9" font-family="Plus Jakarta Sans,sans-serif" font-style="italic">r</text></svg>
+      <div class="fc-body"><span class="fc-p">P = 2πr</span><br><span class="fc-a">A = πr²</span></div>
+    </div>
+    <div class="formula-card" style="--c:var(--jaune)">
+      <div class="fc-name">Parallélogramme</div>
+      <svg width="80" height="55" style="margin:0 auto 8px"><polygon points="10,48 70,48 75,10 15,10" fill="#fff3d0" stroke="#9B7300" stroke-width="2"/></svg>
+      <div class="fc-body"><span class="fc-p">P = 2(a+b)</span><br><span class="fc-a">A = b × h</span></div>
+    </div>
+    <div class="formula-card" style="--c:var(--rose)">
+      <div class="fc-name">Trapèze</div>
+      <svg width="80" height="55" style="margin:0 auto 8px"><polygon points="5,48 75,48 65,10 20,10" fill="#ffdcef" stroke="#B40064" stroke-width="2"/></svg>
+      <div class="fc-body"><span class="fc-p">P = somme des 4 côtés</span><br><span class="fc-a">A = (B+b)×h / 2</span></div>
+    </div>
+    <div class="formula-card" style="--c:var(--cyan)">
+      <div class="fc-name">Losange</div>
+      <svg width="75" height="60" style="margin:0 auto 8px"><polygon points="37,4 70,30 37,56 4,30" fill="#c8f5fa" stroke="#00788C" stroke-width="2"/><line x1="4" y1="30" x2="70" y2="30" stroke="#A50A0A" stroke-width="1.5" stroke-dasharray="3,2"/><line x1="37" y1="4" x2="37" y2="56" stroke="#144BA5" stroke-width="1.5" stroke-dasharray="3,2"/></svg>
+      <div class="fc-body"><span class="fc-p">P = 4c</span><br><span class="fc-a">A = d₁×d₂ / 2</span></div>
+    </div>
+    <div class="formula-card" style="--c:var(--rouge)">
+      <div class="fc-name">Anneau</div>
+      <svg width="70" height="60" style="margin:0 auto 8px"><circle cx="35" cy="30" r="28" fill="#eedcff"/><circle cx="35" cy="30" r="14" fill="white"/><circle cx="35" cy="30" r="28" fill="none" stroke="#6E1996" stroke-width="2"/><circle cx="35" cy="30" r="14" fill="none" stroke="#6E1996" stroke-width="1.5" stroke-dasharray="3,2"/></svg>
+      <div class="fc-body"><span class="fc-p">P = 2πR + 2πr</span><br><span class="fc-a">A = π(R²−r²)</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ EXERCICES ═══════════════════════ -->
+<div id="tab-exercices" class="tab-content">
+  <div class="hero" style="background:linear-gradient(135deg,var(--orange),#d4680a)">
+    <h1>Exercices progressifs</h1>
+    <p>Choisis un niveau et entraîne-toi ! Les valeurs sont générées aléatoirement.</p>
+  </div>
+
+  <div class="level-bar" id="levelBar">
+    <button class="lvl-btn active" onclick="setLevel(1,this)">Niveau 1</button>
+    <button class="lvl-btn" onclick="setLevel(2,this)">Niveau 2</button>
+    <button class="lvl-btn" onclick="setLevel(3,this)">Niveau 3</button>
+    <button class="lvl-btn" onclick="setLevel(4,this)">Niveau 4</button>
+    <button class="lvl-btn" onclick="setLevel(5,this)">Niveau 5</button>
+    <button class="lvl-btn" onclick="setLevel(6,this)">Niveau 6</button>
+  </div>
+  <div id="exo-area"></div>
+</div>
+
+<!-- ═══════════════════════ CALCULATEUR ═══════════════════════ -->
+<div id="tab-calculateur" class="tab-content">
+  <div class="hero" style="background:linear-gradient(135deg,var(--cyan),#009ab0)">
+    <h1>Calculateur de figures</h1>
+    <p>Saisis les mesures et obtiens instantanément $\mathcal{P}$ et $\mathcal{A}$.</p>
+  </div>
+
+  <div class="calc-wrap">
+    <p style="font-weight:700;margin-bottom:12px;color:var(--bleu)">Choisir la figure :</p>
+    <div class="calc-shape-sel" id="shapeButtons">
+      <button class="sh-btn active" onclick="setShape('carre',this)">Carré</button>
+      <button class="sh-btn" onclick="setShape('rect',this)">Rectangle</button>
+      <button class="sh-btn" onclick="setShape('tri',this)">Triangle</button>
+      <button class="sh-btn" onclick="setShape('disque',this)">Disque</button>
+      <button class="sh-btn" onclick="setShape('para',this)">Parallélogramme</button>
+      <button class="sh-btn" onclick="setShape('trap',this)">Trapèze</button>
+      <button class="sh-btn" onclick="setShape('losange',this)">Losange</button>
+      <button class="sh-btn" onclick="setShape('anneau',this)">Anneau</button>
+      <button class="sh-btn" onclick="setShape('secteur',this)">Secteur</button>
+    </div>
+    <div id="calc-inputs" class="calc-inputs"></div>
+    <button class="btn-calc" onclick="calculate()">Calculer</button>
+    <div id="calc-results" class="calc-results" style="display:none">
+      <div class="result-card result-p">
+        <div class="rc-label">PÉRIMÈTRE</div>
+        <div class="rc-val" id="res-p">—</div>
+        <div class="rc-unit" id="res-p-unit"></div>
+      </div>
+      <div class="result-card result-a">
+        <div class="rc-label">AIRE</div>
+        <div class="rc-val" id="res-a">—</div>
+        <div class="rc-unit" id="res-a-unit"></div>
+      </div>
+    </div>
+    <div id="calc-formula" style="background:var(--grisbg);border-radius:8px;padding:12px;margin-top:14px;font-size:.88rem;display:none"></div>
+  </div>
+
+  <div class="unit-conv" style="max-width:560px;margin-top:20px">
+    <h3 style="color:var(--cyan);font-family:'Playfair Display',serif;margin-bottom:14px">Convertisseur d'unités d'aire</h3>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+      <div>
+        <label style="font-size:.8rem;font-weight:600;color:#555;display:block;margin-bottom:4px">Valeur</label>
+        <input type="number" id="conv-val" value="1" style="width:100px;padding:8px;border:2px solid #ddd;border-radius:7px;font-size:.95rem" oninput="convert()">
+      </div>
+      <div>
+        <label style="font-size:.8rem;font-weight:600;color:#555;display:block;margin-bottom:4px">Unité</label>
+        <select id="conv-from" style="padding:9px;border:2px solid #ddd;border-radius:7px;font-size:.88rem" onchange="convert()">
+          <option value="6">km²</option>
+          <option value="5">hm²</option>
+          <option value="4">dam²</option>
+          <option value="3" selected>m²</option>
+          <option value="2">dm²</option>
+          <option value="1">cm²</option>
+          <option value="0">mm²</option>
+        </select>
+      </div>
+    </div>
+    <div id="conv-results" style="font-size:.88rem;line-height:2"></div>
+  </div>
+</div>
+
+</main>
+<!-- ═══════════════════════ QUIZ ═══════════════════════ -->
+<div id="tab-quiz" class="tab-content">
+  <div class="quiz-hero">
+    <h1>🎯 Quiz — Périmètres & Aires</h1>
+    <p>Teste tes connaissances en conditions réelles : chrono, score et correction instantanée !</p>
+  </div>
+
+  <div class="quiz-setup" id="quiz-setup">
+    <h3>⚙️ Configure ton quiz</h3>
+    <p style="font-size:.88rem;color:#666;margin-bottom:16px">Choisis les thèmes et la difficulté :</p>
+    <p style="font-size:.85rem;font-weight:700;color:#333;margin-bottom:8px">Thèmes :</p>
+    <div class="quiz-cat-grid">
+      <button class="cat-btn selected" id="cat-formules" onclick="toggleCat('formules',this)"><span class="cat-icon">📐</span>Formules</button>
+      <button class="cat-btn selected" id="cat-calculs" onclick="toggleCat('calculs',this)"><span class="cat-icon">🔢</span>Calculs numériques</button>
+      <button class="cat-btn selected" id="cat-concepts" onclick="toggleCat('concepts',this)"><span class="cat-icon">💡</span>Concepts & définitions</button>
+      <button class="cat-btn selected" id="cat-conversions" onclick="toggleCat('conversions',this)"><span class="cat-icon">🔄</span>Conversions d'unités</button>
+    </div>
+    <p style="font-size:.85rem;font-weight:700;color:#333;margin-bottom:8px">Difficulté :</p>
+    <div class="quiz-diff-row">
+      <button class="diff-btn" id="diff-facile" onclick="setDiff('facile',this)">🟢 Facile</button>
+      <button class="diff-btn selected" id="diff-moyen" onclick="setDiff('moyen',this)">🟡 Moyen</button>
+      <button class="diff-btn" id="diff-difficile" onclick="setDiff('difficile',this)">🔴 Difficile</button>
+    </div>
+    <p style="font-size:.85rem;font-weight:700;color:#333;margin-bottom:8px">Nombre de questions :</p>
+    <div class="quiz-diff-row" style="margin-bottom:24px">
+      <button class="diff-btn" id="nq-5" onclick="setNQ(5,this)">5</button>
+      <button class="diff-btn selected" id="nq-10" onclick="setNQ(10,this)">10</button>
+      <button class="diff-btn" id="nq-15" onclick="setNQ(15,this)">15</button>
+      <button class="diff-btn" id="nq-20" onclick="setNQ(20,this)">20</button>
+    </div>
+    <button class="btn-start" onclick="startQuiz()">🚀 Démarrer le quiz</button>
+  </div>
+
+  <div class="quiz-game" id="quiz-game">
+    <div class="quiz-header">
+      <div class="quiz-progress-wrap">
+        <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="qpfill" style="width:0%"></div></div>
+        <div class="quiz-q-count" id="q-count">Question 1 / 10</div>
+      </div>
+      <div class="quiz-score-badge">⭐ Score : <span id="q-score">0</span></div>
+      <div class="quiz-timer" id="q-timer">20</div>
+    </div>
+    <div class="quiz-card" id="quiz-card">
+      <div class="q-cat" id="q-cat">FORMULES</div>
+      <div class="q-text" id="q-text">Question...</div>
+      <div class="q-hint" id="q-hint"></div>
+      <div class="quiz-options" id="quiz-options"></div>
+      <div class="quiz-feedback-bar" id="quiz-fb"></div>
+      <button class="btn-next" id="btn-next" onclick="nextQuestion()">Question suivante →</button>
+    </div>
+  </div>
+
+  <div class="quiz-results" id="quiz-results">
+    <div class="quiz-score-circle" id="score-circle">
+      <span id="score-pct">0%</span>
+      <span class="sc-sub" id="score-frac">0/0</span>
+    </div>
+    <div class="quiz-verdict" id="quiz-verdict">Résultat</div>
+    <p id="quiz-msg" style="color:#666;font-size:.9rem;margin-bottom:16px"></p>
+    <div class="quiz-detail-grid">
+      <div class="qd-card"><div class="qdc-val" id="qd-ok" style="color:var(--vert)">0</div><div class="qdc-label">✓ Correctes</div></div>
+      <div class="qd-card"><div class="qdc-val" id="qd-ko" style="color:var(--rouge)">0</div><div class="qdc-label">✗ Incorrectes</div></div>
+      <div class="qd-card"><div class="qdc-val" id="qd-time" style="color:var(--bleu)">0s</div><div class="qdc-label">⏱ Temps moyen</div></div>
+    </div>
+    <button class="btn-retry" onclick="restartQuiz()">🔄 Recommencer</button>
+    <button class="btn-retry" style="background:linear-gradient(135deg,var(--bleu),#1e6bb8)" onclick="showTab('accueil')">🏠 Accueil</button>
+    <div class="quiz-history" id="quiz-history"></div>
+  </div>
+</div>
+
+<footer>Cours Périmètres & Aires — Généré depuis le document LaTeX — Interactive Web App</footer>
+
+<!-- ═══════════════════════ QUIZ TAB (injected outside main for simplicity) ═══════════════════════ -->
+
+<script>
+// ── TAB NAVIGATION ──
+function showTab(id){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  const tabs=['accueil','cours','formules','exercices','calculateur','quiz'];
+  const idx=tabs.indexOf(id);
+  document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='exercices' && !exercisesInitialized){initExercises(1);exercisesInitialized=true;}
+  if(id==='calculateur'){setShape('carre',document.querySelector('.sh-btn.active'));convert();}
+}
+
+// ── EXERCISES ──
+let exercisesInitialized=false;
+const PI=3;
+function r(a,b){return Math.round((Math.random()*(b-a)+a)*10)/10;}
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function fmt(x){return Number.isInteger(x)?x:(Math.round(x*100)/100).toLocaleString('fr-CH');}
+
+const levels={
+  1:{title:'Calculs directs',badge:'1',gen:genL1},
+  2:{title:'Trouver une mesure inconnue',badge:'2',gen:genL2},
+  3:{title:'Trapèze, losange, parallélogramme',badge:'3',gen:genL3},
+  4:{title:'Figures composées',badge:'4',gen:genL4},
+  5:{title:'Conversions et applications',badge:'5',gen:genL5},
+  6:{title:'Problèmes ouverts',badge:'6',gen:genL6},
+};
+
+function setLevel(lvl,btn){
+  document.querySelectorAll('.lvl-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  initExercises(lvl);
+}
+
+function initExercises(lvl){
+  const area=document.getElementById('exo-area');
+  area.innerHTML='';
+  const data=levels[lvl].gen();
+  data.forEach((ex,i)=>{
+    const block=document.createElement('div');
+    block.className='exo-block';
+    block.innerHTML=`
+      <h4><span class="lvl-badge">Niveau ${lvl}</span> ${levels[lvl].title} — Question ${i+1}</h4>
+      <div class="exo-item"><label>${ex.question}</label></div>
+      ${ex.inputs.map((inp,j)=>`
+        <div class="exo-item">
+          <label>${inp.label}</label>
+          <input type="number" step="any" class="exo-input" id="inp-${i}-${j}" placeholder="?" />
+          <span class="exo-unit">${inp.unit}</span>
+        </div>`).join('')}
+      <div class="feedback" id="fb-${i}"></div>
+      <button class="btn-check" onclick="checkEx(${i},${JSON.stringify(ex.answers).replace(/"/g,'&quot;')})">Vérifier</button>
+      <button class="btn-sol" onclick="toggleSol(${i})">Solution</button>
+      <div class="solution" id="sol-${i}">${ex.solution}</div>
+    `;
+    area.appendChild(block);
+  });
+  if(window.renderMathInElement) renderMathInElement(area,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+
+function checkEx(i,answers){
+  let allOk=true;
+  answers.forEach((ans,j)=>{
+    const inp=document.getElementById(`inp-${i}-${j}`);
+    const val=parseFloat(inp.value);
+    const ok=Math.abs(val-ans)<Math.max(0.11,Math.abs(ans)*0.01);
+    inp.classList.remove('correct','wrong');
+    inp.classList.add(ok?'correct':'wrong');
+    if(!ok)allOk=false;
+  });
+  const fb=document.getElementById(`fb-${i}`);
+  fb.className='feedback '+(allOk?'ok':'ko');
+  fb.textContent=allOk?'✓ Correct ! Bravo !':'✗ Une ou plusieurs réponses incorrectes. Réessaie ou affiche la solution.';
+}
+
+function toggleSol(i){
+  const sol=document.getElementById(`sol-${i}`);
+  sol.classList.toggle('visible');
+  if(sol.classList.contains('visible')&&window.renderMathInElement)
+    renderMathInElement(sol,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+
+// Level 1: calculs directs
+function genL1(){
+  const exos=[];
+  // Carré
+  const c=ri(3,15);
+  exos.push({question:`Calcule le périmètre et l'aire d'un <strong>carré</strong> de côté $c = ${c}$ cm.`,
+    inputs:[{label:'Périmètre $\\mathcal{P}$ =',unit:'cm'},{label:'Aire $\\mathcal{A}$ =',unit:'cm²'}],
+    answers:[4*c,c*c],
+    solution:`$\\mathcal{P} = 4 \\times ${c} = ${4*c}$ cm &nbsp; | &nbsp; $\\mathcal{A} = ${c}^2 = ${c*c}$ cm²`});
+  // Rectangle
+  const L=ri(8,20),l=ri(3,10);
+  exos.push({question:`Calcule le périmètre et l'aire d'un <strong>rectangle</strong> $L = ${L}$ cm, $\\ell = ${l}$ cm.`,
+    inputs:[{label:'Périmètre $\\mathcal{P}$ =',unit:'cm'},{label:'Aire $\\mathcal{A}$ =',unit:'cm²'}],
+    answers:[2*(L+l),L*l],
+    solution:`$\\mathcal{P} = 2(${L}+${l}) = 2\\times${L+l} = ${2*(L+l)}$ cm &nbsp; | &nbsp; $\\mathcal{A} = ${L}\\times${l} = ${L*l}$ cm²`});
+  // Triangle
+  const a=ri(6,14),b=ri(5,12),c2=ri(5,12),h=ri(3,10);
+  const P3=a+b+c2,A3=a*h/2;
+  exos.push({question:`Calcule $\\mathcal{P}$ et $\\mathcal{A}$ d'un <strong>triangle</strong> de côtés $${a}$, $${b}$, $${c2}$ cm, hauteur sur base $${a}$ vaut $${h}$ cm.`,
+    inputs:[{label:'Périmètre $\\mathcal{P}$ =',unit:'cm'},{label:'Aire $\\mathcal{A}$ =',unit:'cm²'}],
+    answers:[P3,A3],
+    solution:`$\\mathcal{P} = ${a}+${b}+${c2} = ${P3}$ cm &nbsp; | &nbsp; $\\mathcal{A} = \\frac{${a}\\times${h}}{2} = ${A3}$ cm²`});
+  // Disque
+  const rd=ri(3,10);
+  exos.push({question:`Calcule $\\mathcal{P}$ et $\\mathcal{A}$ d'un <strong>disque</strong> de rayon $r = ${rd}$ cm. <em>(utiliser $\\pi\\approx3$)</em>`,
+    inputs:[{label:'Périmètre $\\mathcal{P}$ =',unit:'cm'},{label:'Aire $\\mathcal{A}$ =',unit:'cm²'}],
+    answers:[2*PI*rd,PI*rd*rd],
+    solution:`$\\mathcal{P} = 2\\times3\\times${rd} = ${2*PI*rd}$ cm &nbsp; | &nbsp; $\\mathcal{A} = 3\\times${rd}^2 = 3\\times${rd*rd} = ${PI*rd*rd}$ cm²`});
+  return exos;
+}
+
+// Level 2: trouver une mesure
+function genL2(){
+  const exos=[];
+  // Rectangle, aire connue
+  const L2=ri(8,18),A2=ri(20,100);
+  const l2=A2/L2;
+  exos.push({question:`Un rectangle a une aire $\\mathcal{A} = ${A2}$ cm² et une longueur $L = ${L2}$ cm. Quelle est sa largeur $\\ell$ ?`,
+    inputs:[{label:'Largeur $\\ell$ =',unit:'cm'}],
+    answers:[l2],
+    solution:`$\\ell = \\frac{${A2}}{${L2}} = ${fmt(l2)}$ cm`});
+  // Carré, périmètre connu
+  const P2=ri(20,60)-ri(20,60)%4;
+  const c2=P2/4;
+  exos.push({question:`Un carré a un périmètre $\\mathcal{P} = ${P2}$ cm. Quel est son côté ? Son aire ?`,
+    inputs:[{label:'Côté $c$ =',unit:'cm'},{label:'Aire $\\mathcal{A}$ =',unit:'cm²'}],
+    answers:[c2,c2*c2],
+    solution:`$c = ${P2}\\div 4 = ${c2}$ cm &nbsp; | &nbsp; $\\mathcal{A} = ${c2}^2 = ${c2*c2}$ cm²`});
+  // Disque, aire connue
+  const r2=ri(2,8);
+  const A2d=PI*r2*r2;
+  exos.push({question:`Un disque a une aire $\\mathcal{A} = ${A2d}$ cm². Quel est son rayon ? <em>($\\pi\\approx3$)</em>`,
+    inputs:[{label:'Rayon $r$ =',unit:'cm'}],
+    answers:[r2],
+    solution:`$3\\times r^2 = ${A2d} \\Rightarrow r^2 = ${A2d/3} \\Rightarrow r = ${r2}$ cm`});
+  // Triangle, hauteur inconnue
+  const bt=ri(6,16),At=ri(20,60);
+  const ht=2*At/bt;
+  exos.push({question:`Un triangle a une base $a = ${bt}$ cm et une aire $\\mathcal{A} = ${At}$ cm². Quelle est sa hauteur $h$ ?`,
+    inputs:[{label:'Hauteur $h$ =',unit:'cm'}],
+    answers:[ht],
+    solution:`$${At} = \\frac{${bt}\\times h}{2} \\Rightarrow h = \\frac{2\\times${At}}{${bt}} = ${fmt(ht)}$ cm`});
+  return exos;
+}
+
+// Level 3: formes avancées
+function genL3(){
+  const exos=[];
+  // Trapèze
+  const B=ri(10,20),b=ri(5,B-2),ht=ri(4,10),s1=ri(5,12),s2=ri(5,12);
+  const At=((B+b)*ht)/2, Pt=s1+B+s2+b;
+  exos.push({question:`Calcule l'aire et le périmètre d'un <strong>trapèze</strong> : grande base $B=${B}$ cm, petite base $b=${b}$ cm, hauteur $h=${ht}$ cm, côtés obliques $${s1}$ et $${s2}$ cm.`,
+    inputs:[{label:'Aire $\\mathcal{A}$ =',unit:'cm²'},{label:'Périmètre $\\mathcal{P}$ =',unit:'cm'}],
+    answers:[At,Pt],
+    solution:`$\\mathcal{A} = \\frac{(${B}+${b})\\times${ht}}{2} = \\frac{${(B+b)*ht}}{2} = ${At}$ cm² &nbsp; | &nbsp; $\\mathcal{P} = ${s1}+${B}+${s2}+${b} = ${Pt}$ cm`});
+  // Losange
+  const d1=ri(6,16)*2,d2=ri(4,12)*2;
+  const Al=d1*d2/2;
+  const cl=Math.sqrt((d1/2)**2+(d2/2)**2);
+  exos.push({question:`Calcule l'aire et le côté d'un <strong>losange</strong> de diagonales $d_1 = ${d1}$ cm et $d_2 = ${d2}$ cm.`,
+    inputs:[{label:'Aire $\\mathcal{A}$ =',unit:'cm²'},{label:'Côté $c$ =',unit:'cm'}],
+    answers:[Al,cl],
+    solution:`$\\mathcal{A} = \\frac{${d1}\\times${d2}}{2} = ${Al}$ cm² &nbsp; | &nbsp; $c = \\sqrt{${d1/2}^2+${d2/2}^2} = \\sqrt{${(d1/2)**2+(d2/2)**2}} \\approx ${fmt(Math.round(cl*100)/100)}$ cm`});
+  // Parallélogramme
+  const ba=ri(7,16),ha=ri(4,10),aa=ri(5,12);
+  exos.push({question:`Calcule l'aire et le périmètre d'un <strong>parallélogramme</strong> : base $b=${ba}$ cm, hauteur $h=${ha}$ cm, côté oblique $a=${aa}$ cm.`,
+    inputs:[{label:'Aire $\\mathcal{A}$ =',unit:'cm²'},{label:'Périmètre $\\mathcal{P}$ =',unit:'cm'}],
+    answers:[ba*ha,2*(ba+aa)],
+    solution:`$\\mathcal{A} = ${ba}\\times${ha} = ${ba*ha}$ cm² &nbsp; | &nbsp; $\\mathcal{P} = 2(${ba}+${aa}) = ${2*(ba+aa)}$ cm`});
+  // Secteur
+  const rs=ri(4,10),alpha=90;
+  const As=alpha/360*PI*rs*rs, Ps=2*rs+alpha/360*2*PI*rs;
+  exos.push({question:`Calcule l'aire et le périmètre d'un <strong>secteur angulaire</strong> $\\alpha = 90°$, $r = ${rs}$ cm. <em>($\\pi\\approx3$)</em>`,
+    inputs:[{label:'Aire $\\mathcal{A}$ =',unit:'cm²'},{label:'Périmètre $\\mathcal{P}$ =',unit:'cm'}],
+    answers:[As,Ps],
+    solution:`$\\mathcal{A} = \\frac{90}{360}\\times3\\times${rs}^2 = \\frac{1}{4}\\times${3*rs*rs} = ${As}$ cm² &nbsp; | &nbsp; $\\mathcal{P} = 2\\times${rs} + \\frac{1}{4}\\times2\\times3\\times${rs} = ${2*rs}+${1/4*2*PI*rs} = ${Ps}$ cm`});
+  return exos;
+}
+
+// Level 4: Figures composées
+function genL4(){
+  const exos=[];
+  // Rectangle + demi-disque
+  const Lr=ri(8,16),lr2=ri(4,10);
+  const r4=Lr/2;
+  const A4=Lr*lr2+PI*r4*r4/2;
+  const P4=lr2+Lr+lr2+PI*r4;
+  exos.push({question:`Un rectangle $${Lr}\\times${lr2}$ cm est surmonté d'un demi-disque de diamètre $${Lr}$ cm. <em>($\\pi\\approx3$)</em><br>Calcule l'aire totale et le périmètre extérieur.`,
+    inputs:[{label:'Aire totale $\\mathcal{A}$ =',unit:'cm²'},{label:'Périmètre extérieur $\\mathcal{P}$ =',unit:'cm'}],
+    answers:[A4,P4],
+    solution:`Aire rect. $= ${Lr}\\times${lr2} = ${Lr*lr2}$ cm². Aire demi-disque $= \\frac{3\\times${r4}^2}{2} = ${PI*r4*r4/2}$ cm².<br>$\\mathcal{A} = ${Lr*lr2}+${PI*r4*r4/2} = ${A4}$ cm²<br>$\\mathcal{P} = ${lr2}+${Lr}+${lr2}+3\\times${r4} = ${P4}$ cm`});
+  // Anneau
+  const R5=ri(5,10),r5=ri(2,R5-2);
+  const A5=PI*(R5*R5-r5*r5);
+  const P5=2*PI*R5+2*PI*r5;
+  exos.push({question:`Un anneau a un grand rayon $R=${R5}$ cm et un petit rayon $r=${r5}$ cm. <em>($\\pi\\approx3$)</em><br>Calcule son aire et son périmètre total (deux cercles).`,
+    inputs:[{label:'Aire $\\mathcal{A}$ =',unit:'cm²'},{label:'Périmètre total $\\mathcal{P}$ =',unit:'cm'}],
+    answers:[A5,P5],
+    solution:`$\\mathcal{A} = 3\\times(${R5}^2-${r5}^2) = 3\\times${R5*R5-r5*r5} = ${A5}$ cm²<br>$\\mathcal{P} = 2\\times3\\times${R5}+2\\times3\\times${r5} = ${2*PI*R5}+${2*PI*r5} = ${P5}$ cm`});
+  // Carré avec trou triangulaire
+  const cs6=ri(8,14),bt6=ri(3,Math.floor(cs6/2))*2,ht6=ri(3,Math.floor(cs6/2));
+  const A6=cs6*cs6-bt6*ht6/2;
+  exos.push({question:`Un carré de côté $${cs6}$ cm a un trou triangulaire central (base $${bt6}$ cm, hauteur $${ht6}$ cm). Calcule l'aire restante.`,
+    inputs:[{label:'Aire restante $\\mathcal{A}$ =',unit:'cm²'}],
+    answers:[A6],
+    solution:`Aire carré $= ${cs6}^2 = ${cs6*cs6}$ cm². Aire triangle $= \\frac{${bt6}\\times${ht6}}{2} = ${bt6*ht6/2}$ cm².<br>$\\mathcal{A} = ${cs6*cs6}-${bt6*ht6/2} = ${A6}$ cm²`});
+  return exos;
+}
+
+// Level 5: conversions
+function genL5(){
+  const exos=[];
+  exos.push({question:`Convertis les mesures d'aire suivantes :<br><b>a)</b> $4{,}2$ m² en cm² &nbsp; <b>b)</b> $38\\ 000$ cm² en m²`,
+    inputs:[{label:'a) $4{,}2$ m² =',unit:'cm²'},{label:'b) $38\\ 000$ cm² =',unit:'m²'}],
+    answers:[42000,3.8],
+    solution:`a) $4{,}2\\times10{,}000 = 42\\ 000$ cm² &nbsp; | &nbsp; b) $38\\ 000\\div10\\ 000 = 3{,}8$ m²`});
+  const Ls=ri(5,12),ls=ri(3,Ls-1),potCov=ri(6,12);
+  const As=Ls*ls,nbPots=Math.ceil(As/potCov);
+  exos.push({question:`Une salle $${Ls}$ m $\\times$ $${ls}$ m. Un pot de peinture couvre $${potCov}$ m². Combien de pots faut-il ?`,
+    inputs:[{label:'Nombre de pots =',unit:'pots'}],
+    answers:[nbPots],
+    solution:`Aire $= ${Ls}\\times${ls} = ${As}$ m². Pots $= \\lceil\\frac{${As}}{${potCov}}\\rceil = \\lceil${fmt(As/potCov)}\\rceil = ${nbPots}$ pots.`});
+  const cloture=ri(40,200);
+  const Lopt=cloture/4;
+  const Aopt=Lopt*Lopt;
+  exos.push({question:`On dispose de $${cloture}$ m de clôture pour un enclos rectangulaire. Quelles dimensions maximisent l'aire ?`,
+    inputs:[{label:'Dimension optimale $L$ =',unit:'m'},{label:'Aire maximale $\\mathcal{A}$ =',unit:'m²'}],
+    answers:[Lopt,Aopt],
+    solution:`$2(L+\\ell)=${cloture} \\Rightarrow L+\\ell=${cloture/2}$. Maximum pour $L=\\ell=${Lopt}$ m. $\\mathcal{A}_{max}=${Lopt}^2=${Aopt}$ m² (carré !)`});
+  return exos;
+}
+
+// Level 6: problèmes ouverts
+function genL6(){
+  return [{
+    question:`<em>Paradoxe du périmètre.</em> Donne deux rectangles différents ayant le même périmètre $\\mathcal{P} = 20$ cm mais des aires différentes. Lequel a la plus grande aire ?<br><br>Indice : essaie un $5\\times5$ et un $8\\times2$.`,
+    inputs:[{label:'Aire du rectangle 1 ($5\\times5$) =',unit:'cm²'},{label:'Aire du rectangle 2 ($8\\times2$) =',unit:'cm²'}],
+    answers:[25,16],
+    solution:`$5\\times5=25$ cm² et $8\\times2=16$ cm², les deux ont $\\mathcal{P}=20$ cm. Le <strong>carré</strong> ($5\\times5$) a la plus grande aire. À périmètre fixé, le carré maximise l'aire parmi tous les rectangles.`
+  },{
+    question:`<em>Anneau et identité remarquable.</em> Montre que l'aire d'un anneau $\\mathcal{A}=\\pi R^2-\\pi r^2$ peut s'écrire $\\mathcal{A}=\\pi(R-r)(R+r)$.<br><br>Calcule l'aire d'un anneau $R=7$ cm, $r=5$ cm. <em>($\\pi\\approx3$)</em>`,
+    inputs:[{label:'Aire de l\'anneau =',unit:'cm²'}],
+    answers:[3*(49-25)],
+    solution:`$\\mathcal{A}=3\\times(7^2-5^2)=3\\times(49-25)=3\\times24=${3*24}$ cm². Factorisation : $R^2-r^2=(R-r)(R+r)$ — c'est l'identité remarquable $a^2-b^2$ !`
+  },{
+    question:`<em>Optimisation.</em> On dispose de $60$ m de clôture pour un enclos. Quelle forme rectangulaire maximise l'aire ?<br>Quelle est cette aire maximale ?`,
+    inputs:[{label:'Côté optimal =',unit:'m'},{label:'Aire maximale =',unit:'m²'}],
+    answers:[15,225],
+    solution:`$2(L+\\ell)=60 \\Rightarrow L+\\ell=30$. Aire $=L(30-L)=30L-L^2$, max en $L=15$ m. $\\mathcal{A}_{max}=15\\times15=225$ m² (carré).`
+  }];
+}
+
+// ── CALCULATOR ──
+const shapes={
+  carre:{label:'Carré',fields:[{id:'c',label:'Côté c',unit:''}],
+    calc:v=>({P:4*v.c,A:v.c**2,Pf:`4 × ${v.c} = ${4*v.c}`,Af:`${v.c}² = ${v.c**2}`})},
+  rect:{label:'Rectangle',fields:[{id:'L',label:'Longueur L',unit:''},{id:'l',label:'Largeur ℓ',unit:''}],
+    calc:v=>({P:2*(v.L+v.l),A:v.L*v.l,Pf:`2(${v.L}+${v.l}) = ${2*(v.L+v.l)}`,Af:`${v.L} × ${v.l} = ${v.L*v.l}}`})},
+  tri:{label:'Triangle',fields:[{id:'a',label:'Côté a (base)',unit:''},{id:'b',label:'Côté b',unit:''},{id:'c',label:'Côté c',unit:''},{id:'h',label:'Hauteur h (⊥ à a)',unit:''}],
+    calc:v=>({P:v.a+v.b+v.c,A:v.a*v.h/2,Pf:`${v.a}+${v.b}+${v.c} = ${v.a+v.b+v.c}`,Af:`${v.a}×${v.h}/2 = ${v.a*v.h/2}`})},
+  disque:{label:'Disque (π≈3)',fields:[{id:'r',label:'Rayon r',unit:''}],
+    calc:v=>({P:2*PI*v.r,A:PI*v.r**2,Pf:`2×3×${v.r} = ${2*PI*v.r}`,Af:`3×${v.r}² = ${PI*v.r**2}`})},
+  para:{label:'Parallélogramme',fields:[{id:'b',label:'Base b',unit:''},{id:'h',label:'Hauteur h',unit:''},{id:'a',label:'Côté oblique a',unit:''}],
+    calc:v=>({P:2*(v.a+v.b),A:v.b*v.h,Pf:`2(${v.a}+${v.b}) = ${2*(v.a+v.b)}`,Af:`${v.b}×${v.h} = ${v.b*v.h}`})},
+  trap:{label:'Trapèze',fields:[{id:'B',label:'Grande base B',unit:''},{id:'b',label:'Petite base b',unit:''},{id:'h',label:'Hauteur h',unit:''},{id:'a1',label:'Côté a₁',unit:''},{id:'a2',label:'Côté a₂',unit:''}],
+    calc:v=>({P:v.B+v.b+v.a1+v.a2,A:(v.B+v.b)*v.h/2,Pf:`${v.B}+${v.b}+${v.a1}+${v.a2} = ${v.B+v.b+v.a1+v.a2}`,Af:`(${v.B}+${v.b})×${v.h}/2 = ${(v.B+v.b)*v.h/2}`})},
+  losange:{label:'Losange',fields:[{id:'d1',label:'Diagonale d₁',unit:''},{id:'d2',label:'Diagonale d₂',unit:''},{id:'c',label:'Côté c',unit:''}],
+    calc:v=>({P:4*v.c,A:v.d1*v.d2/2,Pf:`4×${v.c} = ${4*v.c}`,Af:`${v.d1}×${v.d2}/2 = ${v.d1*v.d2/2}`})},
+  anneau:{label:'Anneau (π≈3)',fields:[{id:'R',label:'Grand rayon R',unit:''},{id:'r',label:'Petit rayon r',unit:''}],
+    calc:v=>({P:2*PI*v.R+2*PI*v.r,A:PI*(v.R**2-v.r**2),Pf:`2π(${v.R}+${v.r}) = ${2*PI*(v.R+v.r)}`,Af:`π(${v.R}²-${v.r}²) = ${PI*(v.R**2-v.r**2)}`})},
+  secteur:{label:'Secteur (π≈3)',fields:[{id:'r',label:'Rayon r',unit:''},{id:'alpha',label:'Angle α',unit:'°'}],
+    calc:v=>({P:2*v.r+v.alpha/360*2*PI*v.r,A:v.alpha/360*PI*v.r**2,Pf:`2×${v.r} + α/360×2π×${v.r}`,Af:`α/360 × π×${v.r}²`})},
+};
+let currentShape='carre';
+function setShape(sh,btn){
+  currentShape=sh;
+  document.querySelectorAll('.sh-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const s=shapes[sh];
+  const inp=document.getElementById('calc-inputs');
+  inp.innerHTML=s.fields.map(f=>`
+    <div class="calc-field">
+      <label>${f.label} ${f.unit?'('+f.unit+')':''}</label>
+      <input type="number" id="cf-${f.id}" step="any" placeholder="0" value="">
+    </div>`).join('');
+  document.getElementById('calc-results').style.display='none';
+  document.getElementById('calc-formula').style.display='none';
+}
+function calculate(){
+  const s=shapes[currentShape];
+  const v={};
+  for(const f of s.fields){
+    const val=parseFloat(document.getElementById('cf-'+f.id).value);
+    if(isNaN(val)||val<=0){alert('Saisis des valeurs positives pour tous les champs.');return;}
+    v[f.id]=val;
+  }
+  const res=s.calc(v);
+  document.getElementById('res-p').textContent=fmt(Math.round(res.P*100)/100);
+  document.getElementById('res-a').textContent=fmt(Math.round(res.A*100)/100);
+  const resDiv=document.getElementById('calc-results');
+  resDiv.style.display='grid';
+  const fDiv=document.getElementById('calc-formula');
+  fDiv.style.display='block';
+  fDiv.innerHTML=`<strong>Calcul :</strong><br>$\\mathcal{P} = ${res.Pf}$<br>$\\mathcal{A} = ${res.Af}$`;
+  if(window.renderMathInElement)renderMathInElement(fDiv,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+// Init calculator
+setShape('carre',document.querySelector('.sh-btn.active'));
+
+// ── UNIT CONVERTER ──
+const unitNames=['mm²','cm²','dm²','m²','dam²','hm²','km²'];
+function convert(){
+  const val=parseFloat(document.getElementById('conv-val').value)||0;
+  const from=parseInt(document.getElementById('conv-from').value);
+  const results=document.getElementById('conv-results');
+  let html='';
+  for(let i=6;i>=0;i--){
+    const diff=i-from;
+    const converted=val*Math.pow(100,diff);
+    const formatted=converted>=1e6?converted.toExponential(3):fmt(Math.round(converted*1e6)/1e6);
+    const isRef=i===from;
+    html+=`<span style="display:inline-block;min-width:160px;${isRef?'font-weight:700;color:var(--rouge)':'color:#555'}">${formatted} ${unitNames[i]}</span> `;
+    if(i===4)html+='<br>';
+  }
+  results.innerHTML=html;
+}
+convert();
+
+// ── QUIZ ──
+let quizCats=new Set(['formules','calculs','concepts','conversions']);
+let quizDiff='moyen';
+let quizNQ=10;
+let quizQuestions=[],quizIdx=0,quizScore=0,quizTimer=null,quizTimeLeft=20,quizTimes=[];
+let quizHistory=[];
+
+function toggleCat(c,btn){
+  if(quizCats.has(c)){if(quizCats.size>1){quizCats.delete(c);btn.classList.remove('selected');}}
+  else{quizCats.add(c);btn.classList.add('selected');}
+}
+function setDiff(d,btn){quizDiff=d;document.querySelectorAll('.diff-btn[id^="diff-"]').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');}
+function setNQ(n,btn){quizNQ=n;document.querySelectorAll('.diff-btn[id^="nq-"]').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');}
+
+// ── QUESTION BANK ──
+const QB={
+  formules:[
+    {q:"Quelle est la formule de l'aire d'un carré de côté $c$ ?",opts:["$c^2$","$4c$","$2c^2$","$c \\times 2$"],ans:0,hint:"L'aire d'un carré = côté × côté",expl:"$\\mathcal{A} = c \\times c = c^2$"},
+    {q:"Quelle est la formule du périmètre d'un rectangle ?",opts:["$L \\times \\ell$","$2L + \\ell$","$2(L + \\ell)$","$L + \\ell$"],ans:2,hint:"On fait le tour : 2 longueurs + 2 largeurs",expl:"$\\mathcal{P} = 2(L + \\ell)$"},
+    {q:"Quelle est la formule de l'aire d'un triangle ?",opts:["$b \\times h$","$\\frac{b+h}{2}$","$\\frac{b \\times h}{2}$","$2bh$"],ans:2,hint:"Moitié du rectangle de même base et hauteur",expl:"$\\mathcal{A} = \\frac{\\text{base} \\times h}{2}$"},
+    {q:"Quelle est la formule de l'aire d'un disque ? ($\\pi \\approx 3$)",opts:["$2\\pi r$","$\\pi r^2$","$\\pi d$","$4\\pi r$"],ans:1,hint:"Le périmètre c'est $2\\pi r$, mais l'aire c'est...",expl:"$\\mathcal{A} = \\pi r^2$"},
+    {q:"Quelle est la formule du périmètre d'un losange de côté $c$ ?",opts:["$2c$","$c^2$","$4c$","$d_1 + d_2$"],ans:2,hint:"4 côtés égaux",expl:"$\\mathcal{P} = 4c$ car le losange a 4 côtés égaux"},
+    {q:"Quelle est la formule de l'aire d'un trapèze ?",opts:["$(B+b) \\times h$","$\\frac{(B+b) \\times h}{2}$","$B \\times h$","$\\frac{B \\times b}{2}$"],ans:1,hint:"C'est la moyenne des deux bases × la hauteur",expl:"$\\mathcal{A} = \\frac{(B+b) \\times h}{2}$"},
+    {q:"Quelle est la formule de l'aire d'un losange ?",opts:["$4c$","$c^2$","$\\frac{d_1 \\times d_2}{2}$","$d_1 + d_2$"],ans:2,hint:"Les diagonales se coupent perpendiculairement",expl:"$\\mathcal{A} = \\frac{d_1 \\times d_2}{2}$"},
+    {q:"Quelle est la circonférence d'un cercle de rayon $r$ ?",opts:["$\\pi r^2$","$2\\pi r$","$\\pi r$","$4\\pi r$"],ans:1,hint:"Le périmètre du cercle",expl:"$\\mathcal{P} = 2\\pi r = \\pi d$"},
+    {q:"Aire d'un parallélogramme de base $b$ et hauteur $h$ ?",opts:["$b+h$","$2(b+h)$","$\\frac{b \\times h}{2}$","$b \\times h$"],ans:3,hint:"Comme un rectangle 'penché'",expl:"$\\mathcal{A} = b \\times h$"},
+    {q:"Aire d'un anneau de grands rayon $R$ et petit rayon $r$ ?",opts:["$\\pi(R-r)^2$","$\\pi R^2 + \\pi r^2$","$\\pi(R^2-r^2)$","$2\\pi(R-r)$"],ans:2,hint:"C'est une soustraction d'aires de disques",expl:"$\\mathcal{A} = \\pi R^2 - \\pi r^2 = \\pi(R^2-r^2)$"},
+  ],
+  calculs:[
+    {q:"Calcule l'aire d'un carré de côté $8$ cm.",opts:["$32$ cm²","$16$ cm²","$64$ cm²","$48$ cm²"],ans:2,hint:"$8 \\times 8 = ?$",expl:"$\\mathcal{A} = 8^2 = 64$ cm²"},
+    {q:"Calcule le périmètre d'un rectangle $L=12$ cm, $\\ell=5$ cm.",opts:["$60$ cm","$34$ cm","$17$ cm","$24$ cm"],ans:1,hint:"$2(12+5) = ?$",expl:"$\\mathcal{P} = 2(12+5) = 2 \\times 17 = 34$ cm"},
+    {q:"Aire d'un disque de rayon $4$ cm. ($\\pi \\approx 3$)",opts:["$24$ cm²","$48$ cm²","$12$ cm²","$36$ cm²"],ans:1,hint:"$3 \\times 4^2 = ?$",expl:"$\\mathcal{A} = 3 \\times 16 = 48$ cm²"},
+    {q:"Périmètre d'un triangle de côtés $6$, $8$ et $10$ cm.",opts:["$24$ cm","$26$ cm","$20$ cm","$48$ cm"],ans:0,hint:"$6+8+10 = ?$",expl:"$\\mathcal{P} = 6+8+10 = 24$ cm"},
+    {q:"Aire d'un triangle de base $10$ cm et hauteur $6$ cm.",opts:["$60$ cm²","$30$ cm²","$16$ cm²","$32$ cm²"],ans:1,hint:"$\\frac{10 \\times 6}{2} = ?$",expl:"$\\mathcal{A} = \\frac{10 \\times 6}{2} = 30$ cm²"},
+    {q:"Circonférence d'un cercle de diamètre $10$ cm. ($\\pi \\approx 3$)",opts:["$15$ cm","$30$ cm","$10$ cm","$20$ cm"],ans:1,hint:"$\\pi \\times d = 3 \\times 10 = ?$",expl:"$\\mathcal{P} = \\pi d = 3 \\times 10 = 30$ cm"},
+    {q:"Aire d'un trapèze : $B=10$, $b=6$, $h=4$ cm.",opts:["$32$ cm²","$64$ cm²","$40$ cm²","$24$ cm²"],ans:0,hint:"$\\frac{(10+6) \\times 4}{2} = ?$",expl:"$\\mathcal{A} = \\frac{16 \\times 4}{2} = \\frac{64}{2} = 32$ cm²"},
+    {q:"Aire d'un losange de diagonales $6$ cm et $8$ cm.",opts:["$48$ cm²","$24$ cm²","$14$ cm²","$28$ cm²"],ans:1,hint:"$\\frac{6 \\times 8}{2} = ?$",expl:"$\\mathcal{A} = \\frac{6 \\times 8}{2} = 24$ cm²"},
+    {q:"Aire d'un anneau : $R=5$ cm, $r=3$ cm. ($\\pi\\approx3$)",opts:["$48$ cm²","$24$ cm²","$75$ cm²","$27$ cm²"],ans:0,hint:"$3 \\times (5^2 - 3^2) = ?$",expl:"$\\mathcal{A} = 3 \\times (25-9) = 3 \\times 16 = 48$ cm²"},
+    {q:"Périmètre d'un carré d'aire $81$ cm².",opts:["$9$ cm","$36$ cm","$18$ cm","$27$ cm"],ans:1,hint:"D'abord trouve le côté : $c = \\sqrt{81}$",expl:"$c = \\sqrt{81} = 9$ cm, donc $\\mathcal{P} = 4 \\times 9 = 36$ cm"},
+  ],
+  concepts:[
+    {q:"Que mesure le périmètre d'une figure ?",opts:["Sa surface intérieure","La longueur de son contour","Sa hauteur","Son volume"],ans:1,hint:"Une fourmi qui fait le tour...",expl:"Le périmètre est la longueur du contour (le tour de la figure)."},
+    {q:"Que mesure l'aire d'une figure ?",opts:["La longueur du contour","La hauteur","La surface intérieure","Le nombre de côtés"],ans:2,hint:"Combien de peinture pour couvrir ?",expl:"L'aire mesure la surface intérieure (en unités carrées : cm², m²…)"},
+    {q:"Quelle unité utilise-t-on pour l'aire ?",opts:["cm","cm²","cm³","m"],ans:1,hint:"Unité au carré !",expl:"L'aire s'exprime en unités au carré : cm², m², mm²…"},
+    {q:"Un carré et un rectangle peuvent-ils avoir le même périmètre mais des aires différentes ?",opts:["Oui, toujours","Non, jamais","Oui, c'est possible","Seulement si même côté"],ans:2,hint:"Essaie $5\\times5$ et $8\\times2$...",expl:"Oui ! Un carré $5\\times5$ et un rectangle $8\\times2$ ont tous deux $\\mathcal{P}=20$ cm, mais aires $25$ et $16$ cm²."},
+    {q:"Quelle figure maximise l'aire à périmètre fixé (parmi les rectangles) ?",opts:["Le rectangle le plus long","Le carré","Le rectangle le plus large","Aucun"],ans:1,hint:"Isopérimétrie !",expl:"À périmètre fixé, le carré maximise l'aire parmi tous les rectangles."},
+    {q:"La hauteur d'un triangle est toujours...",opts:["Sur la base","Parallèle à la base","Perpendiculaire à la base","Égale à la base"],ans:2,hint:"Elle forme un angle droit avec la base",expl:"La hauteur est perpendiculaire (⊥) à sa base associée."},
+    {q:"Le cercle et le disque : quelle est la différence ?",opts:["Ce sont des synonymes","Le cercle est le contour, le disque est la surface","Le disque est le contour","Aucune différence"],ans:1,hint:"Cercle = ligne, Disque = surface",expl:"Le cercle est la courbe (le contour), le disque est la surface pleine."},
+    {q:"L'aire d'un anneau $\\pi(R^2-r^2)$ peut aussi s'écrire :",opts:["$\\pi(R+r)^2$","$\\pi(R-r)^2$","$\\pi(R-r)(R+r)$","$2\\pi(R-r)$"],ans:2,hint:"Identité remarquable $a^2-b^2 = ?$",expl:"$R^2-r^2 = (R-r)(R+r)$ — c'est l'identité remarquable !"},
+    {q:"Pour une figure composée, comment calcule-t-on l'aire totale ?",opts:["On prend la plus grande aire","On multiplie les aires","On additionne (ou soustrait) les aires des parties","On prend la moyenne"],ans:2,hint:"Décomposer, calculer, puis...",expl:"On décompose en figures simples, calcule chaque aire, puis on additionne (ou soustrait si trou)."},
+    {q:"Quel est le lien entre le rayon et le diamètre ?",opts:["$d = r/2$","$d = 2r$","$d = r^2$","$d = r+2$"],ans:1,hint:"Le diamètre traverse le centre de bord à bord",expl:"$d = 2r$, donc $r = d/2$."},
+  ],
+  conversions:[
+    {q:"$1$ m² = ? cm²",opts:["$100$ cm²","$1\\,000$ cm²","$10\\,000$ cm²","$100\\,000$ cm²"],ans:2,hint:"$1$ m = $100$ cm, donc $1$ m² = $100 \\times 100$ cm²",expl:"$1$ m² $= 100 \\times 100 = 10\\,000$ cm²"},
+    {q:"$1$ cm² = ? mm²",opts:["$10$ mm²","$100$ mm²","$1\\,000$ mm²","$10\\,000$ mm²"],ans:1,hint:"$1$ cm = $10$ mm, donc $1$ cm² = ?",expl:"$1$ cm² $= 10 \\times 10 = 100$ mm²"},
+    {q:"$3{,}5$ m² = ? cm²",opts:["$350$ cm²","$3\\,500$ cm²","$35\\,000$ cm²","$350\\,000$ cm²"],ans:2,hint:"$1$ m² = $10\\,000$ cm²",expl:"$3{,}5 \\times 10\\,000 = 35\\,000$ cm²"},
+    {q:"$500$ mm² = ? cm²",opts:["$5$ cm²","$50$ cm²","$0{,}5$ cm²","$5\\,000$ cm²"],ans:0,hint:"$\\div 100$ pour passer de mm² à cm²",expl:"$500 \\div 100 = 5$ cm²"},
+    {q:"Combien vaut $1$ ha (hectare) en m² ?",opts:["$100$ m²","$1\\,000$ m²","$10\\,000$ m²","$100\\,000$ m²"],ans:2,hint:"$1$ ha = $100$ m $\\times$ $100$ m",expl:"$1$ ha $= 100 \\times 100 = 10\\,000$ m²"},
+    {q:"$2$ km² = ? m²",opts:["$2\\,000$ m²","$200\\,000$ m²","$2\\,000\\,000$ m²","$20\\,000$ m²"],ans:2,hint:"$1$ km = $1\\,000$ m, donc $1$ km² = ?",expl:"$1$ km² $= 1\\,000\\,000$ m², donc $2$ km² $= 2\\,000\\,000$ m²"},
+    {q:"Pour passer de m² à cm², on multiplie par :",opts:["$10$","$100$","$1\\,000$","$10\\,000$"],ans:3,hint:"$1$ m² = $10\\,000$ cm²",expl:"On multiplie par $10\\,000$ : $\\times 100$ (m²→dm²) puis $\\times 100$ (dm²→cm²)"},
+    {q:"$45\\,000$ cm² = ? m²",opts:["$45$ m²","$4{,}5$ m²","$450$ m²","$0{,}45$ m²"],ans:1,hint:"$\\div 10\\,000$ pour passer de cm² à m²",expl:"$45\\,000 \\div 10\\,000 = 4{,}5$ m²"},
+    {q:"Pour les aires, chaque changement d'unité multiplie ou divise par :",opts:["$10$","$100$","$1\\,000$","$10\\,000$"],ans:1,hint:"Pas par 10 comme pour les longueurs !",expl:"Pour les aires, chaque changement d'unité multiplie ou divise par $100$ (car $10^2=100$)."},
+    {q:"$0{,}7$ km² = ? m²",opts:["$700$ m²","$7\\,000$ m²","$70\\,000$ m²","$700\\,000$ m²"],ans:3,hint:"$1$ km² = $1\\,000\\,000$ m²",expl:"$0{,}7 \\times 1\\,000\\,000 = 700\\,000$ m²"},
+  ]
+};
+
+// Filter by difficulty
+const difficultyMap={
+  facile:{formules:[0,1,2,3,4],calculs:[0,1,2,3,4],concepts:[0,1,2,3,4],conversions:[0,1,2,3,4]},
+  moyen:{formules:[0,1,2,3,4,5,6,7],calculs:[0,1,2,3,4,5,6,7],concepts:[0,1,2,3,4,5,6,7],conversions:[0,1,2,3,4,5,6,7]},
+  difficile:{formules:[5,6,7,8,9],calculs:[5,6,7,8,9],concepts:[5,6,7,8,9],conversions:[5,6,7,8,9]}
+};
+const timeByDiff={facile:30,moyen:20,difficile:12};
+
+function buildQuestionPool(){
+  let pool=[];
+  quizCats.forEach(cat=>{
+    const indices=difficultyMap[quizDiff][cat]||Array.from({length:QB[cat].length},(_,i)=>i);
+    indices.forEach(i=>{if(QB[cat][i])pool.push({...QB[cat][i],cat});});
+  });
+  // shuffle
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+  return pool.slice(0,quizNQ);
+}
+
+function startQuiz(){
+  quizQuestions=buildQuestionPool();
+  if(quizQuestions.length===0){alert('Sélectionne au moins un thème !');return;}
+  quizIdx=0;quizScore=0;quizTimes=[];quizHistory=[];
+  document.getElementById('quiz-setup').style.display='none';
+  document.getElementById('quiz-game').style.display='block';
+  document.getElementById('quiz-results').style.display='none';
+  document.getElementById('q-score').textContent='0';
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q=quizQuestions[quizIdx];
+  const total=quizQuestions.length;
+  document.getElementById('qpfill').style.width=`${(quizIdx/total)*100}%`;
+  document.getElementById('q-count').textContent=`Question ${quizIdx+1} / ${total}`;
+  const catLabels={formules:'📐 Formules',calculs:'🔢 Calculs',concepts:'💡 Concepts',conversions:'🔄 Conversions'};
+  document.getElementById('q-cat').textContent=catLabels[q.cat]||q.cat;
+  document.getElementById('q-text').innerHTML=q.q;
+  document.getElementById('q-hint').textContent=q.hint?`💡 ${q.hint}`:'';
+  const fb=document.getElementById('quiz-fb');
+  fb.style.display='none';fb.className='quiz-feedback-bar';
+  const bnext=document.getElementById('btn-next');
+  bnext.style.display='none';
+  const opts=document.getElementById('quiz-options');
+  opts.innerHTML=q.opts.map((o,i)=>`<button class="q-opt" id="qo-${i}" onclick="selectOpt(${i})">${o}</button>`).join('');
+  if(window.renderMathInElement){
+    renderMathInElement(document.getElementById('quiz-card'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+  }
+  startTimer();
+}
+
+let qStartTime=Date.now();
+function startTimer(){
+  clearInterval(quizTimer);
+  quizTimeLeft=timeByDiff[quizDiff];
+  qStartTime=Date.now();
+  const el=document.getElementById('q-timer');
+  el.textContent=quizTimeLeft;
+  el.className='quiz-timer';
+  quizTimer=setInterval(()=>{
+    quizTimeLeft--;
+    el.textContent=quizTimeLeft;
+    if(quizTimeLeft<=5)el.className='quiz-timer warn';
+    if(quizTimeLeft<=0){clearInterval(quizTimer);timeOut();}
+  },1000);
+}
+
+function timeOut(){
+  disableOpts();
+  const q=quizQuestions[quizIdx];
+  document.getElementById(`qo-${q.ans}`).classList.add('reveal');
+  showFb(false,'⏱ Temps écoulé ! '+q.expl);
+  quizTimes.push(timeByDiff[quizDiff]);
+  quizHistory.push({q:q.q,correct:false,chosen:'—',right:q.opts[q.ans]});
+  document.getElementById('btn-next').style.display='inline-block';
+}
+
+function selectOpt(i){
+  clearInterval(quizTimer);
+  const elapsed=Math.round((Date.now()-qStartTime)/1000);
+  quizTimes.push(elapsed);
+  disableOpts();
+  const q=quizQuestions[quizIdx];
+  const ok=i===q.ans;
+  document.getElementById(`qo-${i}`).classList.add(ok?'correct':'wrong');
+  if(!ok)document.getElementById(`qo-${q.ans}`).classList.add('reveal');
+  if(ok){quizScore++;document.getElementById('q-score').textContent=quizScore;}
+  showFb(ok,ok?`✓ Correct ! ${q.expl}`:`✗ ${q.opts[i]} est faux. ${q.expl}`);
+  quizHistory.push({q:q.q,correct:ok,chosen:q.opts[i],right:q.opts[q.ans]});
+  document.getElementById('btn-next').style.display='inline-block';
+}
+
+function showFb(ok,txt){
+  const fb=document.getElementById('quiz-fb');
+  fb.className='quiz-feedback-bar '+(ok?'ok':'ko');
+  fb.innerHTML=txt;
+  fb.style.display='block';
+  if(window.renderMathInElement)renderMathInElement(fb,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+
+function disableOpts(){
+  document.querySelectorAll('.q-opt').forEach(b=>b.disabled=true);
+}
+
+function nextQuestion(){
+  quizIdx++;
+  if(quizIdx>=quizQuestions.length){showResults();}
+  else{renderQuestion();}
+}
+
+function showResults(){
+  clearInterval(quizTimer);
+  document.getElementById('quiz-game').style.display='none';
+  const res=document.getElementById('quiz-results');
+  res.style.display='block';
+  const total=quizQuestions.length;
+  const pct=Math.round(quizScore/total*100);
+  const circle=document.getElementById('score-circle');
+  circle.className='quiz-score-circle '+(pct>=80?'great':pct>=60?'good':pct>=40?'ok':'poor');
+  document.getElementById('score-pct').textContent=pct+'%';
+  document.getElementById('score-frac').textContent=`${quizScore}/${total}`;
+  const verdicts=['🔴 À retravailler !','🟡 Bien essayé !','🔵 Bon travail !','🟢 Excellent !'];
+  const msgs=["Continue à réviser le cours et les formules.","Tu es sur la bonne voie, quelques révisions s'imposent !","Tu maîtrises bien le sujet, continue comme ça !","Tu maîtrises parfaitement Périmètres & Aires !"];
+  const vi=pct>=80?3:pct>=60?2:pct>=40?1:0;
+  document.getElementById('quiz-verdict').textContent=verdicts[vi];
+  document.getElementById('quiz-msg').textContent=msgs[vi];
+  document.getElementById('qd-ok').textContent=quizScore;
+  document.getElementById('qd-ko').textContent=total-quizScore;
+  const avgTime=quizTimes.length?Math.round(quizTimes.reduce((a,b)=>a+b,0)/quizTimes.length):0;
+  document.getElementById('qd-time').textContent=avgTime+'s';
+  // History
+  const hDiv=document.getElementById('quiz-history');
+  hDiv.innerHTML='<p style="font-weight:700;margin-bottom:10px;color:#333">📋 Détail des réponses :</p>'+
+    quizHistory.map(h=>`
+      <div class="qh-item ${h.correct?'qh-ok':'qh-ko'}">
+        <span class="qhi-icon">${h.correct?'✅':'❌'}</span>
+        <span class="qhi-q">${h.q}</span>
+        <span class="qhi-ans">${h.correct?h.right:'→ '+h.right}</span>
+      </div>`).join('');
+  if(window.renderMathInElement)renderMathInElement(res,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+}
+
+function restartQuiz(){
+  clearInterval(quizTimer);
+  document.getElementById('quiz-results').style.display='none';
+  document.getElementById('quiz-setup').style.display='block';
+}
+</script>
+</body>
+</html>
