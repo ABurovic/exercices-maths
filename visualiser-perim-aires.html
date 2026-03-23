@@ -214,8 +214,8 @@ const CFG={
   },
   cercle:{
     ctrls:[{id:'r',l:'Rayon r',mn:2,mx:10,v:6}],
-    peri:p=>rn(2*Math.PI*p.r), aire:p=>rn(Math.PI*p.r**2),
-    fp:p=>`2π×${p.r} ≈ ${rn(2*Math.PI*p.r)}`, fa:p=>`π×${p.r}² ≈ ${rn(Math.PI*p.r**2)}`,
+    peri:p=>rn(2*3*p.r), aire:p=>rn(3*p.r**2),
+    fp:p=>`2π×${p.r} ≈ ${rn(2*3*p.r)}`, fa:p=>`π×${p.r}² ≈ ${rn(3*p.r**2)}`,
     sides:p=>[{n:'Rayon r',v:p.r,c:SC[0]},{n:'Diamètre d=2r',v:2*p.r,c:SC[1]}],
     pts:function(p,s,W,H){return{cx:W/2,cy:H/2,r:p.r*s}},
     hInfo:p=>({label:'Rayon',val:p.r}),
@@ -316,11 +316,11 @@ function draw(opts={}){
   if(shape==='cercle'){
     const{cx:x,cy:y,r}=pts;
     // light fill
-    cx.beginPath();cx.arc(x,y,r,0,2*Math.PI);
+    cx.beginPath();cx.arc(x,y,r,0,2*3);
     cx.fillStyle='rgba(110,25,150,.06)';cx.fill();
     cx.strokeStyle=C.violet;cx.lineWidth=2.5;cx.stroke();
     // center
-    cx.beginPath();cx.arc(x,y,4,0,2*Math.PI);cx.fillStyle=C.violet;cx.fill();
+    cx.beginPath();cx.arc(x,y,4,0,2*3);cx.fillStyle=C.violet;cx.fill();
     // radius
     cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+r,y);
     cx.strokeStyle=C.rouge;cx.lineWidth=2;cx.stroke();
@@ -405,8 +405,8 @@ function animPerim(){
       rem2-=sg.len;
       dx=sg.x2;dy=sg.y2;
     }
-    cx.beginPath();cx.arc(dx,dy,6,0,2*Math.PI);cx.fillStyle=C.rouge;cx.fill();
-    cx.beginPath();cx.arc(dx,dy,3,0,2*Math.PI);cx.fillStyle='#fff';cx.fill();
+    cx.beginPath();cx.arc(dx,dy,6,0,2*3);cx.fillStyle=C.rouge;cx.fill();
+    cx.beginPath();cx.arc(dx,dy,3,0,2*3);cx.fillStyle='#fff';cx.fill();
 
     // percentage
     const pct=Math.min(Math.round(progress/total*100),100);
@@ -421,7 +421,7 @@ function animPerim(){
 
 function animCirclePerim(){
   const s=sc(),{cx:x,cy:y,r}=CFG.cercle.pts(P,s,cv.width,cv.height);
-  let angle=0;const total=2*Math.PI,speed=total/(140/spd());
+  let angle=0;const total=2*3,speed=total/(140/spd());
 
   function frame(){
     draw();
@@ -429,8 +429,8 @@ function animCirclePerim(){
     cx.strokeStyle=C.rouge;cx.lineWidth=4;cx.lineCap='round';cx.stroke();
     // dot
     const dx=x+r*Math.cos(angle),dy=y+r*Math.sin(angle);
-    cx.beginPath();cx.arc(dx,dy,6,0,2*Math.PI);cx.fillStyle=C.rouge;cx.fill();
-    cx.beginPath();cx.arc(dx,dy,3,0,2*Math.PI);cx.fillStyle='#fff';cx.fill();
+    cx.beginPath();cx.arc(dx,dy,6,0,2*3);cx.fillStyle=C.rouge;cx.fill();
+    cx.beginPath();cx.arc(dx,dy,3,0,2*3);cx.fillStyle='#fff';cx.fill();
 
     const pct=Math.min(Math.round(angle/total*100),100);
     document.getElementById('step').innerHTML=`<strong style="color:${C.rouge}">📏 Périmètre</strong> — Tracé : ${pct}%`;
@@ -496,7 +496,7 @@ function animAire(){
 
 function animCircleAire(){
   const s=sc(),{cx:x,cy:y,r}=CFG.cercle.pts(P,s,cv.width,cv.height);
-  let angle=0;const total=2*Math.PI,speed=total/(140/spd());
+  let angle=0;const total=2*3,speed=total/(140/spd());
 
   function frame(){
     draw();
