@@ -181,6 +181,10 @@ const C={rouge:'#A50A0A',vert:'#147D32',bleu:'#144BA5',orange:'#BE5000',violet:'
 const SC=['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c'];
 let shape='rectangle', P={}, anim=null;
 
+// PI_CALC = valeur pour les calculs affichés aux élèves (sans calculatrice)
+// Math.PI  = valeur pour le dessin visuel (cercle fermé)
+const PI_CALC = 3;
+
 document.getElementById('speed').oninput=function(){document.getElementById('speedLbl').textContent=this.value+'×'};
 function spd(){return parseInt(document.getElementById('speed').value)}
 
@@ -214,8 +218,9 @@ const CFG={
   },
   cercle:{
     ctrls:[{id:'r',l:'Rayon r',mn:2,mx:10,v:6}],
-    peri:p=>rn(2*3*p.r), aire:p=>rn(3*p.r**2),
-    fp:p=>`2π×${p.r} ≈ ${rn(2*3*p.r)}`, fa:p=>`π×${p.r}² ≈ ${rn(3*p.r**2)}`,
+    // calculs avec PI_CALC=3 pour les élèves sans calculatrice
+    peri:p=>rn(2*PI_CALC*p.r), aire:p=>rn(PI_CALC*p.r**2),
+    fp:p=>`2π×${p.r} ≈ ${rn(2*PI_CALC*p.r)}`, fa:p=>`π×${p.r}² ≈ ${rn(PI_CALC*p.r**2)}`,
     sides:p=>[{n:'Rayon r',v:p.r,c:SC[0]},{n:'Diamètre d=2r',v:2*p.r,c:SC[1]}],
     pts:function(p,s,W,H){return{cx:W/2,cy:H/2,r:p.r*s}},
     hInfo:p=>({label:'Rayon',val:p.r}),
@@ -315,26 +320,23 @@ function draw(opts={}){
 
   if(shape==='cercle'){
     const{cx:x,cy:y,r}=pts;
-    // light fill
-    cx.beginPath();cx.arc(x,y,r,0,2*3);
+    // visuel : Math.PI pour un cercle fermé correct
+    cx.beginPath();cx.arc(x,y,r,0,2*Math.PI);
     cx.fillStyle='rgba(110,25,150,.06)';cx.fill();
     cx.strokeStyle=C.violet;cx.lineWidth=2.5;cx.stroke();
-    // center
-    cx.beginPath();cx.arc(x,y,4,0,2*3);cx.fillStyle=C.violet;cx.fill();
-    // radius
+    // centre
+    cx.beginPath();cx.arc(x,y,4,0,2*Math.PI);cx.fillStyle=C.violet;cx.fill();
+    // rayon
     cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+r,y);
     cx.strokeStyle=C.rouge;cx.lineWidth=2;cx.stroke();
     // label
     cx.font='700 14px Plus Jakarta Sans';cx.fillStyle=C.rouge;cx.textAlign='center';
     cx.fillText('r = '+P.r+' cm',x+r/2,y-12);
   } else {
-    // fill
     cx.beginPath();cx.moveTo(pts[0][0],pts[0][1]);
     pts.slice(1).forEach(p=>cx.lineTo(p[0],p[1]));cx.closePath();
     cx.fillStyle='rgba(20,75,165,.05)';cx.fill();
-    // stroke
     cx.strokeStyle=C.bleu;cx.lineWidth=2.5;cx.stroke();
-    // labels
     dimLabels(pts);
   }
 }
@@ -372,7 +374,6 @@ function animPerim(){
   if(shape==='cercle'){animCirclePerim();return}
 
   const s=sc(),pts=CFG[shape].pts(P,s,cv.width,cv.height);
-  // build full path
   let segs=[];
   for(let i=0;i<pts.length;i++){
     const a=pts[i],b=pts[(i+1)%pts.length];
@@ -397,7 +398,6 @@ function animPerim(){
     }
     cx.strokeStyle=C.rouge;cx.lineWidth=4;cx.lineCap='round';cx.stroke();
 
-    // dot at current position
     let rem2=progress,dx=0,dy=0;
     for(let i=0;i<segs.length;i++){
       const sg=segs[i];
@@ -405,10 +405,9 @@ function animPerim(){
       rem2-=sg.len;
       dx=sg.x2;dy=sg.y2;
     }
-    cx.beginPath();cx.arc(dx,dy,6,0,2*3);cx.fillStyle=C.rouge;cx.fill();
-    cx.beginPath();cx.arc(dx,dy,3,0,2*3);cx.fillStyle='#fff';cx.fill();
+    cx.beginPath();cx.arc(dx,dy,6,0,2*Math.PI);cx.fillStyle=C.rouge;cx.fill();
+    cx.beginPath();cx.arc(dx,dy,3,0,2*Math.PI);cx.fillStyle='#fff';cx.fill();
 
-    // percentage
     const pct=Math.min(Math.round(progress/total*100),100);
     document.getElementById('step').innerHTML=`<strong style="color:${C.rouge}">📏 Périmètre</strong> — Tracé : ${pct}% (${rn(CFG[shape].peri(P)*pct/100)} cm sur ${CFG[shape].peri(P)} cm)`;
 
@@ -421,22 +420,23 @@ function animPerim(){
 
 function animCirclePerim(){
   const s=sc(),{cx:x,cy:y,r}=CFG.cercle.pts(P,s,cv.width,cv.height);
-  let angle=0;const total=2*3,speed=total/(140/spd());
+  // visuel : Math.PI pour l'animation complète du cercle
+  let angle=0;const total=2*Math.PI,speed=total/(140/spd());
 
   function frame(){
     draw();
     cx.beginPath();cx.arc(x,y,r,0,angle);
     cx.strokeStyle=C.rouge;cx.lineWidth=4;cx.lineCap='round';cx.stroke();
-    // dot
     const dx=x+r*Math.cos(angle),dy=y+r*Math.sin(angle);
-    cx.beginPath();cx.arc(dx,dy,6,0,2*3);cx.fillStyle=C.rouge;cx.fill();
-    cx.beginPath();cx.arc(dx,dy,3,0,2*3);cx.fillStyle='#fff';cx.fill();
+    cx.beginPath();cx.arc(dx,dy,6,0,2*Math.PI);cx.fillStyle=C.rouge;cx.fill();
+    cx.beginPath();cx.arc(dx,dy,3,0,2*Math.PI);cx.fillStyle='#fff';cx.fill();
 
     const pct=Math.min(Math.round(angle/total*100),100);
     document.getElementById('step').innerHTML=`<strong style="color:${C.rouge}">📏 Périmètre</strong> — Tracé : ${pct}%`;
 
     angle+=speed;
     if(angle<total+speed) anim=requestAnimationFrame(frame);
+    // résultat affiché avec PI_CALC=3
     else document.getElementById('step').innerHTML=`<strong style="color:${C.rouge}">📏 Périmètre complet !</strong> ${CFG.cercle.fp(P)} = <b>${CFG.cercle.peri(P)} cm</b>`;
   }
   anim=requestAnimationFrame(frame);
@@ -452,7 +452,6 @@ function animAire(){
   if(shape==='cercle'){animCircleAire();return}
 
   const s=sc(),pts=CFG[shape].pts(P,s,cv.width,cv.height);
-  // find bounding box
   let minY=Infinity,maxY=-Infinity;
   pts.forEach(p=>{if(p[1]<minY)minY=p[1];if(p[1]>maxY)maxY=p[1]});
   const hRange=maxY-minY;
@@ -461,17 +460,14 @@ function animAire(){
 
   function frame(){
     draw();
-    // clip and fill from bottom up
     cx.save();
     cx.beginPath();cx.moveTo(pts[0][0],pts[0][1]);
     pts.slice(1).forEach(p=>cx.lineTo(p[0],p[1]));cx.closePath();cx.clip();
-    // fill rectangle from bottom to current line
     const grad=cx.createLinearGradient(0,maxY,0,minY);
     grad.addColorStop(0,'rgba(20,125,50,0.25)');
     grad.addColorStop(1,'rgba(20,125,50,0.08)');
     cx.fillStyle=grad;
     cx.fillRect(0,fillY,cv.width,maxY-fillY+2);
-    // scan line
     cx.beginPath();cx.moveTo(0,fillY);cx.lineTo(cv.width,fillY);
     cx.strokeStyle='rgba(20,125,50,0.5)';cx.lineWidth=2;cx.setLineDash([6,4]);cx.stroke();cx.setLineDash([]);
     cx.restore();
@@ -482,7 +478,6 @@ function animAire(){
     fillY-=speed;
     if(fillY>minY-speed) anim=requestAnimationFrame(frame);
     else{
-      // final full fill
       draw();
       cx.save();cx.beginPath();cx.moveTo(pts[0][0],pts[0][1]);
       pts.slice(1).forEach(p=>cx.lineTo(p[0],p[1]));cx.closePath();cx.clip();
@@ -496,7 +491,8 @@ function animAire(){
 
 function animCircleAire(){
   const s=sc(),{cx:x,cy:y,r}=CFG.cercle.pts(P,s,cv.width,cv.height);
-  let angle=0;const total=2*3,speed=total/(140/spd());
+  // visuel : Math.PI pour que le remplissage couvre tout le cercle
+  let angle=0;const total=2*Math.PI,speed=total/(140/spd());
 
   function frame(){
     draw();
@@ -510,6 +506,7 @@ function animCircleAire(){
 
     angle+=speed;
     if(angle<total+speed) anim=requestAnimationFrame(frame);
+    // résultat affiché avec PI_CALC=3
     else document.getElementById('step').innerHTML=`<strong style="color:${C.vert}">🎨 Aire complète !</strong> ${CFG.cercle.fa(P)} = <b>${CFG.cercle.aire(P)} cm²</b>`;
   }
   anim=requestAnimationFrame(frame);
@@ -530,19 +527,16 @@ function animSides(){
 
   function frame(){
     draw();
-    // draw completed sides
     for(let i=0;i<sideIdx;i++){
       const a=pts[i],b=pts[(i+1)%pts.length];
       cx.beginPath();cx.moveTo(a[0],a[1]);cx.lineTo(b[0],b[1]);
       cx.strokeStyle=ss[i].c;cx.lineWidth=5;cx.lineCap='round';cx.stroke();
-      // length label
       const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;
       cx.font='800 14px Plus Jakarta Sans';cx.fillStyle=ss[i].c;cx.textAlign='center';
       const dx=b[1]-a[1],dy=a[0]-b[0],len=Math.sqrt(dx*dx+dy*dy)||1;
       cx.fillText(ss[i].v+' cm',mx+dx/len*22,my+dy/len*22);
     }
 
-    // current side animated
     if(sideIdx<ss.length){
       const a=pts[sideIdx],b=pts[(sideIdx+1)%pts.length];
       const segLen=Math.sqrt((b[0]-a[0])**2+(b[1]-a[1])**2);
@@ -551,7 +545,6 @@ function animSides(){
       cx.lineTo(a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t);
       cx.strokeStyle=ss[sideIdx].c;cx.lineWidth=5;cx.lineCap='round';cx.stroke();
 
-      // highlight card
       document.querySelectorAll('.sc').forEach(el=>el.classList.remove('hl'));
       const card=document.getElementById('sc-'+sideIdx);
       if(card)card.classList.add('hl');
@@ -579,13 +572,10 @@ function animSides(){
 function animCircleSides(){
   draw();
   const s=sc(),{cx:x,cy:y,r}=CFG.cercle.pts(P,s,cv.width,cv.height);
-  // show radius and diameter
-  // radius
   cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+r,y);
   cx.strokeStyle=SC[0];cx.lineWidth=4;cx.lineCap='round';cx.stroke();
   cx.font='800 14px Plus Jakarta Sans';cx.fillStyle=SC[0];cx.textAlign='center';
   cx.fillText('r = '+P.r+' cm',x+r/2,y-14);
-  // diameter
   cx.beginPath();cx.moveTo(x-r,y);cx.lineTo(x+r,y);
   cx.strokeStyle=SC[1];cx.lineWidth=2.5;cx.setLineDash([8,4]);cx.stroke();cx.setLineDash([]);
   cx.fillStyle=SC[1];cx.fillText('d = '+2*P.r+' cm',x,y+r/2+16);
@@ -603,28 +593,22 @@ function animHeight(){
   const s=sc(),c=CFG[shape],pts=c.pts(P,s,cv.width,cv.height);
   const hi=c.hInfo(P);
 
-  if(shape==='cercle'){
-    animCircleSides();return;
-  }
+  if(shape==='cercle'){animCircleSides();return}
 
-  // Find height visually based on shape
   let hLine=null, baseLabel='', hLabel='';
 
   if(shape==='rectangle'||shape==='carre'){
-    // height = vertical side, show as dashed line inside
     const mid=(pts[0][0]+pts[1][0])/2;
     hLine={x1:mid,y1:pts[0][1],x2:mid,y2:pts[3][1]};
     hLabel=hi.val+' cm';
     baseLabel=shape==='rectangle'?'L = '+P.L+' cm':'c = '+P.c+' cm';
   } else if(shape==='triangle'){
-    // height from apex to base
-    const apex=pts[2], bL=pts[0], bR=pts[1];
-    const footX=apex[0], footY=bL[1]; // perpendicular foot
+    const apex=pts[2], bL=pts[0];
+    const footX=apex[0], footY=bL[1];
     hLine={x1:apex[0],y1:apex[1],x2:footX,y2:footY};
     hLabel='h = '+P.h+' cm';
     baseLabel='b = '+P.b+' cm';
   } else if(shape==='parallelo'){
-    // height perpendicular from top to bottom base
     const topMid=(pts[2][0]+pts[3][0])/2;
     const botY=pts[0][1],topY=pts[2][1];
     hLine={x1:topMid,y1:topY,x2:topMid,y2:botY};
@@ -639,7 +623,6 @@ function animHeight(){
 
   if(!hLine) return;
 
-  // animate height line drawing
   let t=0;
   const speed=1/(60/spd());
 
@@ -648,11 +631,9 @@ function animHeight(){
     const curX=hLine.x1+(hLine.x2-hLine.x1)*Math.min(t,1);
     const curY=hLine.y1+(hLine.y2-hLine.y1)*Math.min(t,1);
 
-    // dashed height line
     cx.beginPath();cx.moveTo(hLine.x1,hLine.y1);cx.lineTo(curX,curY);
     cx.strokeStyle='#888';cx.lineWidth=2.5;cx.setLineDash([8,5]);cx.stroke();cx.setLineDash([]);
 
-    // right angle marker at bottom
     if(t>=0.95){
       const sz=12;
       const dir=hLine.y2>hLine.y1?1:-1;
@@ -663,7 +644,6 @@ function animHeight(){
       cx.strokeStyle=C.bleu;cx.lineWidth=1.5;cx.setLineDash([]);cx.stroke();
     }
 
-    // labels
     cx.font='700 13px Plus Jakarta Sans';cx.textAlign='left';cx.fillStyle='#666';
     const midY=(hLine.y1+curY)/2;
     cx.fillText(hLabel, hLine.x1+10, midY);
