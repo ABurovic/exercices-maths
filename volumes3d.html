@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visualiser — Volumes 3D</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bleu:#144BA5;--bluebg:#E8F1FF;
+  --vert:#147D32;--vertbg:#E1F8E6;
+  --orange:#BE5000;--orangebg:#FFF2DC;
+  --violet:#6E1996;--violetbg:#F3E8FF;
+  --rouge:#A50A0A;--rougebg:#FFE8E8;
+  --cyan:#00788C;--cyanbg:#DCF8FC;
+  --jaune:#9B7300;--jaunebg:#FFFCD7;
+  --gris:#888;--grisbg:#EFEFEF;
+  --bg:#F7F8FC;--white:#fff;
+  --shadow:0 2px 12px rgba(0,0,0,.09);
+  --radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:#1a1a2e;line-height:1.6;font-size:15px;padding:20px 16px 60px}
+.wrap{max-width:1080px;margin:0 auto}
+a.back{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:700;color:var(--gris);text-decoration:none;margin-bottom:14px;transition:color .2s}
+a.back:hover{color:var(--cyan)}
+.hero{background:linear-gradient(135deg,#00788C 0%,#0097A7 40%,#26C6DA 100%);border-radius:var(--radius);padding:36px 32px;color:#fff;margin-bottom:28px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;right:-40px;top:-40px;width:220px;height:220px;background:rgba(255,255,255,.06);border-radius:50%}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(1.5rem,4vw,2.1rem);margin-bottom:6px}
+.hero p{opacity:.88;font-size:.95rem;max-width:580px}
+.mode-tabs{display:flex;gap:0;margin-bottom:24px;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.mode-tab{flex:1;padding:14px 20px;border:none;cursor:pointer;font-family:inherit;font-size:.92rem;font-weight:700;color:#888;background:#fff;transition:all .2s;text-align:center}
+.mode-tab:hover{color:var(--cyan);background:var(--cyanbg)}
+.mode-tab.active{color:#fff;background:linear-gradient(135deg,#00788C,#0097A7)}
+.shape-sel{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.sh-btn{padding:10px 18px;border-radius:10px;border:2px solid #ddd;background:#fff;cursor:pointer;font-size:.85rem;font-weight:700;color:#555;transition:all .18s;font-family:inherit}
+.sh-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.sh-btn.active{border-color:var(--cyan);background:var(--cyanbg);color:var(--cyan)}
+.vis-layout{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start}
+@media(max-width:820px){.vis-layout{grid-template-columns:1fr}}
+.canvas-wrap{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;position:relative}
+.canvas-wrap canvas{display:block;width:100%!important;height:auto!important}
+.hint-3d{position:absolute;bottom:14px;left:14px;background:rgba(0,0,0,.55);color:#fff;font-size:.72rem;font-weight:700;padding:5px 12px;border-radius:20px;pointer-events:none;opacity:1;transition:opacity 1s}
+.step-bar{padding:14px 18px;border-top:1px solid rgba(0,120,140,.1);font-size:.88rem;min-height:48px;line-height:1.5}
+.step-bar.cyan{background:var(--cyanbg)}
+.step-bar.cyan strong{color:var(--cyan)}
+.step-bar.violet{background:var(--violetbg);border-top-color:rgba(110,25,150,.1)}
+.step-bar.violet strong{color:var(--violet)}
+.panel{display:flex;flex-direction:column;gap:16px}
+.card{background:#fff;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.card h3{font-family:'Playfair Display',serif;font-size:.95rem;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.ctrl{margin-bottom:12px}
+.ctrl label{display:flex;justify-content:space-between;font-size:.82rem;font-weight:700;color:#555;margin-bottom:5px}
+.ctrl-val{font-weight:800}
+.ctrl input[type=range]{width:100%;height:6px}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap}
+.abtn{padding:9px 14px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:700;color:#fff;transition:all .15s;display:flex;align-items:center;gap:5px}
+.abtn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.15)}
+.abtn:active{transform:scale(.97)}
+.abtn.vol{background:linear-gradient(135deg,var(--cyan),#0097A7)}
+.abtn.lat{background:linear-gradient(135deg,var(--bleu),#1565c0)}
+.abtn.base{background:linear-gradient(135deg,var(--vert),#2e7d32)}
+.abtn.hgt{background:linear-gradient(135deg,var(--orange),#e65100)}
+.abtn.wire{background:linear-gradient(135deg,var(--violet),#8e24aa)}
+.abtn.rst{background:linear-gradient(135deg,#999,#666)}
+.abtn.slice{background:linear-gradient(135deg,var(--rouge),#c62828)}
+.abtn.unfold{background:linear-gradient(135deg,var(--violet),#9c27b0)}
+.abtn.fold{background:linear-gradient(135deg,var(--cyan),#0097A7)}
+.abtn.off{opacity:.35;pointer-events:none}
+.view-row{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+.vbtn{padding:6px 10px;border-radius:6px;border:2px solid #ddd;background:#fff;cursor:pointer;font-size:.72rem;font-weight:700;color:#666;font-family:inherit;transition:all .15s}
+.vbtn:hover{border-color:var(--cyan);color:var(--cyan)}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.icard{border-radius:10px;padding:12px;text-align:center}
+.icard.vc{background:var(--cyanbg)}.icard.lc{background:var(--bluebg)}
+.icard .il{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#666;margin-bottom:3px}
+.icard .iv{font-size:1.2rem;font-weight:800;font-family:'Playfair Display',serif}
+.icard.vc .iv{color:var(--cyan)}.icard.lc .iv{color:var(--bleu)}
+.icard .if{font-size:.72rem;color:#999;margin-top:3px}
+.dims{display:flex;flex-direction:column;gap:5px;margin-top:4px}
+.dm{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;background:var(--bg);font-size:.83rem}
+.dm-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.65rem;font-weight:800;flex-shrink:0}
+.dm-name{flex:1;font-weight:600}.dm-val{font-weight:800;font-family:'Playfair Display',serif}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.78rem;color:#888;margin-top:8px}
+.legend span{display:flex;align-items:center;gap:4px}
+.ldot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.face-legend{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.face-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;background:var(--bg);font-size:.82rem}
+.face-swatch{width:16px;height:16px;border-radius:4px;flex-shrink:0;border:1px solid rgba(0,0,0,.15)}
+.face-name{flex:1;font-weight:600}
+.face-area{font-weight:800;font-family:'Playfair Display',serif;color:var(--violet)}
+.progress-track{width:100%;height:8px;background:#e8e8e8;border-radius:4px;margin-top:8px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--violet),#9c27b0);border-radius:4px;transition:width .05s;width:0%}
+.tip-box{margin-top:10px;padding:10px;background:var(--violetbg);border-radius:8px;font-size:.8rem;color:var(--violet)}
+#modeVolume,#modePatron{display:none}
+#modeVolume.vis,#modePatron.vis{display:block}
+.pat-info-table{width:100%;border-collapse:collapse;font-size:.78rem;margin-top:6px}
+.pat-info-table td{padding:4px 6px;border-bottom:1px solid #eee}
+.pat-info-table td:first-child{font-weight:700;color:#555;width:45%}
+.pat-info-table td:last-child{font-weight:800;color:var(--violet);text-align:right}
+.pat-total{margin-top:8px;padding:8px 10px;background:var(--violetbg);border-radius:8px;display:flex;justify-content:space-between;font-size:.85rem}
+.pat-total span:first-child{font-weight:700;color:var(--violet)}
+.pat-total span:last-child{font-weight:800;font-family:'Playfair Display',serif;color:var(--violet);font-size:1rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="back" href="index.html">← Retour à l'accueil</a>
+<div class="hero">
+  <h1>🧊 Visualiser les volumes en 3D</h1>
+  <p>Manipule les solides, observe les formules, découpe les sections et déplie les patrons en 3D.</p>
+</div>
+<div class="mode-tabs">
+  <button class="mode-tab active" id="tabVol" onclick="switchMode('volume')">🧊 Volumes 3D</button>
+  <button class="mode-tab" id="tabPat" onclick="switchMode('patron')">✂️ Patrons 3D→2D</button>
+</div>
+<div class="shape-sel" id="shapeSel"></div>
+
+<!-- ═══ VOLUME ═══ -->
+<div id="modeVolume" class="vis">
+<div class="vis-layout">
+  <div>
+    <div class="canvas-wrap" id="volWrap">
+      <div class="hint-3d" id="hintVol">🖱️ Glisser · Molette zoomer</div>
+      <div class="step-bar cyan" id="volStep"><strong>💡</strong> Choisis un solide et explore ses propriétés.</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="card"><h3 style="color:var(--cyan)">⚙️ Paramètres</h3><div id="volCtrls"></div></div>
+    <div class="card">
+      <h3 style="color:var(--orange)">▶️ Visualisations</h3>
+      <div class="btn-row">
+        <button class="abtn vol" onclick="animVolume()">🧊 Volume</button>
+        <button class="abtn lat" onclick="showLateral()">📐 Surface</button>
+        <button class="abtn base" onclick="showBase()">⬡ Base</button>
+        <button class="abtn hgt" onclick="showHeight()">⊥ Hauteur</button>
+        <button class="abtn wire" onclick="toggleWire()">🔲 Fil de fer</button>
+        <button class="abtn slice" onclick="animSlice()">🔪 Section</button>
+        <button class="abtn rst" onclick="resetVol()">↺</button>
+      </div>
+      <div class="view-row">
+        <button class="vbtn" onclick="volCam('face')">Face</button>
+        <button class="vbtn" onclick="volCam('dessus')">Dessus</button>
+        <button class="vbtn" onclick="volCam('cote')">Côté</button>
+        <button class="vbtn" onclick="volCam('3d')">3D</button>
+        <button class="vbtn" onclick="volCam('spin')">🔄</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--bleu)">📊 Résultats <span style="font-size:.65rem;background:#ffe0b2;color:#e65100;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:800">π = 3</span></h3>
+      <div class="info-grid">
+        <div class="icard vc"><div class="il">Volume</div><div class="iv" id="vV">—</div><div class="if" id="fV"></div></div>
+        <div class="icard lc"><div class="il">Surface</div><div class="iv" id="vS">—</div><div class="if" id="fS"></div></div>
+      </div>
+      <div class="dims" id="dims"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ PATRON ═══ -->
+<div id="modePatron">
+<div class="vis-layout">
+  <div>
+    <div class="canvas-wrap" id="patWrap">
+      <div class="hint-3d" id="hintPat">🖱️ Glisser · Molette zoomer</div>
+      <div class="step-bar violet" id="patStep"><strong>📦</strong> Solide en 3D. Appuie sur <b>Déplier</b>.</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="card"><h3 style="color:var(--cyan)">⚙️ Paramètres</h3><div id="patCtrls"></div></div>
+    <div class="card">
+      <h3 style="color:var(--violet)">✂️ Dépliage 3D → 2D</h3>
+      <div class="btn-row">
+        <button class="abtn unfold" id="btnU" onclick="doUnfold()">✂️ Déplier</button>
+        <button class="abtn fold off" id="btnF" onclick="doFold()">📦 Replier</button>
+        <button class="abtn rst" onclick="resetPat()">↺</button>
+      </div>
+      <div style="margin-top:14px">
+        <label style="display:flex;justify-content:space-between;font-size:.82rem;font-weight:700;color:#555">Progression <span class="unfold-pct" id="pctLabel">0%</span></label>
+        <div class="progress-track"><div class="progress-fill" id="pctBar"></div></div>
+      </div>
+      <div style="margin-top:12px">
+        <label style="display:flex;justify-content:space-between;font-size:.82rem;font-weight:700;color:#555">Vitesse <span id="speedLabel" style="color:var(--violet);font-weight:800">×1</span></label>
+        <input type="range" min="1" max="5" value="2" step="1" style="width:100%;accent-color:var(--violet);height:6px" id="speedSlider" oninput="updateSpeed(this.value)">
+        <div style="display:flex;justify-content:space-between;font-size:.68rem;color:#aaa;margin-top:2px"><span>Lent</span><span>Rapide</span></div>
+      </div>
+      <div class="view-row" style="margin-top:12px">
+        <button class="vbtn" onclick="patCam('3d')">3D</button>
+        <button class="vbtn" onclick="patCam('dessus')">Dessus</button>
+        <button class="vbtn" onclick="patCam('face')">Face</button>
+        <button class="vbtn" onclick="patCam('spin')">🔄</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--violet)">📐 Faces du patron <span style="font-size:.65rem;background:#ffe0b2;color:#e65100;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:800">π = 3</span></h3>
+      <div class="face-legend" id="faceLeg"></div>
+      <div id="patInfo" style="margin-top:8px"></div>
+      <div class="tip-box"><strong>💡</strong> Chaque face pivote autour de son arête. Observe le dépliage sous tous les angles !</div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ═══════════════════════════════════════
+   GLOBALS
+   ═══════════════════════════════════════ */
+const PI=Math.PI, HP=PI/2, rn=x=>Math.round(x*100)/100;
+const PD=3; // π affiché aux élèves (π≈3)
+const rnD=x=>Math.round(x*100)/100; // arrondi pour affichage
+let shape='pave', P={}, mode='volume';
+
+const SHAPES=[
+  {id:'pave',icon:'📦',name:'Pavé droit'},
+  {id:'cube',icon:'🧊',name:'Cube'},
+  {id:'cylindre',icon:'🥫',name:'Cylindre'},
+  {id:'cone',icon:'🍦',name:'Cône'},
+  {id:'pyramide',icon:'🔺',name:'Pyramide'},
+  {id:'prisme',icon:'📐',name:'Prisme tri.'},
+];
+
+const CFG={
+  pave:{
+    ctrls:[{id:'L',l:'Longueur L',mn:2,mx:14,v:8},{id:'l',l:'Largeur ℓ',mn:2,mx:10,v:5},{id:'h',l:'Hauteur h',mn:2,mx:10,v:4}],
+    vol:p=>p.L*p.l*p.h,surf:p=>2*(p.L*p.l+p.L*p.h+p.l*p.h),
+    fv:p=>`${p.L}×${p.l}×${p.h}=${rn(p.L*p.l*p.h)}`,fs:p=>`2(Ll+Lh+lh)=${rn(2*(p.L*p.l+p.L*p.h+p.l*p.h))}`,
+    dims:p=>[{n:'L',v:p.L,c:'#e74c3c'},{n:'ℓ',v:p.l,c:'#3498db'},{n:'h',v:p.h,c:'#f39c12'}],
+  },
+  cube:{
+    ctrls:[{id:'c',l:'Côté c',mn:2,mx:12,v:6}],
+    vol:p=>p.c**3,surf:p=>6*p.c**2,
+    fv:p=>`${p.c}³=${p.c**3}`,fs:p=>`6×${p.c}²=${6*p.c**2}`,
+    dims:p=>[{n:'c',v:p.c,c:'#e74c3c'}],
+  },
+  cylindre:{
+    ctrls:[{id:'r',l:'Rayon r',mn:1,mx:8,v:4},{id:'h',l:'Hauteur h',mn:2,mx:14,v:7}],
+    vol:p=>rnD(PD*p.r**2*p.h),surf:p=>rnD(2*PD*p.r*(p.r+p.h)),
+    fv:p=>`π×${p.r}²×${p.h} = ${PD}×${p.r**2}×${p.h} = ${rnD(PD*p.r**2*p.h)}`,
+    fs:p=>`2π×${p.r}×(${p.r}+${p.h}) = ${rnD(2*PD*p.r*(p.r+p.h))}`,
+    dims:p=>[{n:'r',v:p.r,c:'#e74c3c'},{n:'h',v:p.h,c:'#f39c12'}],
+  },
+  cone:{
+    ctrls:[{id:'r',l:'Rayon r',mn:1,mx:8,v:4},{id:'h',l:'Hauteur h',mn:2,mx:14,v:8}],
+    vol:p=>rnD(PD*p.r**2*p.h/3),surf:p=>{const g=Math.sqrt(p.r**2+p.h**2);return rnD(PD*p.r*(p.r+g))},
+    fv:p=>`π×${p.r}²×${p.h}/3 = ${rnD(PD*p.r**2*p.h/3)}`,
+    fs:p=>`πr(r+g) = ${rnD(PD*p.r*(p.r+Math.sqrt(p.r**2+p.h**2)))}`,
+    dims:p=>[{n:'r',v:p.r,c:'#e74c3c'},{n:'h',v:p.h,c:'#f39c12'},{n:'g',v:rn(Math.sqrt(p.r**2+p.h**2)),c:'#9b59b6'}],
+  },
+  pyramide:{
+    ctrls:[{id:'a',l:'Côté base a',mn:2,mx:12,v:6},{id:'h',l:'Hauteur h',mn:2,mx:14,v:8}],
+    vol:p=>rn(p.a**2*p.h/3),surf:p=>{const ap=Math.sqrt(p.h**2+(p.a/2)**2);return rn(p.a**2+2*p.a*ap)},
+    fv:p=>`${p.a}²×${p.h}/3 = ${rn(p.a**2*p.h/3)}`,fs:p=>`a²+2a·ap = ${rn(CFG.pyramide.surf(p))}`,
+    dims:p=>[{n:'a',v:p.a,c:'#e74c3c'},{n:'h',v:p.h,c:'#f39c12'},{n:'ap',v:rn(Math.sqrt(p.h**2+(p.a/2)**2)),c:'#9b59b6'}],
+  },
+  prisme:{
+    ctrls:[{id:'b',l:'Base tri. b',mn:2,mx:12,v:6},{id:'ht',l:'Haut. tri. ht',mn:2,mx:10,v:5},{id:'h',l:'Profondeur h',mn:2,mx:14,v:8}],
+    vol:p=>rn(p.b*p.ht/2*p.h),surf:p=>{const hyp=Math.sqrt((p.b/2)**2+p.ht**2);return rn(p.b*p.ht+p.b*p.h+2*hyp*p.h)},
+    fv:p=>`(${p.b}×${p.ht}/2)×${p.h} = ${rn(p.b*p.ht/2*p.h)}`,fs:p=>`${rn(CFG.prisme.surf(p))}`,
+    dims:p=>[{n:'b',v:p.b,c:'#e74c3c'},{n:'ht',v:p.ht,c:'#2ecc71'},{n:'h',v:p.h,c:'#f39c12'}],
+  },
+};
+
+// Colors for patron faces
+const FC=[
+  {hex:'#147D32',name:'Base'},
+  {hex:'#144BA5',name:'Dessus'},
+  {hex:'#00788C',name:'Avant'},
+  {hex:'#BE5000',name:'Arrière'},
+  {hex:'#6E1996',name:'Gauche'},
+  {hex:'#A50A0A',name:'Droite'},
+  {hex:'#9B7300',name:'Latérale'},
+  {hex:'#1abc9c',name:'Triangle'},
+];
+
+/* ═══════════════════════════════════════
+   SHAPE SELECTOR
+   ═══════════════════════════════════════ */
+document.getElementById('shapeSel').innerHTML=SHAPES.map((s,i)=>
+  `<button class="sh-btn${i===0?' active':''}" data-s="${s.id}" onclick="pick('${s.id}',this)">${s.icon} ${s.name}</button>`
+).join('');
+
+function pick(s,btn){
+  shape=s;
+  document.querySelectorAll('.sh-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const c=CFG[s]; P={};c.ctrls.forEach(ct=>P[ct.id]=ct.v);
+  if(mode==='volume'){buildVolCtrls();refreshVol();}
+  else{buildPatCtrls();rebuildPat();}
+}
+
+function switchMode(m){
+  mode=m;
+  document.getElementById('tabVol').classList.toggle('active',m==='volume');
+  document.getElementById('tabPat').classList.toggle('active',m==='patron');
+  document.getElementById('modeVolume').classList.toggle('vis',m==='volume');
+  document.getElementById('modePatron').classList.toggle('vis',m==='patron');
+  if(m==='patron'){
+    if(!pat.renderer) initPat();
+    buildPatCtrls(); rebuildPat();
+  } else {
+    buildVolCtrls(); refreshVol();
+  }
+}
+
+/* ═══════════════════════════════════════
+   VOLUME MODE — Three.js
+   ═══════════════════════════════════════ */
+const vol={scene:null,camera:null,renderer:null,group:null,mesh:null,edges:null,autoRot:false,animId:null};
+
+function initVol(){
+  const w=document.getElementById('volWrap'), W=w.clientWidth, H=Math.min(W*.7,500);
+  vol.scene=new THREE.Scene(); vol.scene.background=new THREE.Color(0xf7f8fc);
+  vol.camera=new THREE.PerspectiveCamera(45,W/H,.1,1000);
+  vol.camera.position.set(12,10,16);vol.camera.lookAt(0,0,0);
+  vol.renderer=new THREE.WebGLRenderer({antialias:true});
+  vol.renderer.setSize(W,H);vol.renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  w.insertBefore(vol.renderer.domElement,w.querySelector('.step-bar'));
+  vol.scene.add(new THREE.AmbientLight(0xffffff,.5));
+  const d=new THREE.DirectionalLight(0xffffff,.7);d.position.set(8,12,10);vol.scene.add(d);
+  vol.scene.add(new THREE.DirectionalLight(0xb0d4f1,.3)).position.set(-6,4,-8);
+  const g=new THREE.GridHelper(30,30,0xd0d0d0,0xe8e8e8);g.position.y=-.01;vol.scene.add(g);
+  vol.group=new THREE.Group();vol.scene.add(vol.group);
+  drag(vol.renderer.domElement,vol.group,()=>vol.autoRot=false);
+  zoom(vol.renderer.domElement,vol.camera);
+  vol.renderer.domElement.addEventListener('mousedown',()=>{const h=document.getElementById('hintVol');if(h)h.style.opacity='0'},{once:true});
+  (function loop(){requestAnimationFrame(loop);if(vol.autoRot)vol.group.rotation.y+=.005;vol.renderer.render(vol.scene,vol.camera)})();
+  window.addEventListener('resize',()=>{const W2=w.clientWidth,H2=Math.min(W2*.7,500);vol.camera.aspect=W2/H2;vol.camera.updateProjectionMatrix();vol.renderer.setSize(W2,H2)});
+}
+
+function buildVolCtrls(){
+  const c=CFG[shape];
+  document.getElementById('volCtrls').innerHTML=c.ctrls.map(ct=>`<div class="ctrl"><label>${ct.l}<span class="ctrl-val" style="color:var(--cyan)" id="vc-${ct.id}">${P[ct.id]} cm</span></label><input type="range" min="${ct.mn}" max="${ct.mx}" value="${P[ct.id]}" step="0.5" style="accent-color:var(--cyan)" oninput="P['${ct.id}']=+this.value;document.getElementById('vc-${ct.id}').textContent=this.value+' cm';refreshVol()"></div>`).join('');
+}
+
+function refreshVol(){
+  const c=CFG[shape];
+  document.getElementById('vV').textContent=c.vol(P)+' cm³';
+  document.getElementById('vS').textContent=c.surf(P)+' cm²';
+  document.getElementById('fV').textContent=c.fv(P);
+  document.getElementById('fS').textContent=c.fs(P);
+  const ds=c.dims(P);
+  document.getElementById('dims').innerHTML=ds.map((d,i)=>`<div class="dm"><div class="dm-dot" style="background:${d.c}">${d.n}</div><span class="dm-name">${d.n}</span><span class="dm-val" style="color:${d.c}">${d.v} cm</span></div>`).join('');
+  buildVolMesh();
+}
+
+function buildVolMesh(){
+  while(vol.group.children.length)vol.group.remove(vol.group.children[0]);
+  const mat=new THREE.MeshPhongMaterial({color:0x00788C,transparent:true,opacity:.55,side:THREE.DoubleSide});
+  let geo;
+  switch(shape){
+    case'pave':geo=new THREE.BoxGeometry(P.L,P.h,P.l);vol.mesh=new THREE.Mesh(geo,mat);vol.mesh.position.y=P.h/2;break;
+    case'cube':geo=new THREE.BoxGeometry(P.c,P.c,P.c);vol.mesh=new THREE.Mesh(geo,mat);vol.mesh.position.y=P.c/2;break;
+    case'cylindre':geo=new THREE.CylinderGeometry(P.r,P.r,P.h,48);vol.mesh=new THREE.Mesh(geo,mat);vol.mesh.position.y=P.h/2;break;
+    case'cone':geo=new THREE.ConeGeometry(P.r,P.h,48);vol.mesh=new THREE.Mesh(geo,mat);vol.mesh.position.y=P.h/2;break;
+    case'pyramide':{const a=P.a,h=P.h,v=new Float32Array([-a/2,0,-a/2,a/2,0,-a/2,a/2,0,a/2,-a/2,0,-a/2,a/2,0,a/2,-a/2,0,a/2,-a/2,0,a/2,a/2,0,a/2,0,h,0,a/2,0,a/2,a/2,0,-a/2,0,h,0,a/2,0,-a/2,-a/2,0,-a/2,0,h,0,-a/2,0,-a/2,-a/2,0,a/2,0,h,0]);geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(v,3));geo.computeVertexNormals();vol.mesh=new THREE.Mesh(geo,mat);break}
+    case'prisme':{const s=new THREE.Shape();s.moveTo(-P.b/2,0);s.lineTo(P.b/2,0);s.lineTo(0,P.ht);s.closePath();geo=new THREE.ExtrudeGeometry(s,{depth:P.h,bevelEnabled:false});vol.mesh=new THREE.Mesh(geo,mat);vol.mesh.rotation.x=-HP;vol.mesh.position.set(0,0,-P.h/2);break}
+  }
+  if(vol.mesh){
+    vol.group.add(vol.mesh);
+    const eg=new THREE.EdgesGeometry(vol.mesh.geometry,20);
+    vol.edges=new THREE.LineSegments(eg,new THREE.LineBasicMaterial({color:0x004D5A}));
+    vol.edges.position.copy(vol.mesh.position);vol.edges.rotation.copy(vol.mesh.rotation);
+    vol.group.add(vol.edges);
+  }
+  const d=Math.max(...Object.values(P))*1.4;
+  vol.camera.position.set(d*1.2,d,d*1.5);vol.camera.lookAt(0,d*.3,0);
+}
+
+function volCam(v){vol.autoRot=false;const d=Math.max(...Object.values(P))*2;vol.group.rotation.set(0,0,0);
+  if(v==='face')vol.camera.position.set(0,d*.3,d*1.5);
+  else if(v==='dessus')vol.camera.position.set(0,d*2,.01);
+  else if(v==='cote')vol.camera.position.set(d*1.5,d*.3,0);
+  else if(v==='3d')vol.camera.position.set(d,d*.8,d*1.2);
+  else{vol.autoRot=true;vol.camera.position.set(d,d*.8,d*1.2)}
+  vol.camera.lookAt(0,d*.2,0)}
+
+// Volume animations (compact)
+function animVolume(){if(!vol.mesh)return;vol.mesh.material.opacity=0;let t=0;function f(){t+=.015;if(t<=1){vol.mesh.material.opacity=t*.7;vol.mesh.scale.y=t;animReq(f)}else{vol.mesh.material.opacity=.55;vol.mesh.scale.set(1,1,1);buildVolMesh();document.getElementById('volStep').innerHTML=`<strong>🧊</strong> V = <b>${CFG[shape].vol(P)} cm³</b>`}}f()}
+function showLateral(){if(!vol.mesh)return;vol.mesh.material.color.setHex(0x144BA5);vol.mesh.material.opacity=.2;setTimeout(()=>{vol.mesh.material.color.setHex(0x00788C);vol.mesh.material.opacity=.55},2000);document.getElementById('volStep').innerHTML=`<strong>📐</strong> S = <b>${CFG[shape].surf(P)} cm²</b>`}
+function showBase(){
+  if(!vol.mesh)return;
+  const old=vol.group.getObjectByName('baseHL');if(old)vol.group.remove(old);
+  let geo;
+  switch(shape){
+    case'pave':geo=new THREE.PlaneGeometry(P.L,P.l);break;
+    case'cube':geo=new THREE.PlaneGeometry(P.c,P.c);break;
+    case'cylindre':case'cone':geo=new THREE.CircleGeometry(P.r,48);break;
+    case'pyramide':geo=new THREE.PlaneGeometry(P.a,P.a);break;
+    case'prisme':geo=new THREE.PlaneGeometry(P.b,P.h);break;
+    default:return;
+  }
+  const hl=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:0x147D32,transparent:true,opacity:.5,side:THREE.DoubleSide}));
+  hl.rotation.x=-HP;hl.position.y=.03;hl.name='baseHL';vol.group.add(hl);
+  setTimeout(()=>{const o=vol.group.getObjectByName('baseHL');if(o)vol.group.remove(o)},3000);
+  const area=shape==='cylindre'||shape==='cone'?rnD(PD*P.r**2):shape==='pyramide'?P.a**2:shape==='prisme'?rn(P.b*P.ht/2):shape==='cube'?P.c**2:rn(P.L*P.l);
+  document.getElementById('volStep').innerHTML=`<strong>⬡</strong> Aire base = <b>${area} cm²</b>`;
+}
+function showHeight(){
+  if(!vol.mesh)return;
+  const old=vol.group.getObjectByName('htLine');if(old)vol.group.remove(old);
+  let h=P.h||P.c||P.ht||P.r*2;
+  const mat=new THREE.LineDashedMaterial({color:0xBE5000,dashSize:.3,gapSize:.15});
+  const geo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,h,0)]);
+  const ln=new THREE.Line(geo,mat);ln.computeLineDistances();ln.name='htLine';vol.group.add(ln);
+  setTimeout(()=>{const o=vol.group.getObjectByName('htLine');if(o)vol.group.remove(o)},4000);
+  document.getElementById('volStep').innerHTML=`<strong>⊥</strong> h = <b>${h} cm</b>`;
+}
+let isWire=false;function toggleWire(){isWire=!isWire;if(vol.mesh){vol.mesh.material.wireframe=isWire;vol.mesh.material.opacity=isWire?.9:.55}}
+let sliceAF=null;
+function animSlice(){
+  if(!vol.mesh)return;
+  const old=vol.group.getObjectByName('slicePl');if(old)vol.group.remove(old);
+  if(sliceAF)cancelAnimationFrame(sliceAF);
+  let maxH=P.h||P.c||P.ht||P.r*2;
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshBasicMaterial({color:0xA50A0A,transparent:true,opacity:.2,side:THREE.DoubleSide}));
+  pl.rotation.x=-HP;pl.name='slicePl';vol.group.add(pl);
+  let t=0;
+  (function f(){t+=.008;if(t<=1){pl.position.y=t*maxH;sliceAF=requestAnimationFrame(f);
+    document.getElementById('volStep').innerHTML=`<strong>🔪</strong> Section y = ${rn(t*maxH)} cm`;}
+  else{setTimeout(()=>{const o=vol.group.getObjectByName('slicePl');if(o)vol.group.remove(o)},2000);
+    document.getElementById('volStep').innerHTML=`<strong>🔪</strong> Section complète, h = ${maxH} cm`;}})();
+}
+function resetVol(){vol.autoRot=false;isWire=false;vol.group.rotation.set(0,0,0);document.getElementById('volStep').innerHTML='<strong>💡</strong> Choisis une animation.';refreshVol()}
+function animReq(f){requestAnimationFrame(f)}
+
+/* ═══════════════════════════════════════
+   PATRON MODE — Three.js with pivot hinges
+   ═══════════════════════════════════════
+
+   APPROACH:
+   - All faces are PlaneGeometry, created in the XY plane.
+   - Each non-base face is inside a "pivot" Group.
+   - The pivot is positioned at the hinge edge on the base.
+   - When angle=0 → face lies flat (unfolded patron).
+   - When angle=foldAngle → face is upright (3D solid).
+   - We start at folded (t=0 → angles=foldAngle) and animate to unfolded (t=1 → angles=0).
+
+   This guarantees that t=0 is a correct 3D solid, because we compute
+   foldAngle geometrically for each shape.
+   ═══════════════════════════════════════ */
+const pat={scene:null,camera:null,renderer:null,group:null,autoRot:false};
+let hinges=[]; // {pivot, foldAngle, axis:'x'|'z', label, area, colorHex}
+let unfoldT=0, unfoldAF=null;
+let animSpeed=2; // 1=very slow(4s), 2=normal(2s), 3=fast(1.2s), 4=vfast(0.7s), 5=instant(0.3s)
+const SPEED_DUR=[4000,2000,1200,700,300];
+const SPEED_LABELS=['×0.5','×1','×1.5','×2.5','×5'];
+function updateSpeed(v){
+  animSpeed=parseInt(v);
+  document.getElementById('speedLabel').textContent=SPEED_LABELS[animSpeed-1];
+}
+function getAnimDur(){return SPEED_DUR[animSpeed-1]||2000;}
+
+function initPat(){
+  const w=document.getElementById('patWrap'), W=w.clientWidth, H=Math.min(W*.7,500);
+  pat.scene=new THREE.Scene();pat.scene.background=new THREE.Color(0xf7f8fc);
+  pat.camera=new THREE.PerspectiveCamera(45,W/H,.1,1000);
+  pat.camera.position.set(14,12,18);pat.camera.lookAt(0,0,0);
+  pat.renderer=new THREE.WebGLRenderer({antialias:true});
+  pat.renderer.setSize(W,H);pat.renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  w.insertBefore(pat.renderer.domElement,w.querySelector('.step-bar'));
+  pat.scene.add(new THREE.AmbientLight(0xffffff,.55));
+  const d=new THREE.DirectionalLight(0xffffff,.65);d.position.set(8,14,10);pat.scene.add(d);
+  pat.scene.add(new THREE.DirectionalLight(0xb0d4f1,.3)).position.set(-6,4,-8);
+  const g=new THREE.GridHelper(40,40,0xd8d8d8,0xeaeaea);g.position.y=-.02;pat.scene.add(g);
+  pat.group=new THREE.Group();pat.scene.add(pat.group);
+  drag(pat.renderer.domElement,pat.group,()=>pat.autoRot=false);
+  zoom(pat.renderer.domElement,pat.camera);
+  pat.renderer.domElement.addEventListener('mousedown',()=>{const h=document.getElementById('hintPat');if(h)h.style.opacity='0'},{once:true});
+  (function loop(){requestAnimationFrame(loop);if(pat.autoRot)pat.group.rotation.y+=.004;pat.renderer.render(pat.scene,pat.camera)})();
+  window.addEventListener('resize',()=>{const W2=w.clientWidth,H2=Math.min(W2*.7,500);pat.camera.aspect=W2/H2;pat.camera.updateProjectionMatrix();pat.renderer.setSize(W2,H2)});
+}
+
+function buildPatCtrls(){
+  const c=CFG[shape];
+  document.getElementById('patCtrls').innerHTML=c.ctrls.map(ct=>`<div class="ctrl"><label>${ct.l}<span class="ctrl-val" style="color:var(--violet)" id="pc-${ct.id}">${P[ct.id]} cm</span></label><input type="range" min="${ct.mn}" max="${ct.mx}" value="${P[ct.id]}" step="0.5" style="accent-color:var(--violet)" oninput="P['${ct.id}']=+this.value;document.getElementById('pc-${ct.id}').textContent=this.value+' cm';rebuildPat()"></div>`).join('');
+}
+
+/*
+  PATRON GEOMETRY ENGINE — XZ-plane approach
+  ─────────────────────────────────────────
+  ALL faces are quads/tris in the XZ plane (y=0).
+  Each face's hinge edge sits at the pivot Group's origin.
+  When angle=0 → face is flat on ground (patron).
+  When angle=foldAngle → face is rotated up to form 3D solid.
+  
+  ROTATION MATH (verified):
+  Pivot rotX by θ on a point at local (x, 0, z):
+    y' = -z·sin(θ)    z' = z·cos(θ)
+  So (x,0,z) with θ=-HP → y'=z, z'=0 → face stands up in +Y ✓
+  
+  Front face: pivot at z=+W/2, face flat at z>0 local.
+    foldAngle=-HP → local z maps to y → wall at z=W/2, going up in Y ✓
+  Back face: pivot at z=-W/2, face flat at z<0 local.
+    foldAngle=+HP → sin(HP)=1 → y'=-z·1=-z → for z<0: y>0 ✓, z'=0 ✓
+  Right face: pivot at x=+L/2, face flat at x>0 local.
+    pivotRotZ=+HP → x'=x·cos-y·sin=0, y'=x·sin+y·cos=x → stands up ✓
+  Left face: pivot at x=-L/2, face flat at x<0 local.
+    pivotRotZ=-HP → y'=x·sin(-HP)=-x → for x<0: y>0 ✓
+*/
+
+function colorMat(ci){
+  return new THREE.MeshPhongMaterial({color:new THREE.Color(FC[ci%8].hex),transparent:true,opacity:.55,side:THREE.DoubleSide});
+}
+function makeQuadXZ(pts,ci){
+  // pts = [[x,z],...] 4 corners, y=0
+  const vs=new Float32Array([
+    pts[0][0],0,pts[0][1], pts[1][0],0,pts[1][1], pts[2][0],0,pts[2][1],
+    pts[0][0],0,pts[0][1], pts[2][0],0,pts[2][1], pts[3][0],0,pts[3][1]
+  ]);
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(vs,3));
+  geo.computeVertexNormals();
+  const mesh=new THREE.Mesh(geo,colorMat(ci));
+  mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo,1),new THREE.LineBasicMaterial({color:0x222222})));
+  return mesh;
+}
+function makeTriXZ(pts,ci){
+  const vs=new Float32Array([pts[0][0],0,pts[0][1],pts[1][0],0,pts[1][1],pts[2][0],0,pts[2][1]]);
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(vs,3));
+  geo.computeVertexNormals();
+  const mesh=new THREE.Mesh(geo,colorMat(ci));
+  mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo,1),new THREE.LineBasicMaterial({color:0x222222})));
+  return mesh;
+}
+function makeDiskXZ(r,ci,N){
+  const geo=new THREE.CircleGeometry(r,N||48);
+  const mesh=new THREE.Mesh(geo,colorMat(ci));
+  mesh.rotation.x=-HP;
+  mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo,1),new THREE.LineBasicMaterial({color:0x222222})));
+  return mesh;
+}
+
+function rebuildPat(){
+  while(pat.group.children.length) pat.group.remove(pat.group.children[0]);
+  hinges=[];unfoldT=0;updatePct(0);
+  document.getElementById('btnU').classList.remove('off');
+  document.getElementById('btnF').classList.add('off');
+  switch(shape){
+    case'pave':patPave();break;case'cube':patCube();break;
+    case'cylindre':patCylindre();break;case'cone':patCone();break;
+    case'pyramide':patPyramide();break;case'prisme':patPrisme();break;
+  }
+  applyFold(0);
+  const d=Math.max(...Object.values(P))*1.6;
+  pat.camera.position.set(d*1.1,d*.9,d*1.4);pat.camera.lookAt(0,d*.15,0);
+  pat.group.rotation.set(0,0,0);pat.autoRot=false;
+  buildFaceLeg();
+  document.getElementById('patStep').innerHTML=`<strong>📦</strong> Solide en 3D. Appuie sur <b>Déplier</b>.`;
+}
+
+/* ═══ PAVÉ (L along X, W=ℓ along Z, H=h = height) ═══ */
+function patPave(){
+  const L=P.L,W=P.l,H=P.h;
+  // Base on y=0
+  pat.group.add(makeQuadXZ([[-L/2,-W/2],[L/2,-W/2],[L/2,W/2],[-L/2,W/2]],0));
+  hinges.push({pivot:null,label:'Base',area:rn(L*W),colorHex:FC[0].hex});
+  // Front: hinge z=+W/2, flat extends in +z
+  addXZWall([[-L/2,0],[L/2,0],[L/2,H],[-L/2,H]], {x:0,y:0,z:W/2},'x',-HP,'Avant',rn(L*H),2);
+  // Back: hinge z=-W/2, flat extends in -z
+  addXZWall([[-L/2,0],[L/2,0],[L/2,-H],[-L/2,-H]], {x:0,y:0,z:-W/2},'x',HP,'Arrière',rn(L*H),3);
+  // Right: hinge x=+L/2, flat extends in +x
+  addXZWall([[0,-W/2],[H,-W/2],[H,W/2],[0,W/2]], {x:L/2,y:0,z:0},'z',HP,'Droite',rn(W*H),5);
+  // Left: hinge x=-L/2, flat extends in -x
+  addXZWall([[0,-W/2],[-H,-W/2],[-H,W/2],[0,W/2]], {x:-L/2,y:0,z:0},'z',-HP,'Gauche',rn(W*H),4);
+  // Top: secondary hinge on front face's far edge (local z=H)
+  const fp=hinges[1].pivot;
+  const tp=new THREE.Group();tp.position.set(0,0,H);fp.add(tp);
+  tp.add(makeQuadXZ([[-L/2,0],[L/2,0],[L/2,W],[-L/2,W]],1));
+  hinges.push({pivot:tp,axis:'x',foldAngle:-HP,label:'Dessus',area:rn(L*W),colorHex:FC[1].hex});
+}
+
+function addXZWall(localPts,pos,axis,foldAngle,label,area,ci){
+  const pv=new THREE.Group();
+  pv.position.set(pos.x,pos.y,pos.z);
+  pat.group.add(pv);
+  pv.add(makeQuadXZ(localPts,ci));
+  hinges.push({pivot:pv,axis,foldAngle,label,area,colorHex:FC[ci].hex});
+}
+
+/* ═══ CUBE ═══ */
+function patCube(){
+  const c=P.c;
+  pat.group.add(makeQuadXZ([[-c/2,-c/2],[c/2,-c/2],[c/2,c/2],[-c/2,c/2]],0));
+  hinges.push({pivot:null,label:'Base',area:c*c,colorHex:FC[0].hex});
+  addXZWall([[-c/2,0],[c/2,0],[c/2,c],[-c/2,c]],{x:0,y:0,z:c/2},'x',-HP,'Avant',c*c,2);
+  addXZWall([[-c/2,0],[c/2,0],[c/2,-c],[-c/2,-c]],{x:0,y:0,z:-c/2},'x',HP,'Arrière',c*c,3);
+  addXZWall([[0,-c/2],[c,-c/2],[c,c/2],[0,c/2]],{x:c/2,y:0,z:0},'z',HP,'Droite',c*c,5);
+  addXZWall([[0,-c/2],[-c,-c/2],[-c,c/2],[0,c/2]],{x:-c/2,y:0,z:0},'z',-HP,'Gauche',c*c,4);
+  const fp=hinges[1].pivot;
+  const tp=new THREE.Group();tp.position.set(0,0,c);fp.add(tp);
+  tp.add(makeQuadXZ([[-c/2,0],[c/2,0],[c/2,c],[-c/2,c]],1));
+  hinges.push({pivot:tp,axis:'x',foldAngle:-HP,label:'Dessus',area:c*c,colorHex:FC[1].hex});
+}
+
+/* ═══ CYLINDRE ═══
+   Vertex morphing approach: one mesh for lateral surface, vertices interpolated
+   between 3D cylinder and 2D flat rectangle. No pivot groups needed.
+   Disks are separate meshes that move/rotate into position.
+*/
+function patCylindre(){
+  const r=P.r,h=P.h,N=48;
+  const circ=2*PI*r; // circumference = flat rectangle width
+
+  // Bottom disk — static at y=0
+  const disk=makeDiskXZ(r,0,N);
+  pat.group.add(disk);
+  hinges.push({pivot:null,label:'Disque bas',area:rnD(PD*r*r),colorHex:FC[0].hex});
+
+  // Lateral surface — single mesh with N+1 columns × 2 rows
+  const pos3D=[],pos2D=[],indices=[];
+  const circDisp=rnD(2*PD*r); // display circumference with π=3
+  for(let i=0;i<=N;i++){
+    const a=i*2*PI/N;
+    const cx=r*Math.cos(a), cz=r*Math.sin(a);
+    const fx=-circ/2+i*circ/N; // flat x position
+    // Bottom vertex: 3D=(cx,0,cz), 2D=(fx,0,r+0.3) [just below disk in flat]
+    pos3D.push(cx,0,cz);
+    pos2D.push(fx,0,r+0.3);
+    // Top vertex: 3D=(cx,h,cz), 2D=(fx,0,r+0.3+h)
+    pos3D.push(cx,h,cz);
+    pos2D.push(fx,0,r+0.3+h);
+  }
+  for(let i=0;i<N;i++){
+    const bl=i*2, br=(i+1)*2, tl=i*2+1, tr=(i+1)*2+1;
+    indices.push(bl,br,tl, br,tr,tl);
+  }
+  const latGeo=new THREE.BufferGeometry();
+  latGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(pos3D),3));
+  latGeo.setIndex(indices);
+  latGeo.computeVertexNormals();
+  const latMesh=new THREE.Mesh(latGeo,colorMat(2));
+  // Store flat positions for morphing
+  latMesh.userData={pos3D:new Float32Array(pos3D),pos2D:new Float32Array(pos2D)};
+  // Edge wireframe
+  const wGeo=new THREE.EdgesGeometry(latGeo,15);
+  latMesh.add(new THREE.LineSegments(wGeo,new THREE.LineBasicMaterial({color:0x222222})));
+  pat.group.add(latMesh);
+  hinges.push({type:'morph',mesh:latMesh,label:'Surface latérale',area:rnD(circDisp*h),colorHex:FC[2].hex});
+
+  // Top disk — in 3D: at y=h. In 2D: offset next to rectangle
+  const topDisk=makeDiskXZ(r,1,N);
+  pat.group.add(topDisk);
+  // Store 3D and 2D transforms
+  topDisk.userData={
+    pos3D:{x:0,y:h,z:0,rx:-HP},
+    pos2D:{x:0,y:0,z:r+0.3+h+r+0.3,rx:-HP}
+  };
+  hinges.push({type:'disk_morph',mesh:topDisk,label:'Disque haut',area:rnD(PD*r*r),colorHex:FC[1].hex});
+}
+
+/* ═══ CÔNE ═══
+   Same vertex-morphing approach. Lateral surface morphs between
+   cone (vertices on cone surface) and flat sector.
+*/
+function patCone(){
+  const r=P.r,h=P.h,N=48;
+  const g=Math.sqrt(r*r+h*h); // slant height
+  const sectorAngle=2*PI*r/g; // angle of the flat sector
+
+  // Bottom disk
+  const disk=makeDiskXZ(r,0,N);
+  pat.group.add(disk);
+  hinges.push({pivot:null,label:'Disque base',area:rnD(PD*r*r),colorHex:FC[0].hex});
+
+  // Lateral surface
+  const pos3D=[],pos2D=[],indices=[];
+  // Apex: 3D=(0,h,0), 2D=(0,0,-r-0.5) [center of sector above disk]
+  // We build rows from base (row 0) to apex (row nRows)
+  const nRows=16;
+  for(let j=0;j<=nRows;j++){
+    const t=j/nRows; // 0=base, 1=apex
+    const rowR=r*(1-t); // radius at this height on cone
+    const rowH=h*t;     // height on cone
+    const rowG=g*(1-t); // distance from apex on slant (for flat sector)
+    for(let i=0;i<=N;i++){
+      const a=i*2*PI/N;
+      // 3D: circle of radius rowR at height rowH
+      pos3D.push(rowR*Math.cos(a), rowH, rowR*Math.sin(a));
+      // 2D: sector centered at (0,0,-r-0.5-g), radius rowG from center
+      const flatA=-sectorAngle/2 + i*sectorAngle/N;
+      const scx=rowG*Math.sin(flatA);
+      const scz=-r-0.5-g+rowG*Math.cos(flatA);
+      pos2D.push(scx,0,scz);
+    }
+  }
+  for(let j=0;j<nRows;j++){
+    for(let i=0;i<N;i++){
+      const c=j*(N+1)+i, r1=c+1, u=c+(N+1), ur=u+1;
+      indices.push(c,r1,u, r1,ur,u);
+    }
+  }
+  const latGeo=new THREE.BufferGeometry();
+  latGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(pos3D),3));
+  latGeo.setIndex(indices);
+  latGeo.computeVertexNormals();
+  const latMesh=new THREE.Mesh(latGeo,colorMat(3));
+  latMesh.userData={pos3D:new Float32Array(pos3D),pos2D:new Float32Array(pos2D)};
+  latMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(latGeo,20),new THREE.LineBasicMaterial({color:0x222222})));
+  pat.group.add(latMesh);
+  hinges.push({type:'morph',mesh:latMesh,label:'Surface latérale',area:rnD(PD*r*g),colorHex:FC[3].hex});
+}
+
+/* Override applyFold to handle morph types */
+const _origApplyFold=function(t){
+  hinges.forEach(h=>{
+    if(!h.pivot) return;
+    if(h.type==='morph'||h.type==='disk_morph') return;
+    const a=h.foldAngle*(1-t);
+    h.pivot.rotation[h.axis]=a;
+  });
+};
+function applyFold(t){
+  hinges.forEach(h=>{
+    if(h.type==='morph'){
+      // Interpolate vertex positions
+      const m=h.mesh, p3=m.userData.pos3D, p2=m.userData.pos2D;
+      const pos=m.geometry.attributes.position.array;
+      for(let i=0;i<pos.length;i++) pos[i]=p3[i]*(1-t)+p2[i]*t;
+      m.geometry.attributes.position.needsUpdate=true;
+      m.geometry.computeVertexNormals();
+      // Update wireframe
+      if(m.children.length){m.remove(m.children[0]);}
+      m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry,15),new THREE.LineBasicMaterial({color:0x222222})));
+      return;
+    }
+    if(h.type==='disk_morph'){
+      const m=h.mesh, d3=m.userData.pos3D, d2=m.userData.pos2D;
+      m.position.set(
+        d3.x*(1-t)+d2.x*t,
+        d3.y*(1-t)+d2.y*t,
+        d3.z*(1-t)+d2.z*t
+      );
+      m.rotation.x=d3.rx*(1-t)+d2.rx*t;
+      return;
+    }
+    if(!h.pivot) return;
+    const a=h.foldAngle*(1-t);
+    h.pivot.rotation[h.axis]=a;
+  });
+}
+
+/* ═══ PYRAMIDE ═══
+   No rotY on pivots! Each face gets its own fold axis and triangle layout.
+   
+   Front: pivot(0,0,a/2), tri extends in +z, fold around X, angle=atan2(-h,-a/2)
+   Back:  pivot(0,0,-a/2), tri extends in -z, fold around X, angle=atan2(h,-a/2)
+   Right: pivot(a/2,0,0), tri extends in +x, fold around Z, angle=atan2(h,-a/2)
+   Left:  pivot(-a/2,0,0), tri extends in -x, fold around Z, angle=atan2(-h,-a/2)
+   
+   All apexes converge to world (0, h, 0). Verified numerically.
+*/
+function patPyramide(){
+  const a=P.a,h=P.h,ap=Math.sqrt(h*h+(a/2)*(a/2));
+  pat.group.add(makeQuadXZ([[-a/2,-a/2],[a/2,-a/2],[a/2,a/2],[-a/2,a/2]],0));
+  hinges.push({pivot:null,label:'Base carrée',area:a*a,colorHex:FC[0].hex});
+
+  // Front: hinge z=+a/2, triangle in XZ extending in +z
+  {const pv=new THREE.Group();pv.position.set(0,0,a/2);pat.group.add(pv);
+   pv.add(makeTriXZ([[-a/2,0],[a/2,0],[0,ap]],2));
+   hinges.push({pivot:pv,axis:'x',foldAngle:Math.atan2(-h,-a/2),label:'Avant',area:rn(a*ap/2),colorHex:FC[2].hex});}
+
+  // Back: hinge z=-a/2, triangle in XZ extending in -z
+  {const pv=new THREE.Group();pv.position.set(0,0,-a/2);pat.group.add(pv);
+   pv.add(makeTriXZ([[-a/2,0],[a/2,0],[0,-ap]],3));
+   hinges.push({pivot:pv,axis:'x',foldAngle:Math.atan2(h,-a/2),label:'Arrière',area:rn(a*ap/2),colorHex:FC[3].hex});}
+
+  // Right: hinge x=+a/2, triangle in XZ extending in +x
+  {const pv=new THREE.Group();pv.position.set(a/2,0,0);pat.group.add(pv);
+   pv.add(makeTriXZ([[0,-a/2],[0,a/2],[ap,0]],5));
+   hinges.push({pivot:pv,axis:'z',foldAngle:Math.atan2(h,-a/2),label:'Droite',area:rn(a*ap/2),colorHex:FC[5].hex});}
+
+  // Left: hinge x=-a/2, triangle in XZ extending in -x
+  {const pv=new THREE.Group();pv.position.set(-a/2,0,0);pat.group.add(pv);
+   pv.add(makeTriXZ([[0,-a/2],[0,a/2],[-ap,0]],4));
+   hinges.push({pivot:pv,axis:'z',foldAngle:Math.atan2(-h,-a/2),label:'Gauche',area:rn(a*ap/2),colorHex:FC[4].hex});}
+}
+
+/* ═══ PRISME TRIANGULAIRE ═══
+   Cross-section: isoceles triangle base=b, height=ht
+   Depth along Z = h
+   
+   Base rect: b×h on XZ plane (bottom face of the prism)
+   Left lateral: hyp×h, hinges at x=-b/2
+   Right lateral: hyp×h, hinges at x=+b/2
+   Front triangle: hinges at z=+h/2
+   Back triangle: hinges at z=-h/2
+   
+   Geometry check for left face:
+   - Pivot at (-b/2, 0, 0), face extends in LOCAL -x from 0 to -hyp
+   - Rotation around Z by angle θ: x'=x·cosθ - y·sinθ, y'=x·sinθ + y·cosθ
+   - For point (x=-hyp, y=0): x'=-hyp·cosθ, y'=-hyp·sinθ
+   - We want this point to end up at WORLD (-b/2 + (-b/2), ht, z) = (-b, ht, z)
+   - In LOCAL that's x'=-b/2, y'=ht
+   - -hyp·cosθ = -b/2 → cosθ = b/(2·hyp) ✓
+   - -hyp·sinθ = ht → sinθ = -ht/hyp → θ = -atan2(ht, b/2)
+   
+   For right face:
+   - Pivot at (b/2, 0, 0), face extends in LOCAL +x from 0 to +hyp
+   - Point (x=hyp, y=0): x'=hyp·cosθ, y'=hyp·sinθ
+   - Want LOCAL x'=b/2, y'=ht
+   - hyp·cosθ = b/2 → cosθ = b/(2·hyp) ✓
+   - hyp·sinθ = ht → sinθ = ht/hyp → θ = +atan2(ht, b/2)
+*/
+function patPrisme(){
+  const b=P.b,ht=P.ht,h=P.h,hyp=Math.sqrt((b/2)*(b/2)+ht*ht);
+  // Base rect (b×h on XZ)
+  pat.group.add(makeQuadXZ([[-b/2,-h/2],[b/2,-h/2],[b/2,h/2],[-b/2,h/2]],0));
+  hinges.push({pivot:null,label:'Dessous',area:rn(b*h),colorHex:FC[0].hex});
+  const ang=Math.atan2(ht,b/2);
+  // Left: hinge x=-b/2, extends in -x → foldAngle = -ang
+  addXZWall([[0,-h/2],[-hyp,-h/2],[-hyp,h/2],[0,h/2]],{x:-b/2,y:0,z:0},'z',-ang,'Lat. gauche',rn(hyp*h),4);
+  // Right: hinge x=+b/2, extends in +x → foldAngle = +ang
+  addXZWall([[0,-h/2],[hyp,-h/2],[hyp,h/2],[0,h/2]],{x:b/2,y:0,z:0},'z',ang,'Lat. droite',rn(hyp*h),5);
+  // Front tri: hinge z=+h/2
+  {const pv=new THREE.Group();pv.position.set(0,0,h/2);pat.group.add(pv);
+   pv.add(makeTriXZ([[-b/2,0],[b/2,0],[0,ht]],2));
+   hinges.push({pivot:pv,axis:'x',foldAngle:-HP,label:'Tri. avant',area:rn(b*ht/2),colorHex:FC[2].hex});}
+  // Back tri: hinge z=-h/2
+  {const pv=new THREE.Group();pv.position.set(0,0,-h/2);pv.rotation.y=PI;pat.group.add(pv);
+   pv.add(makeTriXZ([[-b/2,0],[b/2,0],[0,ht]],3));
+   hinges.push({pivot:pv,axis:'x',foldAngle:-HP,label:'Tri. arrière',area:rn(b*ht/2),colorHex:FC[3].hex});}
+}
+
+/* ═══ UNFOLD / FOLD ANIMATIONS ═══ */
+function doUnfold(){
+  if(unfoldAF) cancelAnimationFrame(unfoldAF);
+  document.getElementById('btnU').classList.add('off');
+  document.getElementById('btnF').classList.add('off');
+  const t0=unfoldT, start=performance.now(), dur=getAnimDur();
+  function frame(now){
+    let p=Math.min((now-start)/dur,1);
+    p=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+    unfoldT=t0+(1-t0)*p;
+    applyFold(unfoldT); updatePct(unfoldT);
+    if(p<1) unfoldAF=requestAnimationFrame(frame);
+    else{unfoldT=1;applyFold(1);updatePct(1);
+      document.getElementById('btnF').classList.remove('off');
+      document.getElementById('btnU').classList.add('off');
+      document.getElementById('patStep').innerHTML=`<strong>✂️</strong> Patron déplié ! Appuie sur <b>Replier</b>.`;
+      setTimeout(()=>patCam('dessus'),400);
+    }
+  }
+  document.getElementById('patStep').innerHTML=`<strong>✂️</strong> Dépliage en cours…`;
+  unfoldAF=requestAnimationFrame(frame);
+}
+
+function doFold(){
+  if(unfoldAF) cancelAnimationFrame(unfoldAF);
+  document.getElementById('btnU').classList.add('off');
+  document.getElementById('btnF').classList.add('off');
+  patCam('3d');
+  const t0=unfoldT, start=performance.now(), dur=getAnimDur();
+  function frame(now){
+    let p=Math.min((now-start)/dur,1);
+    p=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+    unfoldT=t0*(1-p);
+    applyFold(unfoldT); updatePct(unfoldT);
+    if(p<1) unfoldAF=requestAnimationFrame(frame);
+    else{unfoldT=0;applyFold(0);updatePct(0);
+      document.getElementById('btnU').classList.remove('off');
+      document.getElementById('btnF').classList.add('off');
+      document.getElementById('patStep').innerHTML=`<strong>📦</strong> Solide reconstitué ! Appuie sur <b>Déplier</b>.`;
+    }
+  }
+  document.getElementById('patStep').innerHTML=`<strong>📦</strong> Repliage en cours…`;
+  unfoldAF=requestAnimationFrame(frame);
+}
+
+function resetPat(){
+  if(unfoldAF) cancelAnimationFrame(unfoldAF);
+  rebuildPat();
+}
+
+function updatePct(t){
+  const p=Math.round(t*100);
+  document.getElementById('pctLabel').textContent=p+'%';
+  document.getElementById('pctBar').style.width=p+'%';
+}
+
+function patCam(v){
+  pat.autoRot=false;
+  const d=Math.max(...Object.values(P))*2;
+  pat.group.rotation.set(0,0,0);
+  if(v==='3d')pat.camera.position.set(d*1.1,d*.9,d*1.3);
+  else if(v==='dessus')pat.camera.position.set(0,d*2.5,.01);
+  else if(v==='face')pat.camera.position.set(0,d*.2,d*2);
+  else{pat.autoRot=true;pat.camera.position.set(d*1.1,d*.9,d*1.3)}
+  pat.camera.lookAt(0,0,0);
+}
+
+function buildFaceLeg(){
+  const shown=hinges.filter(h=>h.label);
+  document.getElementById('faceLeg').innerHTML=shown.map(h=>
+    `<div class="face-item"><div class="face-swatch" style="background:${h.colorHex}40;border-color:${h.colorHex}"></div><span class="face-name">${h.label}</span>${h.area?`<span class="face-area">${h.area} cm²</span>`:''}</div>`
+  ).join('');
+  // Detailed info panel
+  const info=document.getElementById('patInfo');
+  if(!info) return;
+  let html='';
+  const c=CFG[shape], totalS=c.surf(P);
+  // Per-shape dimension details
+  switch(shape){
+    case'pave':{
+      const L=P.L,l=P.l,h=P.h;
+      html=`<table class="pat-info-table">
+        <tr><td>Longueur L</td><td>${L} cm</td></tr>
+        <tr><td>Largeur ℓ</td><td>${l} cm</td></tr>
+        <tr><td>Hauteur h</td><td>${h} cm</td></tr>
+        <tr><td>Face L×ℓ (×2)</td><td>${rn(L*l)} cm²</td></tr>
+        <tr><td>Face L×h (×2)</td><td>${rn(L*h)} cm²</td></tr>
+        <tr><td>Face ℓ×h (×2)</td><td>${rn(l*h)} cm²</td></tr>
+      </table>`;break}
+    case'cube':{
+      const c2=P.c;
+      html=`<table class="pat-info-table">
+        <tr><td>Côté c</td><td>${c2} cm</td></tr>
+        <tr><td>Aire 1 face</td><td>${rn(c2*c2)} cm²</td></tr>
+        <tr><td>Nombre de faces</td><td>6</td></tr>
+      </table>`;break}
+    case'cylindre':{
+      const r2=P.r,h2=P.h,circ=rnD(2*PD*r2);
+      html=`<table class="pat-info-table">
+        <tr><td>Rayon r</td><td>${r2} cm</td></tr>
+        <tr><td>Hauteur h</td><td>${h2} cm</td></tr>
+        <tr><td>π (approx.)</td><td><b>3</b></td></tr>
+        <tr><td>Périmètre base</td><td>2×3×${r2} = ${circ} cm</td></tr>
+        <tr><td>Rectangle latéral</td><td>${circ} × ${h2} cm</td></tr>
+        <tr><td>Aire latérale</td><td>${rnD(circ*h2)} cm²</td></tr>
+        <tr><td>Aire 1 disque</td><td>3×${r2}² = ${rnD(PD*r2*r2)} cm²</td></tr>
+      </table>`;break}
+    case'cone':{
+      const r2=P.r,h2=P.h,g=rn(Math.sqrt(r2*r2+h2*h2));
+      html=`<table class="pat-info-table">
+        <tr><td>Rayon r</td><td>${r2} cm</td></tr>
+        <tr><td>Hauteur h</td><td>${h2} cm</td></tr>
+        <tr><td>π (approx.)</td><td><b>3</b></td></tr>
+        <tr><td>Génératrice g</td><td>√(${r2}²+${h2}²) = ${g} cm</td></tr>
+        <tr><td>Secteur (rayon)</td><td>${g} cm</td></tr>
+        <tr><td>Aire latérale</td><td>3×${r2}×${g} = ${rnD(PD*r2*g)} cm²</td></tr>
+        <tr><td>Aire disque</td><td>3×${r2}² = ${rnD(PD*r2*r2)} cm²</td></tr>
+      </table>`;break}
+    case'pyramide':{
+      const a=P.a,h2=P.h,ap=rn(Math.sqrt(h2*h2+(a/2)*(a/2)));
+      html=`<table class="pat-info-table">
+        <tr><td>Côté base a</td><td>${a} cm</td></tr>
+        <tr><td>Hauteur h</td><td>${h2} cm</td></tr>
+        <tr><td>Apothème face</td><td>${ap} cm</td></tr>
+        <tr><td>Aire base (a²)</td><td>${rn(a*a)} cm²</td></tr>
+        <tr><td>Aire 1 triangle</td><td>${rn(a*ap/2)} cm²</td></tr>
+        <tr><td>4 triangles</td><td>${rn(2*a*ap)} cm²</td></tr>
+      </table>`;break}
+    case'prisme':{
+      const b=P.b,ht=P.ht,h2=P.h,hyp=rn(Math.sqrt((b/2)*(b/2)+ht*ht));
+      html=`<table class="pat-info-table">
+        <tr><td>Base triangle b</td><td>${b} cm</td></tr>
+        <tr><td>Hauteur triangle</td><td>${ht} cm</td></tr>
+        <tr><td>Profondeur p</td><td>${h2} cm</td></tr>
+        <tr><td>Côté incliné</td><td>${hyp} cm</td></tr>
+        <tr><td>Aire 1 triangle</td><td>${rn(b*ht/2)} cm²</td></tr>
+        <tr><td>Rectangle base</td><td>${b}×${h2} = ${rn(b*h2)} cm²</td></tr>
+        <tr><td>Rectangles lat.</td><td>${hyp}×${h2} (×2)</td></tr>
+      </table>`;break}
+  }
+  html+=`<div class="pat-total"><span>Surface totale</span><span>${totalS} cm²</span></div>`;
+  info.innerHTML=html;
+}
+
+/* ═══════════════════════════════════════
+   COMMON UTILS
+   ═══════════════════════════════════════ */
+function drag(cvs,group,onStart){
+  let d=false,pr={x:0,y:0};
+  const mv=(dx,dy)=>{group.rotation.y+=dx*.008;group.rotation.x+=dy*.008;group.rotation.x=Math.max(-HP,Math.min(HP,group.rotation.x))};
+  cvs.addEventListener('mousedown',e=>{d=true;pr={x:e.clientX,y:e.clientY};if(onStart)onStart()});
+  cvs.addEventListener('mousemove',e=>{if(!d)return;mv(e.clientX-pr.x,e.clientY-pr.y);pr={x:e.clientX,y:e.clientY}});
+  cvs.addEventListener('mouseup',()=>d=false);cvs.addEventListener('mouseleave',()=>d=false);
+  cvs.addEventListener('touchstart',e=>{d=true;pr={x:e.touches[0].clientX,y:e.touches[0].clientY};if(onStart)onStart()},{passive:true});
+  cvs.addEventListener('touchmove',e=>{if(!d||!e.touches.length)return;mv(e.touches[0].clientX-pr.x,e.touches[0].clientY-pr.y);pr={x:e.touches[0].clientX,y:e.touches[0].clientY}},{passive:true});
+  cvs.addEventListener('touchend',()=>d=false);
+}
+function zoom(cvs,cam){
+  cvs.addEventListener('wheel',e=>{e.preventDefault();cam.position.multiplyScalar(e.deltaY>0?1.05:.95);cam.position.clampLength(4,60)},{passive:false});
+}
+
+/* ═══ INIT ═══ */
+initVol();
+buildVolCtrls();
+refreshVol();
+</script>
+</body>
+</html>
