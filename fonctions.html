@@ -1,0 +1,2198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fonctions — Simulateur graphique</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f6fa;--card:#ffffff;--card2:#f0f2f8;--border:#d8dce8;
+  --text:#1a1e2e;--muted:#5a6180;--dim:#c0c4d4;
+  --cyan:#0077b6;--magenta:#c2185b;--lime:#2e7d32;--amber:#e65100;--violet:#6a1b9a;--red:#c62828;
+  --grid:#d0d4e0;--axis:#1a1e2e;
+  --radius:14px;--shadow:0 2px 16px rgba(0,0,0,.07);
+  --curve1:#0077b6;--curve2:#c2185b;--curveGlow:rgba(0,119,182,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ═══ HEADER ═══ */
+.hero{padding:28px 24px 18px;text-align:center;position:relative}
+.hero::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);border-radius:2px}
+.hero h1{font-family:'JetBrains Mono',monospace;font-size:clamp(1.3rem,3.5vw,1.8rem);font-weight:800;letter-spacing:-0.5px;color:#1a1e2e}
+.hero h1 .fx{color:var(--cyan)}
+.hero h1 .eq{color:var(--magenta)}
+.hero p{color:var(--muted);font-size:.85rem;margin-top:4px;font-weight:600}
+
+/* ═══ TYPE SELECTOR ═══ */
+.types{display:flex;gap:6px;padding:14px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.types::-webkit-scrollbar{display:none}
+.tbtn{padding:9px 16px;border-radius:10px;border:2px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;white-space:nowrap;transition:all .2s;box-shadow:var(--shadow)}
+.tbtn:hover{border-color:var(--cyan);color:var(--cyan)}
+.tbtn.active{border-color:var(--cyan);background:rgba(0,119,182,.08);color:var(--cyan);box-shadow:0 0 0 3px rgba(0,119,182,.12)}
+
+/* ═══ LAYOUT ═══ */
+.main{display:grid;grid-template-columns:1fr 340px;gap:16px;padding:16px;max-width:1200px;margin:0 auto}
+@media(max-width:860px){.main{grid-template-columns:1fr;}.panel{max-height:none!important}}
+
+/* ═══ CANVAS ═══ */
+.graph-wrap{background:#ffffff;border-radius:var(--radius);overflow:hidden;position:relative;border:1px solid var(--border);box-shadow:var(--shadow)}
+.graph-wrap canvas{display:block;width:100%;cursor:crosshair}
+.coords{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.coords .cx{color:var(--cyan);font-weight:800}.coords .cy{color:var(--magenta);font-weight:800}
+.graph-tools{position:absolute;bottom:12px;left:12px;display:flex;gap:6px}
+.gtool{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.9);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;transition:all .15s;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.gtool:hover{border-color:var(--cyan);color:var(--cyan);background:#fff}
+.gtool.active{border-color:var(--lime);color:var(--lime);background:rgba(46,125,50,.06)}
+
+/* ═══ PANEL ═══ */
+.panel{display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 140px);overflow-y:auto}
+.panel::-webkit-scrollbar{width:4px}.panel::-webkit-scrollbar-thumb{background:var(--dim);border-radius:4px}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.pcard h3{font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:800;color:var(--cyan);margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:1px}
+.pcard h3 .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ═══ SLIDERS ═══ */
+.sl{margin-bottom:10px}
+.sl-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.sl-name{font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;color:var(--muted)}
+.sl-val{font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:800;color:var(--amber);min-width:50px;text-align:right}
+.sl input[type=range]{width:100%;height:5px;-webkit-appearance:none;background:var(--dim);border-radius:3px;outline:none}
+.sl input::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--cyan);cursor:pointer;box-shadow:0 1px 6px rgba(0,119,182,.3)}
+
+/* ═══ FORMULA ═══ */
+.formula-box{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;margin-bottom:8px}
+.formula{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:800;letter-spacing:.5px}
+.formula .fn{color:var(--cyan)}.formula .op{color:var(--magenta)}.formula .num{color:var(--amber)}.formula .var{color:var(--lime)}
+
+/* ═══ TABLE ═══ */
+.vtable{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:.72rem}
+.vtable th{padding:6px 4px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border);text-align:center}
+.vtable td{padding:5px 4px;text-align:center;border-bottom:1px solid rgba(37,42,56,.5)}
+.vtable td.xv{color:var(--cyan);font-weight:700}
+.vtable td.yv{color:var(--magenta);font-weight:700}
+
+/* ═══ PROPERTIES ═══ */
+.props{display:flex;flex-direction:column;gap:6px}
+.prop{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--card2);border-radius:8px;font-size:.78rem}
+.prop-name{color:var(--muted);font-weight:600}
+.prop-val{font-family:'JetBrains Mono',monospace;font-weight:800;color:var(--lime)}
+.prop-val.na{color:var(--dim);font-weight:600}
+
+/* ═══ PEDAGOGY TIPS ═══ */
+.tip{background:rgba(0,119,182,.05);border:1px solid rgba(0,119,182,.15);border-radius:10px;padding:12px;font-size:.78rem;color:var(--muted);line-height:1.5;margin-top:6px}
+.tip strong{color:var(--cyan)}
+.tip em{color:var(--amber);font-style:normal;font-weight:700}
+
+/* ═══ TOGGLES ═══ */
+.toggles{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tgl{padding:6px 12px;border-radius:7px;border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700;transition:all .15s}
+.tgl:hover{border-color:var(--violet);color:var(--violet)}
+.tgl.on{border-color:var(--lime);color:var(--lime);background:rgba(46,125,50,.06)}
+
+/* ═══ MODE TABS ═══ */
+.mode-tabs{display:flex;gap:0;margin:0 16px 16px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--border);max-width:1200px;margin-left:auto;margin-right:auto}
+.mtab{flex:1;padding:13px 20px;border:none;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:700;color:var(--muted);background:var(--card);transition:all .2s;text-align:center}
+.mtab:hover{color:var(--cyan);background:rgba(0,119,182,.04)}
+.mtab.active{color:#fff;background:linear-gradient(135deg,#0077b6,#0096c7)}
+
+/* ═══ TERMINOLOGIE ═══ */
+.termin-wrap{max-width:820px;margin:0 auto;padding:0 16px}
+.t-input-card{margin-bottom:16px}
+.t-formula-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.t-fx{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:800;color:var(--cyan);white-space:nowrap}
+.t-input{flex:1;font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;padding:12px 16px;border:2px solid var(--border);border-radius:10px;background:var(--card2);color:var(--text);outline:none;transition:border-color .2s}
+.t-input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,119,182,.1)}
+.t-btn{padding:12px 20px;border-radius:10px;border:none;background:linear-gradient(135deg,#0077b6,#0096c7);color:#fff;font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:800;cursor:pointer;transition:transform .15s;white-space:nowrap}
+.t-btn:hover{transform:translateY(-1px);box-shadow:0 3px 12px rgba(0,119,182,.25)}
+.t-btn:active{transform:scale(.97)}
+.t-btn-sm{padding:8px 14px;font-size:.78rem}
+.t-examples{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center}
+.t-ex-label{font-size:.75rem;font-weight:700;color:var(--muted);margin-right:4px}
+.t-ex{padding:5px 12px;border-radius:7px;border:1.5px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:700;transition:all .15s}
+.t-ex:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(0,119,182,.04)}
+.t-xrow{display:flex;align-items:center;gap:10px}
+.t-xlabel{font-size:.85rem;font-weight:700;color:var(--muted);white-space:nowrap}
+.t-xinput{width:80px;font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:700;padding:8px 12px;border:2px solid var(--border);border-radius:8px;background:var(--card2);color:var(--text);outline:none;text-align:center}
+.t-xinput:focus{border-color:var(--amber)}
+.t-error{margin-top:10px;font-size:.82rem;font-weight:700;color:var(--red);min-height:20px}
+.t-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:600px){.t-grid{grid-template-columns:1fr}}
+.t-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;box-shadow:var(--shadow)}
+.t-card-type{border-left:4px solid var(--cyan)}
+.t-card-eval{border-left:4px solid var(--amber)}
+.t-card-icon{font-size:2rem;margin-bottom:6px}
+.t-card-label{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:4px}
+.t-card-val{font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:800;color:var(--text)}
+.t-card-sub{font-size:.78rem;color:var(--muted);margin-top:4px;font-weight:600}
+.t-vocab{display:flex;flex-direction:column;gap:8px}
+.t-vocab-item{display:flex;gap:12px;padding:12px 14px;background:var(--card2);border-radius:10px;border-left:3px solid var(--cyan)}
+.t-vocab-item .t-vterm{font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:800;color:var(--cyan);min-width:130px;flex-shrink:0}
+.t-vocab-item .t-vdef{font-size:.82rem;color:var(--text);line-height:1.5}
+.t-vocab-item .t-vval{font-family:'JetBrains Mono',monospace;font-weight:800;color:var(--amber)}
+
+/* ═══ COMPARATEUR ═══ */
+.cmp-layout{display:grid;grid-template-columns:1fr 360px;gap:16px;padding:16px;max-width:1200px;margin:0 auto}
+@media(max-width:860px){.cmp-layout{grid-template-columns:1fr}}
+.cmp-panel{display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 140px);overflow-y:auto}
+.cmp-panel::-webkit-scrollbar{width:4px}.cmp-panel::-webkit-scrollbar-thumb{background:var(--dim);border-radius:4px}
+.cmp-add-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.cmp-add-row .t-input{font-size:.88rem;padding:10px 12px}
+.cmp-presets{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;align-items:center}
+.cmp-count{font-size:.7rem;font-weight:700;color:var(--muted);margin-left:auto}
+.cmp-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;max-height:380px;overflow-y:auto}
+.cmp-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card2);border-radius:8px;border-left:4px solid;font-size:.82rem;transition:opacity .15s}
+.cmp-item-color{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+.cmp-item-name{font-family:'JetBrains Mono',monospace;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmp-item-idx{font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:800;color:var(--muted);width:22px;text-align:center}
+.cmp-item-toggle{width:28px;height:28px;border-radius:6px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;transition:all .12s;color:var(--muted)}
+.cmp-item-toggle:hover{border-color:var(--red);color:var(--red)}
+.cmp-item-toggle.hide{opacity:.4}
+.cmp-item-del{width:28px;height:28px;border-radius:6px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--muted);transition:all .12s}
+.cmp-item-del:hover{border-color:var(--red);color:var(--red);background:rgba(198,40,40,.06)}
+.cmp-actions{display:flex;gap:8px}
+.cmp-eval-row{margin-bottom:8px}
+.cmp-inter-list{display:flex;flex-direction:column;gap:4px}
+.cmp-inter-item{font-family:'JetBrains Mono',monospace;font-size:.78rem;padding:6px 10px;background:var(--card2);border-radius:6px}
+
+/* ═══ QUIZ ═══ */
+.quiz-wrap{max-width:680px;margin:0 auto;padding:0 16px}
+.quiz-top{margin-bottom:16px}
+.quiz-score-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+.qsb-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;box-shadow:var(--shadow)}
+.qsb-label{display:block;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:2px}
+.qsb-val{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:800;color:var(--text)}
+.qsb-streak{color:var(--amber)}
+.qsb-time{color:var(--red)}
+.quiz-progress{width:100%;height:6px;background:var(--dim);border-radius:3px;overflow:hidden}
+.quiz-progress-fill{height:100%;background:linear-gradient(90deg,var(--cyan),#0096c7);border-radius:3px;transition:width .3s;width:0%}
+.quiz-diff{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.quiz-diff-label{font-size:.82rem;font-weight:700;color:var(--muted);margin-right:4px}
+.q-diff-btn{padding:8px 16px;border-radius:8px;border:2px solid var(--border);background:var(--card);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:700;color:var(--muted);transition:all .15s}
+.q-diff-btn:hover{border-color:var(--cyan)}
+.q-diff-btn.active{border-color:var(--cyan);background:rgba(0,119,182,.08);color:var(--cyan)}
+.quiz-topics{margin-bottom:8px}
+.quiz-topic-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.q-topic{padding:6px 12px;border-radius:7px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-size:.75rem;font-weight:700;color:var(--muted);transition:all .15s}
+.q-topic:hover{border-color:var(--lime)}
+.q-topic.on{border-color:var(--lime);color:var(--lime);background:rgba(46,125,50,.06)}
+.quiz-q-card{text-align:center;padding:28px 24px}
+.quiz-q-type{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
+.quiz-q-text{font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:16px;line-height:1.5}
+.quiz-q-formula{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:800;color:var(--cyan);margin-bottom:20px;padding:14px;background:var(--card2);border-radius:10px;border:1px solid var(--border)}
+.quiz-q-graph-wrap{margin:0 auto 20px;max-width:400px;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.quiz-q-graph-wrap canvas{display:block;width:100%}
+.quiz-answers{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:460px;margin:0 auto}
+@media(max-width:500px){.quiz-answers{grid-template-columns:1fr}}
+.q-ans{padding:14px 16px;border-radius:10px;border:2px solid var(--border);background:var(--card);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:700;color:var(--text);transition:all .15s;text-align:center}
+.q-ans:hover{border-color:var(--cyan);background:rgba(0,119,182,.04);transform:translateY(-1px)}
+.q-ans.correct{border-color:var(--lime);background:rgba(46,125,50,.1);color:var(--lime);animation:qPop .3s ease}
+.q-ans.wrong{border-color:var(--red);background:rgba(198,40,40,.08);color:var(--red);animation:qShake .35s ease}
+.q-ans.reveal{border-color:var(--lime);background:rgba(46,125,50,.06)}
+.q-ans.disabled{pointer-events:none;opacity:.6}
+@keyframes qPop{0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
+@keyframes qShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.quiz-feedback{margin-top:16px;padding:14px;border-radius:10px;font-size:.88rem;font-weight:600;line-height:1.5;display:none}
+.quiz-feedback.show{display:block}
+.quiz-feedback.ok{background:rgba(46,125,50,.08);border:1px solid rgba(46,125,50,.2);color:var(--lime)}
+.quiz-feedback.ko{background:rgba(198,40,40,.06);border:1px solid rgba(198,40,40,.15);color:var(--red)}
+.quiz-result{text-align:center}
+.quiz-result-card{padding:36px 24px}
+.quiz-result-emoji{font-size:4rem;margin-bottom:12px}
+.quiz-result-score{font-family:'JetBrains Mono',monospace;font-size:2.5rem;font-weight:800;color:var(--cyan);margin-bottom:6px}
+.quiz-result-msg{font-size:1.1rem;font-weight:700;color:var(--muted);margin-bottom:20px}
+.quiz-result-details{display:flex;flex-direction:column;gap:4px;text-align:left;max-width:400px;margin:0 auto}
+.qrd-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;font-size:.8rem;background:var(--card2)}
+.qrd-ok{color:var(--lime)}.qrd-ko{color:var(--red)}
+.quiz-timer-settings{margin-bottom:14px}
+.quiz-timer-toggle{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.quiz-timer-dur{margin-left:0}
+.quiz-timer-slider{display:flex;align-items:center;gap:10px;margin-top:6px}
+.quiz-timer-slider input[type=range]{flex:1;height:5px;-webkit-appearance:none;background:var(--dim);border-radius:3px}
+.quiz-timer-slider input::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--amber);cursor:pointer}
+.quiz-next-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:18px}
+.q-next-btn{padding:12px 32px;font-size:.95rem}
+.q-explain-btn{padding:10px 20px;border-radius:10px;border:2px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:700;transition:all .15s}
+.q-explain-btn:hover{border-color:var(--amber);color:var(--amber);background:rgba(230,81,0,.04)}
+.qsb-item.timer-off{opacity:.3}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1><span class="fx">f(x)</span> <span class="eq">=</span> Simulateur graphique</h1>
+  <p>Explore les fonctions de base jusqu'aux logarithmes et exponentielles</p>
+</div>
+
+<div class="mode-tabs">
+  <button class="mtab active" id="mtGraph" onclick="switchTab('graph')">📊 Graphique</button>
+  <button class="mtab" id="mtTermin" onclick="switchTab('termin')">📖 Terminologie</button>
+  <button class="mtab" id="mtCompare" onclick="switchTab('compare')">🔬 Comparateur</button>
+  <button class="mtab" id="mtQuiz" onclick="switchTab('quiz')">🎯 Quiz</button>
+</div>
+
+<div id="tabGraphContent">
+<div class="types" id="typeBar"></div>
+
+<div class="main">
+  <div class="graph-wrap">
+    <canvas id="graph" width="800" height="600"></canvas>
+    <div class="coords" id="coords">x: <span class="cx">—</span> &nbsp; y: <span class="cy">—</span></div>
+    <div class="graph-tools">
+      <button class="gtool" onclick="zoomIn()" title="Zoom +">+</button>
+      <button class="gtool" onclick="zoomOut()" title="Zoom −">−</button>
+      <button class="gtool" onclick="resetView()" title="Recentrer">⌂</button>
+      <button class="gtool" id="btnGrid" onclick="toggleGrid()" title="Grille">▦</button>
+      <button class="gtool" id="btnDeriv" onclick="toggleDeriv()" title="Dérivée">f'</button>
+      <button class="gtool" id="btnTangent" onclick="toggleTangent()" title="Tangente">⟋</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="pcard">
+      <h3><span class="dot" style="background:var(--cyan)"></span>Formule</h3>
+      <div class="formula-box"><div class="formula" id="formulaDisp"></div></div>
+      <div id="sliders"></div>
+    </div>
+
+    <div class="pcard">
+      <h3><span class="dot" style="background:var(--lime)"></span>Propriétés</h3>
+      <div class="props" id="propsBox"></div>
+      <div class="toggles" id="toggles"></div>
+    </div>
+
+    <div class="pcard">
+      <h3><span class="dot" style="background:var(--magenta)"></span>Table de valeurs</h3>
+      <table class="vtable" id="valTable"></table>
+    </div>
+
+    <div class="pcard">
+      <h3><span class="dot" style="background:var(--amber)"></span>Pédagogie</h3>
+      <div class="tip" id="tipBox"></div>
+    </div>
+  </div>
+</div>
+</div><!-- end tabGraphContent -->
+
+<!-- ═══ TERMINOLOGIE TAB ═══ -->
+<div id="tabTerminContent" style="display:none">
+<div class="termin-wrap">
+
+  <div class="t-input-card pcard">
+    <h3><span class="dot" style="background:var(--cyan)"></span>Écrire une fonction</h3>
+    <div class="t-formula-row">
+      <span class="t-fx">f(x) =</span>
+      <input type="text" id="tInput" class="t-input" placeholder="2x+3  ou  x^2-4x+1  ou  3*2^x" spellcheck="false" autocomplete="off">
+      <button class="t-btn" onclick="analyzeFunction()">Analyser</button>
+    </div>
+    <div class="t-examples">
+      <span class="t-ex-label">Exemples :</span>
+      <button class="t-ex" onclick="setExpr('2*x+3')">2x+3</button>
+      <button class="t-ex" onclick="setExpr('-x+5')">−x+5</button>
+      <button class="t-ex" onclick="setExpr('x^2-4*x+3')">x²−4x+3</button>
+      <button class="t-ex" onclick="setExpr('-2*x^2+8')">−2x²+8</button>
+      <button class="t-ex" onclick="setExpr('3*abs(x-1)+2')">3|x−1|+2</button>
+      <button class="t-ex" onclick="setExpr('1/x')">1/x</button>
+      <button class="t-ex" onclick="setExpr('sqrt(x)')">√x</button>
+      <button class="t-ex" onclick="setExpr('2^x')">2ˣ</button>
+      <button class="t-ex" onclick="setExpr('log(x)')">log(x)</button>
+      <button class="t-ex" onclick="setExpr('5')">5</button>
+    </div>
+    <div class="t-xrow">
+      <label class="t-xlabel">Évaluer en x₀ =</label>
+      <input type="number" id="tX0" class="t-xinput" value="2" step="0.5">
+      <button class="t-btn t-btn-sm" onclick="analyzeFunction()">Calculer</button>
+    </div>
+    <div class="t-error" id="tError"></div>
+  </div>
+
+  <div class="t-results" id="tResults" style="display:none">
+
+    <div class="t-grid">
+      <div class="t-card t-card-type">
+        <div class="t-card-icon" id="tTypeIcon">📈</div>
+        <div class="t-card-label">Type de fonction</div>
+        <div class="t-card-val" id="tType">—</div>
+        <div class="t-card-sub" id="tTypeSub"></div>
+      </div>
+      <div class="t-card t-card-eval">
+        <div class="t-card-icon">📍</div>
+        <div class="t-card-label">Image de x₀</div>
+        <div class="t-card-val" id="tFx0">—</div>
+        <div class="t-card-sub" id="tFx0Sub"></div>
+      </div>
+    </div>
+
+    <div class="pcard">
+      <h3><span class="dot" style="background:var(--cyan)"></span>Vocabulaire</h3>
+      <div class="t-vocab" id="tVocab"></div>
+    </div>
+
+    <div class="pcard">
+      <h3><span class="dot" style="background:var(--lime)"></span>Propriétés de la fonction</h3>
+      <div class="props" id="tProps"></div>
+    </div>
+
+    <div class="pcard">
+      <h3><span class="dot" style="background:var(--magenta)"></span>Table de valeurs</h3>
+      <table class="vtable" id="tTable"></table>
+    </div>
+
+    <div class="pcard">
+      <h3><span class="dot" style="background:var(--amber)"></span>Résumé pédagogique</h3>
+      <div class="tip" id="tSummary"></div>
+    </div>
+
+  </div>
+</div>
+</div><!-- end tabTerminContent -->
+
+<!-- ═══ COMPARATEUR TAB ═══ -->
+<div id="tabCompareContent" style="display:none">
+<div class="cmp-layout">
+  <div class="graph-wrap">
+    <canvas id="cmpGraph" width="800" height="600"></canvas>
+    <div class="coords" id="cmpCoords">x: <span class="cx">—</span> &nbsp; y: <span class="cy">—</span></div>
+    <div class="graph-tools">
+      <button class="gtool" onclick="cmpZoomIn()">+</button>
+      <button class="gtool" onclick="cmpZoomOut()">−</button>
+      <button class="gtool" onclick="cmpResetView()">⌂</button>
+      <button class="gtool" id="cmpBtnGrid" onclick="cmpToggleGrid()">▦</button>
+    </div>
+  </div>
+  <div class="cmp-panel">
+    <div class="pcard">
+      <h3><span class="dot" style="background:var(--cyan)"></span>Fonctions <span class="cmp-count" id="cmpCount">0/15</span></h3>
+      <div class="cmp-add-row">
+        <span class="t-fx">f(x)=</span>
+        <input type="text" id="cmpInput" class="t-input" placeholder="2x+3" spellcheck="false">
+        <button class="t-btn" onclick="cmpAdd()">+ Ajouter</button>
+      </div>
+      <div class="cmp-presets">
+        <span class="t-ex-label">Rapide :</span>
+        <button class="t-ex" onclick="cmpQuick('x')">x</button>
+        <button class="t-ex" onclick="cmpQuick('x^2')">x²</button>
+        <button class="t-ex" onclick="cmpQuick('x^3')">x³</button>
+        <button class="t-ex" onclick="cmpQuick('2^x')">2ˣ</button>
+        <button class="t-ex" onclick="cmpQuick('sqrt(x)')">√x</button>
+        <button class="t-ex" onclick="cmpQuick('log(x)')">log</button>
+        <button class="t-ex" onclick="cmpQuick('1/x')">1/x</button>
+        <button class="t-ex" onclick="cmpQuick('abs(x)')">|x|</button>
+      </div>
+      <div class="cmp-list" id="cmpList"></div>
+      <div class="cmp-actions">
+        <button class="t-btn t-btn-sm" style="background:linear-gradient(135deg,#c62828,#d32f2f)" onclick="cmpClearAll()">🗑 Tout supprimer</button>
+      </div>
+    </div>
+    <div class="pcard">
+      <h3><span class="dot" style="background:var(--magenta)"></span>Intersections</h3>
+      <div id="cmpIntersections" class="cmp-inter-list"><span style="color:var(--muted);font-size:.8rem">Ajoute au moins 2 fonctions</span></div>
+    </div>
+    <div class="pcard">
+      <h3><span class="dot" style="background:var(--amber)"></span>Évaluer en x =</h3>
+      <div class="cmp-eval-row">
+        <input type="number" id="cmpX" class="t-xinput" value="1" step="0.5" oninput="cmpRefresh()">
+      </div>
+      <table class="vtable" id="cmpEvalTable"></table>
+    </div>
+  </div>
+</div>
+</div><!-- end tabCompareContent -->
+
+<!-- ═══ QUIZ TAB ═══ -->
+<div id="tabQuizContent" style="display:none">
+<div class="quiz-wrap">
+
+  <div class="quiz-top">
+    <div class="quiz-score-bar">
+      <div class="qsb-item"><span class="qsb-label">Score</span><span class="qsb-val" id="qScore">0</span></div>
+      <div class="qsb-item"><span class="qsb-label">Série</span><span class="qsb-val qsb-streak" id="qStreak">0 🔥</span></div>
+      <div class="qsb-item"><span class="qsb-label">Question</span><span class="qsb-val" id="qNum">1/10</span></div>
+      <div class="qsb-item"><span class="qsb-label">Temps</span><span class="qsb-val qsb-time" id="qTime">30</span></div>
+    </div>
+    <div class="quiz-progress"><div class="quiz-progress-fill" id="qProgFill"></div></div>
+  </div>
+
+  <div class="quiz-settings pcard" id="qSettings">
+    <h3><span class="dot" style="background:var(--amber)"></span>Paramètres du quiz</h3>
+    <div class="quiz-diff">
+      <span class="quiz-diff-label">Difficulté :</span>
+      <button class="q-diff-btn active" data-d="facile" onclick="qSetDiff('facile',this)">🟢 Facile</button>
+      <button class="q-diff-btn" data-d="moyen" onclick="qSetDiff('moyen',this)">🟡 Moyen</button>
+      <button class="q-diff-btn" data-d="difficile" onclick="qSetDiff('difficile',this)">🔴 Difficile</button>
+    </div>
+    <div class="quiz-timer-settings">
+      <div class="quiz-timer-toggle">
+        <span class="quiz-diff-label">Chronomètre :</span>
+        <button class="q-diff-btn active" id="qTimerOn" onclick="qSetTimer(true)">⏱ Activé</button>
+        <button class="q-diff-btn" id="qTimerOff" onclick="qSetTimer(false)">♾️ Sans limite</button>
+      </div>
+      <div id="qTimerDurWrap" class="quiz-timer-dur">
+        <span class="quiz-diff-label">Durée par question :</span>
+        <div class="quiz-timer-slider">
+          <input type="range" min="10" max="120" step="5" value="30" id="qTimerSlider" oninput="document.getElementById('qTimerVal').textContent=this.value+'s'">
+          <span class="qsb-val" id="qTimerVal" style="font-size:.9rem;min-width:40px;text-align:center">30s</span>
+        </div>
+      </div>
+    </div>
+    <div class="quiz-topics">
+      <span class="quiz-diff-label">Thèmes :</span>
+      <div class="quiz-topic-grid" id="qTopics"></div>
+    </div>
+    <button class="t-btn" style="width:100%;margin-top:16px;padding:16px;font-size:1rem" onclick="qStart()">🚀 Commencer le quiz !</button>
+  </div>
+
+  <div class="quiz-question-area" id="qArea" style="display:none">
+    <div class="quiz-q-card pcard">
+      <div class="quiz-q-type" id="qType"></div>
+      <div class="quiz-q-text" id="qText"></div>
+      <div class="quiz-q-formula" id="qFormula"></div>
+      <div class="quiz-q-graph-wrap" id="qGraphWrap" style="display:none">
+        <canvas id="qGraph" width="500" height="300"></canvas>
+      </div>
+      <div class="quiz-answers" id="qAnswers"></div>
+      <div class="quiz-feedback" id="qFeedback"></div>
+      <div class="quiz-next-row" id="qNextRow" style="display:none">
+        <button class="q-explain-btn" id="qExplainBtn" style="display:none">💡 Voir l'explication</button>
+        <button class="t-btn q-next-btn" id="qNextBtn">Suivant ➜</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="quiz-result" id="qResult" style="display:none">
+    <div class="quiz-result-card pcard">
+      <div class="quiz-result-emoji" id="qResEmoji">🎉</div>
+      <div class="quiz-result-score" id="qResScore">8/10</div>
+      <div class="quiz-result-msg" id="qResMsg">Excellent !</div>
+      <div class="quiz-result-details" id="qResDetails"></div>
+      <button class="t-btn" style="width:100%;margin-top:16px;padding:14px" onclick="qRestart()">🔄 Rejouer</button>
+    </div>
+  </div>
+
+</div>
+</div><!-- end tabQuizContent -->
+
+<script>
+/* ═══════════════════════════════════════
+   CONFIG
+   ═══════════════════════════════════════ */
+const TYPES = [
+  {id:'affine',   name:'Affine',       icon:'📈', formula:'ax + b',
+    params:[{id:'a',name:'a (pente)',min:-5,max:5,step:0.25,val:2},{id:'b',name:'b (ordonnée)',min:-8,max:8,step:0.5,val:1}],
+    fn:(p,x)=>p.a*x+p.b,
+    fstr:p=>`<span class="fn">f</span>(x) = <span class="num">${fmtN(p.a)}</span><span class="var">x</span> <span class="op">+</span> <span class="num">${fmtN(p.b)}</span>`,
+    props:p=>{
+      const items=[{n:'Pente (a)',v:fmtN(p.a)},{n:'Ordonnée (b)',v:fmtN(p.b)},{n:'Zéro',v:p.a!==0?fmtN(-p.b/p.a):'∅'}];
+      if(p.a>0) items.push({n:'Sens',v:'↗ Croissante'});
+      else if(p.a<0) items.push({n:'Sens',v:'↘ Décroissante'});
+      else items.push({n:'Sens',v:'→ Constante'});
+      return items;
+    },
+    tip:p=>`<strong>Fonction affine</strong> : droite de pente <em>a = ${fmtN(p.a)}</em>. `+
+      (p.a>0?`Quand a > 0 la droite monte. `:`Quand a < 0 la droite descend. `)+
+      `L'ordonnée à l'origine est <em>b = ${fmtN(p.b)}</em> : le point (0, ${fmtN(p.b)}) est sur l'axe Y.`+
+      (p.a!==0?` La droite coupe l'axe X en <em>x = ${fmtN(-p.b/p.a)}</em>.`:''),
+    color:'#00e5ff',deriv:p=>`${fmtN(p.a)}`,derivFn:(p,x)=>p.a
+  },
+  {id:'constante',name:'Constante',   icon:'➖', formula:'c',
+    params:[{id:'c',name:'c',min:-8,max:8,step:0.5,val:3}],
+    fn:(p,x)=>p.c,
+    fstr:p=>`<span class="fn">f</span>(x) = <span class="num">${fmtN(p.c)}</span>`,
+    props:p=>[{n:'Valeur',v:fmtN(p.c)},{n:'Sens',v:'→ Constante'},{n:'Zéro',v:p.c===0?'Tout ℝ':'∅'}],
+    tip:p=>`<strong>Fonction constante</strong> : une droite horizontale à y = <em>${fmtN(p.c)}</em>. La pente est nulle. `+
+      (p.c===0?'Elle est confondue avec l\'axe X.':''),
+    color:'#ff2daa',deriv:p=>'0',derivFn:(p,x)=>0
+  },
+  {id:'lineaire', name:'Linéaire',    icon:'📏', formula:'ax',
+    params:[{id:'a',name:'a (pente)',min:-5,max:5,step:0.25,val:1.5}],
+    fn:(p,x)=>p.a*x,
+    fstr:p=>`<span class="fn">f</span>(x) = <span class="num">${fmtN(p.a)}</span><span class="var">x</span>`,
+    props:p=>[{n:'Pente',v:fmtN(p.a)},{n:'Passe par',v:'(0, 0)'},{n:'Proportionnalité',v:p.a!==0?'Oui':'—'}],
+    tip:p=>`<strong>Fonction linéaire</strong> : droite passant par l'origine (0,0). C'est un cas particulier de la fonction affine avec b = 0. Elle traduit une <em>proportionnalité</em> de coefficient <em>${fmtN(p.a)}</em>.`,
+    color:'#7cff4b',deriv:p=>`${fmtN(p.a)}`,derivFn:(p,x)=>p.a
+  },
+  {id:'quadra',   name:'Parabole',    icon:'〰️', formula:'ax² + bx + c',
+    params:[{id:'a',name:'a (ouverture)',min:-4,max:4,step:0.25,val:1},{id:'b',name:'b',min:-6,max:6,step:0.5,val:0},{id:'c',name:'c (ordonnée)',min:-8,max:8,step:0.5,val:0}],
+    fn:(p,x)=>p.a*x*x+p.b*x+p.c,
+    fstr:p=>{
+      let s=`<span class="fn">f</span>(x) = <span class="num">${fmtN(p.a)}</span><span class="var">x²</span>`;
+      if(p.b!==0) s+=` <span class="op">${p.b>0?'+':'−'}</span> <span class="num">${fmtN(Math.abs(p.b))}</span><span class="var">x</span>`;
+      if(p.c!==0) s+=` <span class="op">${p.c>0?'+':'−'}</span> <span class="num">${fmtN(Math.abs(p.c))}</span>`;
+      return s;
+    },
+    props:p=>{
+      const a=p.a,b=p.b,c=p.c;
+      const xv=a!==0?-b/(2*a):0, yv=a!==0?a*xv*xv+b*xv+c:c;
+      const delta=b*b-4*a*c;
+      const items=[
+        {n:'Sommet',v:a!==0?`(${fmtN(xv)}, ${fmtN(yv)})`:'—'},
+        {n:'Axe de symétrie',v:a!==0?`x = ${fmtN(xv)}`:'—'},
+        {n:'Ouverture',v:a>0?'↑ Vers le haut':a<0?'↓ Vers le bas':'—'},
+        {n:'Discriminant Δ',v:fmtN(delta)},
+      ];
+      if(a!==0){
+        if(delta>0){
+          const x1=(-b-Math.sqrt(delta))/(2*a), x2=(-b+Math.sqrt(delta))/(2*a);
+          items.push({n:'Racines (2)',v:`${fmtN(x1)} ; ${fmtN(x2)}`});
+        } else if(delta===0){
+          items.push({n:'Racine double',v:fmtN(-b/(2*a))});
+        } else {
+          items.push({n:'Racines',v:'∅ (Δ < 0)'});
+        }
+      }
+      return items;
+    },
+    tip:p=>{
+      const a=p.a,b=p.b,c=p.c;
+      if(a===0) return '<strong>Attention</strong> : avec a = 0, ce n\'est plus une parabole mais une droite.';
+      const xv=-b/(2*a), yv=a*xv*xv+b*xv+c;
+      const delta=b*b-4*a*c;
+      let s=`<strong>Parabole</strong> : courbe en U ${a>0?'ouvert vers le haut ↑':'ouvert vers le bas ↓'}. `;
+      s+=`Le sommet est en <em>(${fmtN(xv)}, ${fmtN(yv)})</em> — c'est le point ${a>0?'le plus bas':'le plus haut'}. `;
+      s+=`L'axe de symétrie est <em>x = ${fmtN(xv)}</em>. `;
+      if(delta>0){
+        const x1=(-b-Math.sqrt(delta))/(2*a), x2=(-b+Math.sqrt(delta))/(2*a);
+        s+=`La parabole coupe l'axe X en <em>x = ${fmtN(x1)}</em> et <em>x = ${fmtN(x2)}</em> (Δ = ${fmtN(delta)} > 0).`;
+      } else if(delta===0){
+        s+=`La parabole touche l'axe X en un seul point : <em>x = ${fmtN(xv)}</em> (Δ = 0).`;
+      } else {
+        s+=`La parabole ne coupe pas l'axe X (Δ = ${fmtN(delta)} < 0).`;
+      }
+      return s;
+    },
+    color:'#ffb300',deriv:p=>`${fmtN(2*p.a)}x + ${fmtN(p.b)}`,derivFn:(p,x)=>2*p.a*x+p.b
+  },
+  {id:'abs',      name:'Valeur abs.',  icon:'📐', formula:'a|x − h| + k',
+    params:[{id:'a',name:'a (pente)',min:-4,max:4,step:0.25,val:1},{id:'h',name:'h (décalage X)',min:-6,max:6,step:0.5,val:0},{id:'k',name:'k (décalage Y)',min:-6,max:6,step:0.5,val:0}],
+    fn:(p,x)=>p.a*Math.abs(x-p.h)+p.k,
+    fstr:p=>`<span class="fn">f</span>(x) = <span class="num">${fmtN(p.a)}</span>|<span class="var">x</span> − <span class="num">${fmtN(p.h)}</span>| + <span class="num">${fmtN(p.k)}</span>`,
+    props:p=>[{n:'Sommet',v:`(${fmtN(p.h)}, ${fmtN(p.k)})`},{n:'Pente gauche',v:fmtN(-p.a)},{n:'Pente droite',v:fmtN(p.a)},{n:'Ouverture',v:p.a>0?'↑ V':'↓ Λ'}],
+    tip:p=>`<strong>Valeur absolue</strong> : forme en V${p.a<0?' inversé':''} avec le sommet en <em>(${fmtN(p.h)}, ${fmtN(p.k)})</em>. `+
+      `La pente est <em>${fmtN(Math.abs(p.a))}</em> de chaque côté. Plus |a| est grand, plus le V est serré.`,
+    color:'#b388ff',deriv:p=>'non dérivable en x=h',derivFn:(p,x)=>x<p.h?-p.a:p.a
+  },
+  {id:'inverse',  name:'Inverse',      icon:'🔄', formula:'a/x + k',
+    params:[{id:'a',name:'a',min:-8,max:8,step:0.5,val:1},{id:'k',name:'k (asympt. Y)',min:-6,max:6,step:0.5,val:0}],
+    fn:(p,x)=>x===0?NaN:p.a/x+p.k,
+    fstr:p=>`<span class="fn">f</span>(x) = <span class="num">${fmtN(p.a)}</span>/<span class="var">x</span> + <span class="num">${fmtN(p.k)}</span>`,
+    props:p=>[{n:'Asymptote vert.',v:'x = 0'},{n:'Asymptote horiz.',v:`y = ${fmtN(p.k)}`},{n:'Domaine',v:'ℝ \\ {0}'},{n:'Symétrie',v:'Origine décalée'}],
+    tip:p=>`<strong>Fonction inverse</strong> : hyperbole avec deux branches. Elle n'est <em>jamais définie en x = 0</em> (asymptote verticale). `+
+      `Elle tend vers <em>y = ${fmtN(p.k)}</em> quand x → ±∞ (asymptote horizontale). `+
+      (p.a>0?'Les branches sont en haut à droite et en bas à gauche.':'Les branches sont en haut à gauche et en bas à droite.'),
+    color:'#ff5252',deriv:p=>`−${fmtN(p.a)}/x²`,derivFn:(p,x)=>x===0?NaN:-p.a/(x*x)
+  },
+  {id:'racine',   name:'Racine carrée',icon:'√', formula:'a√(x−h) + k',
+    params:[{id:'a',name:'a',min:-4,max:4,step:0.25,val:1},{id:'h',name:'h (début)',min:-6,max:6,step:0.5,val:0},{id:'k',name:'k (décalage Y)',min:-6,max:6,step:0.5,val:0}],
+    fn:(p,x)=>(x-p.h)<0?NaN:p.a*Math.sqrt(x-p.h)+p.k,
+    fstr:p=>`<span class="fn">f</span>(x) = <span class="num">${fmtN(p.a)}</span>√(<span class="var">x</span> − <span class="num">${fmtN(p.h)}</span>) + <span class="num">${fmtN(p.k)}</span>`,
+    props:p=>[{n:'Domaine',v:`[${fmtN(p.h)}, +∞[`},{n:'Point de départ',v:`(${fmtN(p.h)}, ${fmtN(p.k)})`},{n:'Sens',v:p.a>0?'↗ Croissante':'↘ Décroissante'}],
+    tip:p=>`<strong>Racine carrée</strong> : définie uniquement pour <em>x ≥ ${fmtN(p.h)}</em>. La courbe démarre au point <em>(${fmtN(p.h)}, ${fmtN(p.k)})</em> et croît de plus en plus lentement. `+
+      `C'est la "moitié" d'une parabole couchée.`,
+    color:'#4dd0e1',deriv:p=>`${fmtN(p.a)}/(2√(x−${fmtN(p.h)}))`,derivFn:(p,x)=>(x-p.h)<=0?NaN:p.a/(2*Math.sqrt(x-p.h))
+  },
+  {id:'expon',    name:'Exponentielle',icon:'📈', formula:'a·bˣ + k',
+    params:[{id:'a',name:'a (amplitude)',min:-4,max:4,step:0.25,val:1},{id:'b',name:'b (base)',min:0.1,max:5,step:0.1,val:2},{id:'k',name:'k (asymptote)',min:-6,max:6,step:0.5,val:0}],
+    fn:(p,x)=>p.a*Math.pow(p.b,x)+p.k,
+    fstr:p=>`<span class="fn">f</span>(x) = <span class="num">${fmtN(p.a)}</span> · <span class="num">${fmtN(p.b)}</span><sup><span class="var">x</span></sup> + <span class="num">${fmtN(p.k)}</span>`,
+    props:p=>{
+      const items=[
+        {n:'Base b',v:fmtN(p.b)},
+        {n:'Asymptote horiz.',v:`y = ${fmtN(p.k)}`},
+        {n:'f(0)',v:fmtN(p.a*1+p.k)},
+        {n:'Domaine',v:'ℝ (tout x)'},
+        {n:'Image',v:p.a>0?`]${fmtN(p.k)}, +∞[`:`]−∞, ${fmtN(p.k)}[`},
+      ];
+      if(p.b>1) items.push({n:'Comportement',v:p.a>0?'↗ Croissance rapide':'↘ Décroissance rapide'});
+      else if(p.b>0&&p.b<1) items.push({n:'Comportement',v:p.a>0?'↘ Décroissance':'↗ Croissance'});
+      else if(p.b===1) items.push({n:'Comportement',v:'→ Constante (b=1)'});
+      return items;
+    },
+    tip:p=>{
+      let s=`<strong>Fonction exponentielle</strong> : f(x) = ${fmtN(p.a)}·${fmtN(p.b)}ˣ + ${fmtN(p.k)}. `;
+      if(p.b>1) s+=`Avec b = <em>${fmtN(p.b)} > 1</em>, la fonction croît de plus en plus vite (croissance exponentielle). `;
+      else if(p.b>0&&p.b<1) s+=`Avec b = <em>${fmtN(p.b)} < 1</em>, la fonction décroît vers l'asymptote (décroissance exponentielle). `;
+      else if(p.b===1) s+=`Avec b = 1, bˣ = 1 pour tout x → fonction constante. `;
+      s+=`L'asymptote horizontale est <em>y = ${fmtN(p.k)}</em> : la courbe s'en approche sans jamais la toucher. `;
+      s+=`La courbe passe par le point <em>(0, ${fmtN(p.a+p.k)})</em>.`;
+      if(p.a>0&&p.k===0) s+=` La fonction est toujours positive.`;
+      return s;
+    },
+    color:'#d32f2f',deriv:p=>`${fmtN(p.a)}·ln(${fmtN(p.b)})·${fmtN(p.b)}ˣ`,
+    derivFn:(p,x)=>p.a*Math.log(p.b)*Math.pow(p.b,x)
+  },
+  {id:'log',      name:'Logarithme',   icon:'📉', formula:'a·log_b(x−h) + k',
+    params:[{id:'a',name:'a (amplitude)',min:-4,max:4,step:0.25,val:1},{id:'b',name:'b (base)',min:0.5,max:10,step:0.5,val:10},{id:'h',name:'h (décalage X)',min:-6,max:6,step:0.5,val:0},{id:'k',name:'k (décalage Y)',min:-6,max:6,step:0.5,val:0}],
+    fn:(p,x)=>(x-p.h)<=0?NaN:p.a*(Math.log(x-p.h)/Math.log(p.b))+p.k,
+    fstr:p=>{
+      const base=p.b===Math.E?'e':p.b===10?'10':fmtN(p.b);
+      const logName=p.b===Math.E?'ln':p.b===10?'log':`log<sub>${base}</sub>`;
+      return `<span class="fn">f</span>(x) = <span class="num">${fmtN(p.a)}</span>·${logName}(<span class="var">x</span> − <span class="num">${fmtN(p.h)}</span>) + <span class="num">${fmtN(p.k)}</span>`;
+    },
+    props:p=>{
+      const base=p.b===10?'10':fmtN(p.b);
+      const items=[
+        {n:'Base',v:base},
+        {n:'Domaine',v:`]${fmtN(p.h)}, +∞[`},
+        {n:'Asymptote vert.',v:`x = ${fmtN(p.h)}`},
+        {n:`f(${fmtN(p.h+1)})`,v:fmtN(p.a*0+p.k)},
+        {n:`f(${fmtN(p.h+p.b)})`,v:fmtN(p.a*1+p.k)},
+      ];
+      if(p.b>1) items.push({n:'Comportement',v:p.a>0?'↗ Croissante lente':'↘ Décroissante'});
+      else items.push({n:'Comportement',v:p.a>0?'↘ Décroissante':'↗ Croissante'});
+      // Zero
+      if(p.a!==0){
+        const xzero=Math.pow(p.b,-p.k/p.a)+p.h;
+        if(xzero>p.h) items.push({n:'Zéro',v:`x = ${fmtN(xzero)}`});
+      }
+      return items;
+    },
+    tip:p=>{
+      const base=p.b===10?'10':fmtN(p.b);
+      let s=`<strong>Fonction logarithme</strong> en base <em>${base}</em>. `;
+      s+=`Elle n'est définie que pour <em>x > ${fmtN(p.h)}</em> (l'argument du log doit être positif). `;
+      s+=`L'asymptote verticale est <em>x = ${fmtN(p.h)}</em> : la courbe descend vers −∞ en s'approchant. `;
+      s+=`Le logarithme est la <em>réciproque de l'exponentielle</em> : si y = bˣ alors x = log_b(y). `;
+      s+=`La courbe passe par <em>(${fmtN(p.h+1)}, ${fmtN(p.k)})</em> car log(1) = 0, `;
+      s+=`et par <em>(${fmtN(p.h+p.b)}, ${fmtN(p.a+p.k)})</em> car log_b(b) = 1.`;
+      return s;
+    },
+    color:'#6a1b9a',
+    deriv:p=>`${fmtN(p.a)}/(ln(${fmtN(p.b)})·(x−${fmtN(p.h)}))`,
+    derivFn:(p,x)=>(x-p.h)<=0?NaN:p.a/(Math.log(p.b)*(x-p.h))
+  },
+];
+
+let curType=0, P={}, view={cx:0,cy:0,scale:60};
+let showGrid=true, showDeriv=false, showTangent=false, showRoots=true, showVertex=true, showAsympt=true;
+let mouseX=null, mouseY=null;
+const cvs=document.getElementById('graph'), ctx=cvs.getContext('2d');
+
+function fmtN(n){return Math.abs(n)<0.005?'0':parseFloat(n.toFixed(2)).toString();}
+
+/* ═══ TYPE BAR ═══ */
+document.getElementById('typeBar').innerHTML=TYPES.map((t,i)=>
+  `<button class="tbtn${i===0?' active':''}" onclick="pickType(${i},this)">${t.icon} ${t.name}</button>`
+).join('');
+
+function pickType(i,btn){
+  curType=i;
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const t=TYPES[i]; P={};
+  t.params.forEach(p=>P[p.id]=p.val);
+  buildSliders(); refresh();
+}
+
+/* ═══ INIT ═══ */
+function init(){
+  const t=TYPES[0]; P={};
+  t.params.forEach(p=>P[p.id]=p.val);
+  buildSliders(); resizeCanvas(); refresh();
+  window.addEventListener('resize',()=>{resizeCanvas();refresh()});
+  // Mouse tracking
+  cvs.addEventListener('mousemove',e=>{const r=cvs.getBoundingClientRect();mouseX=e.clientX-r.left;mouseY=e.clientY-r.top;refresh()});
+  cvs.addEventListener('mouseleave',()=>{mouseX=null;mouseY=null;refresh()});
+  // Pan
+  let dragging=false, dragStart={x:0,y:0}, viewStart={cx:0,cy:0};
+  cvs.addEventListener('mousedown',e=>{dragging=true;dragStart={x:e.clientX,y:e.clientY};viewStart={cx:view.cx,cy:view.cy}});
+  cvs.addEventListener('mousemove',e=>{if(!dragging)return;view.cx=viewStart.cx-(e.clientX-dragStart.x)/view.scale;view.cy=viewStart.cy+(e.clientY-dragStart.y)/view.scale;refresh()});
+  cvs.addEventListener('mouseup',()=>dragging=false);
+  cvs.addEventListener('mouseleave',()=>dragging=false);
+  // Zoom wheel
+  cvs.addEventListener('wheel',e=>{e.preventDefault();const f=e.deltaY>0?0.9:1.1;view.scale*=f;view.scale=Math.max(10,Math.min(300,view.scale));refresh()},{passive:false});
+}
+
+function resizeCanvas(){
+  const w=cvs.parentElement.clientWidth;
+  const h=Math.min(w*0.7,580);
+  cvs.width=w*2;cvs.height=h*2;cvs.style.height=h+'px';
+  ctx.setTransform(2,0,0,2,0,0); // retina
+}
+
+/* ═══ SLIDERS ═══ */
+function buildSliders(){
+  const t=TYPES[curType];
+  document.getElementById('sliders').innerHTML=t.params.map(p=>
+    `<div class="sl"><div class="sl-head"><span class="sl-name">${p.name}</span><span class="sl-val" id="sv-${p.id}">${P[p.id]}</span></div><input type="range" min="${p.min}" max="${p.max}" step="${p.step}" value="${P[p.id]}" oninput="P['${p.id}']=+this.value;document.getElementById('sv-${p.id}').textContent=fmtN(+this.value);refresh()"></div>`
+  ).join('');
+}
+
+/* ═══ DRAWING ═══ */
+function toScreen(x,y){
+  const w=cvs.width/2, h=cvs.height/2;
+  return{x:w/2+(x-view.cx)*view.scale, y:h/2-(y-view.cy)*view.scale};
+}
+function toMath(sx,sy){
+  const w=cvs.width/2, h=cvs.height/2;
+  return{x:(sx-w/2)/view.scale+view.cx, y:-(sy-h/2)/view.scale+view.cy};
+}
+
+function refresh(){
+  const t=TYPES[curType];
+  const w=cvs.width/2, h=cvs.height/2;
+  ctx.clearRect(0,0,w,h);
+
+  // Background
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,w,h);
+
+  // Grid
+  if(showGrid) drawGrid(w,h);
+
+  // Axes
+  drawAxes(w,h);
+
+  // Function curve
+  drawFunction(t,w,h,t.color,2.5);
+
+  // Derivative
+  if(showDeriv && t.derivFn) drawDerivative(t,w,h);
+
+  // Asymptotes
+  if(showAsympt) drawAsymptotes(t,w,h);
+
+  // Roots & Vertex
+  if(showRoots) drawRoots(t,w,h);
+  if(showVertex) drawVertex(t,w,h);
+
+  // Tangent at mouse
+  if(showTangent && mouseX!==null && t.derivFn) drawTangentLine(t,w,h);
+
+  // Mouse crosshair + coordinates
+  if(mouseX!==null){
+    const m=toMath(mouseX,mouseY);
+    const yf=t.fn(P,m.x);
+    document.querySelector('.coords .cx').textContent=fmtN(m.x);
+    document.querySelector('.coords .cy').textContent=isNaN(yf)?'—':fmtN(yf);
+    // Dot on curve
+    if(!isNaN(yf)){
+      const sp=toScreen(m.x,yf);
+      ctx.beginPath();ctx.arc(sp.x,sp.y,5,0,Math.PI*2);
+      ctx.fillStyle=t.color;ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+    }
+  }
+
+  // UI updates
+  document.getElementById('formulaDisp').innerHTML=t.fstr(P);
+  updateProps(t);
+  updateTable(t);
+  document.getElementById('tipBox').innerHTML=t.tip(P);
+  updateToggles();
+}
+
+function drawGrid(w,h){
+  const stepBase=[1,2,5];
+  let step=1;
+  const pxPerUnit=view.scale;
+  if(pxPerUnit<20) step=5;
+  else if(pxPerUnit<40) step=2;
+  else if(pxPerUnit>150) step=0.5;
+  else if(pxPerUnit>250) step=0.25;
+
+  ctx.lineWidth=0.5;
+  const xMin=toMath(0,0).x, xMax=toMath(w,0).x, yMin=toMath(0,h).y, yMax=toMath(0,0).y;
+  // Vertical lines
+  const x0=Math.ceil(xMin/step)*step;
+  for(let x=x0;x<=xMax;x+=step){
+    const sx=toScreen(x,0).x;
+    ctx.strokeStyle=(Math.abs(x%1)<0.01)?'#c0c6d8':'#dde0ea';
+    ctx.lineWidth=(Math.abs(x%1)<0.01)?0.8:0.4;
+    ctx.beginPath();ctx.moveTo(sx,0);ctx.lineTo(sx,h);ctx.stroke();
+  }
+  // Horizontal lines
+  const y0=Math.ceil(yMin/step)*step;
+  for(let y=y0;y<=yMax;y+=step){
+    const sy=toScreen(0,y).y;
+    ctx.strokeStyle=(Math.abs(y%1)<0.01)?'#c0c6d8':'#dde0ea';
+    ctx.lineWidth=(Math.abs(y%1)<0.01)?0.8:0.4;
+    ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(w,sy);ctx.stroke();
+  }
+}
+
+function drawAxes(w,h){
+  ctx.strokeStyle='#1a1e2e';ctx.lineWidth=2;
+  // X axis
+  const y0a=toScreen(0,0).y;
+  if(y0a>=0&&y0a<=h){ctx.beginPath();ctx.moveTo(0,y0a);ctx.lineTo(w,y0a);ctx.stroke();
+    // Arrow
+    ctx.beginPath();ctx.moveTo(w-1,y0a);ctx.lineTo(w-10,y0a-5);ctx.lineTo(w-10,y0a+5);ctx.fillStyle='#1a1e2e';ctx.fill();
+  }
+  // Y axis
+  const x0a=toScreen(0,0).x;
+  if(x0a>=0&&x0a<=w){ctx.beginPath();ctx.moveTo(x0a,0);ctx.lineTo(x0a,h);ctx.stroke();
+    // Arrow
+    ctx.beginPath();ctx.moveTo(x0a,1);ctx.lineTo(x0a-5,10);ctx.lineTo(x0a+5,10);ctx.fillStyle='#1a1e2e';ctx.fill();
+  }
+  // Tick labels
+  ctx.fillStyle='#3a4058';ctx.font='bold 11px JetBrains Mono';ctx.textAlign='center';
+  const step2=view.scale>100?1:view.scale>40?2:5;
+  const xMinA=toMath(0,0).x, xMaxA=toMath(w,0).x;
+  for(let x=Math.ceil(xMinA/step2)*step2;x<=xMaxA;x+=step2){
+    if(Math.abs(x)<0.01) continue;
+    const sx=toScreen(x,0).x;
+    if(y0a>=0&&y0a<=h){
+      // Tick mark
+      ctx.strokeStyle='#1a1e2e';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(sx,y0a-4);ctx.lineTo(sx,y0a+4);ctx.stroke();
+      ctx.fillText(fmtN(x),sx,Math.min(h-4,Math.max(14,y0a+18)));
+    }
+  }
+  ctx.textAlign='right';
+  const yMinA=toMath(0,h).y, yMaxA=toMath(0,0).y;
+  for(let y=Math.ceil(yMinA/step2)*step2;y<=yMaxA;y+=step2){
+    if(Math.abs(y)<0.01) continue;
+    const sy=toScreen(0,y).y;
+    if(x0a>=0&&x0a<=w){
+      ctx.strokeStyle='#1a1e2e';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(x0a-4,sy);ctx.lineTo(x0a+4,sy);ctx.stroke();
+      ctx.fillStyle='#3a4058';
+      ctx.fillText(fmtN(y),Math.min(w-4,Math.max(30,x0a-8)),sy+4);
+    }
+  }
+  // Origin label
+  if(x0a>=0&&x0a<=w&&y0a>=0&&y0a<=h){
+    ctx.textAlign='right';ctx.fillStyle='#1a1e2e';ctx.font='bold 12px JetBrains Mono';ctx.fillText('0',x0a-8,y0a+16);
+  }
+  // Axis labels
+  ctx.fillStyle='#1a1e2e';ctx.font='bold 13px JetBrains Mono';
+  if(y0a>=0&&y0a<=h) {ctx.textAlign='left';ctx.fillText('x',w-18,y0a-10);}
+  if(x0a>=0&&x0a<=w) {ctx.textAlign='left';ctx.fillText('y',x0a+10,16);}
+}
+
+function drawFunction(t,w,h,color,lw){
+  ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.lineJoin='round';
+  ctx.beginPath();
+  let started=false;
+  for(let px=0;px<w;px+=0.5){
+    const mx=toMath(px,0).x;
+    const my=t.fn(P,mx);
+    if(isNaN(my)||!isFinite(my)||Math.abs(my)>1e6){started=false;continue;}
+    const sp=toScreen(mx,my);
+    if(!started){ctx.moveTo(sp.x,sp.y);started=true;}
+    else ctx.lineTo(sp.x,sp.y);
+  }
+  ctx.stroke();
+  // Subtle shadow under curve
+  ctx.save();ctx.globalAlpha=0.08;ctx.lineWidth=lw+8;ctx.stroke();ctx.restore();
+}
+
+function drawDerivative(t,w,h){
+  ctx.strokeStyle='rgba(106,27,154,.55)';ctx.lineWidth=1.8;ctx.setLineDash([6,4]);
+  ctx.beginPath();let started=false;
+  for(let px=0;px<w;px+=1){
+    const mx=toMath(px,0).x;
+    const my=t.derivFn(P,mx);
+    if(isNaN(my)||!isFinite(my)){started=false;continue;}
+    const sp=toScreen(mx,my);
+    if(!started){ctx.moveTo(sp.x,sp.y);started=true;}
+    else ctx.lineTo(sp.x,sp.y);
+  }
+  ctx.stroke();ctx.setLineDash([]);
+}
+
+function drawAsymptotes(t,w,h){
+  ctx.strokeStyle='rgba(198,40,40,.35)';ctx.lineWidth=1.2;ctx.setLineDash([5,5]);
+  if(t.id==='inverse'){
+    // Vertical: x=0
+    const sx=toScreen(0,0).x;
+    ctx.beginPath();ctx.moveTo(sx,0);ctx.lineTo(sx,h);ctx.stroke();
+    // Horizontal: y=k
+    const sy=toScreen(0,P.k).y;
+    ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(w,sy);ctx.stroke();
+  }
+  if(t.id==='expon'){
+    // Horizontal: y=k
+    const sy=toScreen(0,P.k).y;
+    ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(w,sy);ctx.stroke();
+    // Label
+    ctx.fillStyle='rgba(198,40,40,.6)';ctx.font='bold 10px JetBrains Mono';ctx.textAlign='left';
+    ctx.fillText(`y = ${fmtN(P.k)}`,8,sy-6);
+  }
+  if(t.id==='log'){
+    // Vertical: x=h
+    const sx=toScreen(P.h,0).x;
+    ctx.beginPath();ctx.moveTo(sx,0);ctx.lineTo(sx,h);ctx.stroke();
+    // Label
+    ctx.fillStyle='rgba(198,40,40,.6)';ctx.font='bold 10px JetBrains Mono';ctx.textAlign='left';
+    ctx.fillText(`x = ${fmtN(P.h)}`,sx+6,16);
+  }
+  ctx.setLineDash([]);
+}
+
+function drawRoots(t,w,h){
+  if(t.id==='quadra'&&P.a!==0){
+    const delta=P.b*P.b-4*P.a*P.c;
+    if(delta>=0){
+      const roots=delta>0?[(-P.b-Math.sqrt(delta))/(2*P.a),(-P.b+Math.sqrt(delta))/(2*P.a)]:[(-P.b/(2*P.a))];
+      roots.forEach(rx=>{
+        const sp=toScreen(rx,0);
+        ctx.beginPath();ctx.arc(sp.x,sp.y,6,0,Math.PI*2);
+        ctx.fillStyle='rgba(198,40,40,.9)';ctx.fill();
+        ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+        ctx.fillStyle='#c62828';ctx.font='bold 11px JetBrains Mono';ctx.textAlign='center';
+        ctx.fillText(fmtN(rx),sp.x,sp.y-14);
+      });
+    }
+  }
+  if(t.id==='affine'&&P.a!==0){
+    const rx=-P.b/P.a;
+    const sp=toScreen(rx,0);
+    ctx.beginPath();ctx.arc(sp.x,sp.y,5,0,Math.PI*2);
+    ctx.fillStyle='rgba(198,40,40,.9)';ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+  }
+}
+
+function drawVertex(t,w,h){
+  if(t.id==='quadra'&&P.a!==0){
+    const xv=-P.b/(2*P.a), yv=P.a*xv*xv+P.b*xv+P.c;
+    const sp=toScreen(xv,yv);
+    // Axis of symmetry
+    ctx.strokeStyle='rgba(230,81,0,.25)';ctx.lineWidth=1.2;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(sp.x,0);ctx.lineTo(sp.x,h);ctx.stroke();ctx.setLineDash([]);
+    // Vertex dot
+    ctx.beginPath();ctx.arc(sp.x,sp.y,7,0,Math.PI*2);
+    ctx.fillStyle='#e65100';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#e65100';ctx.font='bold 11px JetBrains Mono';ctx.textAlign='center';
+    ctx.fillText(`(${fmtN(xv)}, ${fmtN(yv)})`,sp.x,sp.y-16);
+  }
+  if(t.id==='abs'){
+    const sp=toScreen(P.h,P.k);
+    ctx.beginPath();ctx.arc(sp.x,sp.y,6,0,Math.PI*2);
+    ctx.fillStyle='#6a1b9a';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+  }
+  // Exponential: mark (0, a+k) = y-intercept
+  if(t.id==='expon'){
+    const yInt=P.a*1+P.k;
+    const sp=toScreen(0,yInt);
+    ctx.beginPath();ctx.arc(sp.x,sp.y,6,0,Math.PI*2);
+    ctx.fillStyle='#d32f2f';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#d32f2f';ctx.font='bold 10px JetBrains Mono';ctx.textAlign='left';
+    ctx.fillText(`(0, ${fmtN(yInt)})`,sp.x+10,sp.y-8);
+  }
+  // Logarithm: mark (h+1, k) and (h+b, a+k)
+  if(t.id==='log'){
+    const pts=[
+      {x:P.h+1, y:P.k, label:`(${fmtN(P.h+1)}, ${fmtN(P.k)})`},
+      {x:P.h+P.b, y:P.a+P.k, label:`(${fmtN(P.h+P.b)}, ${fmtN(P.a+P.k)})`},
+    ];
+    pts.forEach(pt=>{
+      if(pt.x<=P.h) return;
+      const sp=toScreen(pt.x,pt.y);
+      ctx.beginPath();ctx.arc(sp.x,sp.y,5,0,Math.PI*2);
+      ctx.fillStyle='#6a1b9a';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle='#6a1b9a';ctx.font='bold 9px JetBrains Mono';ctx.textAlign='left';
+      ctx.fillText(pt.label,sp.x+8,sp.y-6);
+    });
+  }
+}
+
+function drawTangentLine(t,w,h){
+  if(!mouseX) return;
+  const mx=toMath(mouseX,mouseY).x;
+  const my=t.fn(P,mx);
+  const slope=t.derivFn(P,mx);
+  if(isNaN(my)||isNaN(slope)||!isFinite(slope)) return;
+  // y - my = slope * (x - mx)
+  const xL=toMath(0,0).x, xR=toMath(w,0).x;
+  const yL=my+slope*(xL-mx), yR=my+slope*(xR-mx);
+  const spL=toScreen(xL,yL), spR=toScreen(xR,yR);
+  ctx.strokeStyle='rgba(46,125,50,.6)';ctx.lineWidth=1.8;ctx.setLineDash([6,3]);
+  ctx.beginPath();ctx.moveTo(spL.x,spL.y);ctx.lineTo(spR.x,spR.y);ctx.stroke();ctx.setLineDash([]);
+  // Slope label
+  const sp=toScreen(mx,my);
+  ctx.fillStyle='#2e7d32';ctx.font='bold 11px JetBrains Mono';ctx.textAlign='left';
+  ctx.fillText(`pente = ${fmtN(slope)}`,sp.x+12,sp.y-10);
+}
+
+/* ═══ PROPERTIES ═══ */
+function updateProps(t){
+  const items=t.props(P);
+  document.getElementById('propsBox').innerHTML=items.map(p=>
+    `<div class="prop"><span class="prop-name">${p.n}</span><span class="prop-val${p.v==='∅'||p.v==='—'?' na':''}">${p.v}</span></div>`
+  ).join('');
+}
+
+/* ═══ TABLE ═══ */
+function updateTable(t){
+  const xs=[];
+  for(let x=-4;x<=4;x+=1) xs.push(x);
+  let html='<tr><th>x</th>'+xs.map(x=>`<th>${x}</th>`).join('')+'</tr>';
+  html+='<tr><td style="color:var(--muted);font-weight:700">f(x)</td>'+xs.map(x=>{
+    const y=t.fn(P,x);
+    return `<td class="yv">${isNaN(y)||!isFinite(y)?'—':fmtN(y)}</td>`;
+  }).join('')+'</tr>';
+  if(showDeriv&&t.derivFn){
+    html+='<tr><td style="color:var(--violet);font-weight:700">f\'(x)</td>'+xs.map(x=>{
+      const y=t.derivFn(P,x);
+      return `<td style="color:var(--violet)">${isNaN(y)||!isFinite(y)?'—':fmtN(y)}</td>`;
+    }).join('')+'</tr>';
+  }
+  document.getElementById('valTable').innerHTML=html;
+}
+
+/* ═══ TOGGLES ═══ */
+function updateToggles(){
+  document.getElementById('btnGrid').classList.toggle('active',showGrid);
+  document.getElementById('btnDeriv').classList.toggle('active',showDeriv);
+  document.getElementById('btnTangent').classList.toggle('active',showTangent);
+  document.getElementById('toggles').innerHTML=[
+    {id:'roots',label:'Racines/Zéros',on:showRoots},
+    {id:'vertex',label:'Sommet/Points',on:showVertex},
+    {id:'asympt',label:'Asymptotes',on:showAsympt},
+  ].map(t=>`<button class="tgl${t.on?' on':''}" onclick="toggle_${t.id}()">${t.label}</button>`).join('');
+}
+function toggleGrid(){showGrid=!showGrid;refresh()}
+function toggleDeriv(){showDeriv=!showDeriv;refresh()}
+function toggleTangent(){showTangent=!showTangent;refresh()}
+function toggle_roots(){showRoots=!showRoots;refresh()}
+function toggle_vertex(){showVertex=!showVertex;refresh()}
+function toggle_asympt(){showAsympt=!showAsympt;refresh()}
+
+/* ═══ ZOOM/PAN ═══ */
+function zoomIn(){view.scale*=1.3;view.scale=Math.min(300,view.scale);refresh()}
+function zoomOut(){view.scale*=0.7;view.scale=Math.max(10,view.scale);refresh()}
+function resetView(){view={cx:0,cy:0,scale:60};refresh()}
+
+/* ═══════════════════════════════════════
+   TAB SWITCHING
+   ═══════════════════════════════════════ */
+function switchTab(tab){
+  ['mtGraph','mtTermin','mtCompare','mtQuiz'].forEach(id=>{
+    document.getElementById(id).classList.toggle('active',id==='mt'+tab.charAt(0).toUpperCase()+tab.slice(1));
+  });
+  document.getElementById('mtGraph').classList.toggle('active',tab==='graph');
+  document.getElementById('mtTermin').classList.toggle('active',tab==='termin');
+  document.getElementById('mtCompare').classList.toggle('active',tab==='compare');
+  document.getElementById('mtQuiz').classList.toggle('active',tab==='quiz');
+  document.getElementById('tabGraphContent').style.display=tab==='graph'?'':'none';
+  document.getElementById('tabTerminContent').style.display=tab==='termin'?'':'none';
+  document.getElementById('tabCompareContent').style.display=tab==='compare'?'':'none';
+  document.getElementById('tabQuizContent').style.display=tab==='quiz'?'':'none';
+  if(tab==='compare'&&!cmp.inited) cmpInit();
+  if(tab==='quiz') qInitTopics();
+}
+
+/* ═══════════════════════════════════════
+   COMPARATEUR — up to 15 functions
+   ═══════════════════════════════════════ */
+const CMP_COLORS=[
+  '#0077b6','#c2185b','#2e7d32','#e65100','#6a1b9a',
+  '#00838f','#d32f2f','#1565c0','#f57f17','#4a148c',
+  '#00695c','#bf360c','#283593','#827717','#880e4f'
+];
+const cmp={fns:[],inited:false,view:{cx:0,cy:0,scale:60},showGrid:true,mouseX:null,mouseY:null};
+let cmpCvs,cmpCtx;
+
+function cmpInit(){
+  cmp.inited=true;
+  cmpCvs=document.getElementById('cmpGraph');
+  cmpCtx=cmpCvs.getContext('2d');
+  const wrap=cmpCvs.parentElement;
+  const w=wrap.clientWidth, h=Math.min(w*0.7,580);
+  cmpCvs.width=w*2;cmpCvs.height=h*2;cmpCvs.style.height=h+'px';
+  cmpCtx.setTransform(2,0,0,2,0,0);
+
+  cmpCvs.addEventListener('mousemove',e=>{const r=cmpCvs.getBoundingClientRect();cmp.mouseX=e.clientX-r.left;cmp.mouseY=e.clientY-r.top;cmpDraw()});
+  cmpCvs.addEventListener('mouseleave',()=>{cmp.mouseX=null;cmp.mouseY=null;cmpDraw()});
+
+  let drag=false,ds={x:0,y:0},vs={cx:0,cy:0};
+  cmpCvs.addEventListener('mousedown',e=>{drag=true;ds={x:e.clientX,y:e.clientY};vs={cx:cmp.view.cx,cy:cmp.view.cy}});
+  cmpCvs.addEventListener('mousemove',e=>{if(!drag)return;cmp.view.cx=vs.cx-(e.clientX-ds.x)/cmp.view.scale;cmp.view.cy=vs.cy+(e.clientY-ds.y)/cmp.view.scale;cmpDraw()});
+  cmpCvs.addEventListener('mouseup',()=>drag=false);
+  cmpCvs.addEventListener('mouseleave',()=>drag=false);
+  cmpCvs.addEventListener('wheel',e=>{e.preventDefault();cmp.view.scale*=e.deltaY>0?0.9:1.1;cmp.view.scale=Math.max(10,Math.min(300,cmp.view.scale));cmpDraw()},{passive:false});
+
+  window.addEventListener('resize',()=>{
+    if(document.getElementById('tabCompareContent').style.display==='none') return;
+    const w2=wrap.clientWidth,h2=Math.min(w2*0.7,580);
+    cmpCvs.width=w2*2;cmpCvs.height=h2*2;cmpCvs.style.height=h2+'px';
+    cmpCtx.setTransform(2,0,0,2,0,0);cmpDraw();
+  });
+
+  document.getElementById('cmpInput').addEventListener('keydown',e=>{if(e.key==='Enter')cmpAdd()});
+  cmpDraw();
+}
+
+function cmpAdd(){
+  if(cmp.fns.length>=15) return;
+  const expr=document.getElementById('cmpInput').value.trim();
+  if(!expr) return;
+  const fn=makeFunc(expr);
+  if(!fn){alert('Expression invalide');return;}
+  cmp.fns.push({expr,fn,visible:true,color:CMP_COLORS[cmp.fns.length%15]});
+  document.getElementById('cmpInput').value='';
+  cmpRefresh();
+}
+
+function cmpQuick(expr){
+  if(cmp.fns.length>=15) return;
+  // Check if already added
+  if(cmp.fns.some(f=>f.expr===expr)) return;
+  const fn=makeFunc(expr);
+  if(!fn) return;
+  cmp.fns.push({expr,fn,visible:true,color:CMP_COLORS[cmp.fns.length%15]});
+  cmpRefresh();
+}
+
+function cmpRemove(i){cmp.fns.splice(i,1);cmpRefresh()}
+function cmpToggleVis(i){cmp.fns[i].visible=!cmp.fns[i].visible;cmpRefresh()}
+function cmpClearAll(){cmp.fns=[];cmpRefresh()}
+
+function cmpRefresh(){
+  // Update list
+  document.getElementById('cmpCount').textContent=`${cmp.fns.length}/15`;
+  document.getElementById('cmpList').innerHTML=cmp.fns.map((f,i)=>{
+    const sub=i<9?`f${i+1}`:`g${i-8}`;
+    return `<div class="cmp-item" style="border-left-color:${f.color};${f.visible?'':'opacity:.35'}">
+      <span class="cmp-item-idx">${sub}</span>
+      <div class="cmp-item-color" style="background:${f.color}"></div>
+      <span class="cmp-item-name" style="color:${f.color}">${f.expr}</span>
+      <button class="cmp-item-toggle${f.visible?'':' hide'}" onclick="cmpToggleVis(${i})" title="${f.visible?'Masquer':'Afficher'}">${f.visible?'👁':'⊘'}</button>
+      <button class="cmp-item-del" onclick="cmpRemove(${i})" title="Supprimer">✕</button>
+    </div>`;
+  }).join('');
+
+  // Eval table
+  const x0=parseFloat(document.getElementById('cmpX').value)||0;
+  if(cmp.fns.length>0){
+    let html='<tr><th>Fonction</th><th>Expression</th><th>f('+fmtN(x0)+')</th></tr>';
+    cmp.fns.forEach((f,i)=>{
+      const y=f.fn(x0);
+      const sub=i<9?`f${i+1}`:`g${i-8}`;
+      html+=`<tr><td style="color:${f.color};font-weight:800">${sub}</td><td class="xv">${f.expr}</td><td class="yv">${isFinite(y)?fmtN(y):'—'}</td></tr>`;
+    });
+    document.getElementById('cmpEvalTable').innerHTML=html;
+  } else {
+    document.getElementById('cmpEvalTable').innerHTML='';
+  }
+
+  // Intersections
+  cmpFindIntersections();
+
+  cmpDraw();
+}
+
+function cmpFindIntersections(){
+  const el=document.getElementById('cmpIntersections');
+  const visible=cmp.fns.filter(f=>f.visible);
+  if(visible.length<2){el.innerHTML='<span style="color:var(--muted);font-size:.8rem">Ajoute au moins 2 fonctions visibles</span>';return;}
+
+  const inters=[];
+  for(let i=0;i<visible.length;i++){
+    for(let j=i+1;j<visible.length;j++){
+      const fi=visible[i], fj=visible[j];
+      const idxI=cmp.fns.indexOf(fi), idxJ=cmp.fns.indexOf(fj);
+      const subI=idxI<9?`f${idxI+1}`:`g${idxI-8}`;
+      const subJ=idxJ<9?`f${idxJ+1}`:`g${idxJ-8}`;
+      // Find crossings
+      let prev=fi.fn(-10)-fj.fn(-10);
+      for(let x=-9.95;x<=10;x+=0.05){
+        const diff=fi.fn(x)-fj.fn(x);
+        if(!isFinite(diff)||!isFinite(prev)){prev=diff;continue;}
+        if(Math.abs(diff)<1e-4){
+          inters.push({x:Math.round(x*100)/100,y:Math.round(fi.fn(x)*100)/100,i:subI,j:subJ,ci:fi.color,cj:fj.color});
+          prev=diff;continue;
+        }
+        if(prev*diff<0){
+          // Bisect
+          let lo=x-0.05,hi=x;
+          for(let k=0;k<25;k++){
+            const mid=(lo+hi)/2;
+            if((fi.fn(lo)-fj.fn(lo))*(fi.fn(mid)-fj.fn(mid))<=0) hi=mid; else lo=mid;
+          }
+          const xr=Math.round((lo+hi)/2*100)/100;
+          inters.push({x:xr,y:Math.round(fi.fn(xr)*100)/100,i:subI,j:subJ,ci:fi.color,cj:fj.color});
+        }
+        prev=diff;
+      }
+    }
+  }
+
+  // Dedupe close points
+  const unique=[];
+  inters.forEach(p=>{
+    if(!unique.some(u=>Math.abs(u.x-p.x)<0.08&&u.i===p.i&&u.j===p.j)) unique.push(p);
+  });
+
+  if(unique.length===0){
+    el.innerHTML='<span style="color:var(--muted);font-size:.8rem">Aucune intersection trouvée sur [−10, 10]</span>';
+  } else {
+    el.innerHTML=unique.slice(0,20).map(p=>
+      `<div class="cmp-inter-item"><span style="color:${p.ci};font-weight:800">${p.i}</span> ∩ <span style="color:${p.cj};font-weight:800">${p.j}</span> : (<span style="color:var(--cyan)">${fmtN(p.x)}</span>, <span style="color:var(--amber)">${fmtN(p.y)}</span>)</div>`
+    ).join('');
+  }
+
+  // Store for drawing
+  cmp._inters=unique;
+}
+
+/* ═══ COMPARATOR DRAWING ═══ */
+function cmpToScreen(x,y){
+  const w=cmpCvs.width/2,h=cmpCvs.height/2;
+  return{x:w/2+(x-cmp.view.cx)*cmp.view.scale,y:h/2-(y-cmp.view.cy)*cmp.view.scale};
+}
+function cmpToMath(sx,sy){
+  const w=cmpCvs.width/2,h=cmpCvs.height/2;
+  return{x:(sx-w/2)/cmp.view.scale+cmp.view.cx,y:-(sy-h/2)/cmp.view.scale+cmp.view.cy};
+}
+
+function cmpDraw(){
+  if(!cmpCtx) return;
+  const w=cmpCvs.width/2,h=cmpCvs.height/2;
+  cmpCtx.clearRect(0,0,w,h);
+  cmpCtx.fillStyle='#ffffff';cmpCtx.fillRect(0,0,w,h);
+
+  if(cmp.showGrid) cmpDrawGrid(w,h);
+  cmpDrawAxes(w,h);
+
+  // Draw each visible function
+  cmp.fns.forEach((f,i)=>{
+    if(!f.visible) return;
+    cmpCtx.strokeStyle=f.color;cmpCtx.lineWidth=2.5;cmpCtx.lineJoin='round';
+    cmpCtx.beginPath();let started=false;
+    for(let px=0;px<w;px+=0.5){
+      const mx=cmpToMath(px,0).x;
+      const my=f.fn(mx);
+      if(isNaN(my)||!isFinite(my)||Math.abs(my)>1e6){started=false;continue;}
+      const sp=cmpToScreen(mx,my);
+      if(!started){cmpCtx.moveTo(sp.x,sp.y);started=true;}else cmpCtx.lineTo(sp.x,sp.y);
+    }
+    cmpCtx.stroke();
+    // Glow
+    cmpCtx.save();cmpCtx.globalAlpha=0.08;cmpCtx.lineWidth=8;cmpCtx.stroke();cmpCtx.restore();
+  });
+
+  // Draw intersection points
+  if(cmp._inters){
+    cmp._inters.forEach(p=>{
+      const sp=cmpToScreen(p.x,p.y);
+      cmpCtx.beginPath();cmpCtx.arc(sp.x,sp.y,6,0,Math.PI*2);
+      cmpCtx.fillStyle='#c62828';cmpCtx.fill();
+      cmpCtx.strokeStyle='#fff';cmpCtx.lineWidth=2;cmpCtx.stroke();
+    });
+  }
+
+  // Mouse vertical line + dots on each curve
+  if(cmp.mouseX!==null){
+    const mx=cmpToMath(cmp.mouseX,cmp.mouseY).x;
+    // Vertical dashed line
+    const sx=cmpToScreen(mx,0).x;
+    cmpCtx.strokeStyle='rgba(0,0,0,.12)';cmpCtx.lineWidth=1;cmpCtx.setLineDash([4,4]);
+    cmpCtx.beginPath();cmpCtx.moveTo(sx,0);cmpCtx.lineTo(sx,h);cmpCtx.stroke();cmpCtx.setLineDash([]);
+
+    // Dot on each visible curve
+    cmp.fns.forEach(f=>{
+      if(!f.visible) return;
+      const my=f.fn(mx);
+      if(!isFinite(my)) return;
+      const sp=cmpToScreen(mx,my);
+      cmpCtx.beginPath();cmpCtx.arc(sp.x,sp.y,4.5,0,Math.PI*2);
+      cmpCtx.fillStyle=f.color;cmpCtx.fill();
+      cmpCtx.strokeStyle='#fff';cmpCtx.lineWidth=1.5;cmpCtx.stroke();
+    });
+
+    // Coords display
+    document.querySelector('#cmpCoords .cx').textContent=fmtN(mx);
+    const yVals=cmp.fns.filter(f=>f.visible).map(f=>{const y=f.fn(mx);return isFinite(y)?fmtN(y):'—'});
+    document.querySelector('#cmpCoords .cy').textContent=yVals.length?yVals.join(' | '):'—';
+  }
+}
+
+function cmpDrawGrid(w,h){
+  const pxPU=cmp.view.scale;
+  let step=1;
+  if(pxPU<20)step=5;else if(pxPU<40)step=2;else if(pxPU>150)step=0.5;
+  const xMin=cmpToMath(0,0).x,xMax=cmpToMath(w,0).x,yMin=cmpToMath(0,h).y,yMax=cmpToMath(0,0).y;
+  for(let x=Math.ceil(xMin/step)*step;x<=xMax;x+=step){
+    const sx=cmpToScreen(x,0).x;
+    cmpCtx.strokeStyle=Math.abs(x%1)<0.01?'#c0c6d8':'#dde0ea';
+    cmpCtx.lineWidth=Math.abs(x%1)<0.01?0.8:0.4;
+    cmpCtx.beginPath();cmpCtx.moveTo(sx,0);cmpCtx.lineTo(sx,h);cmpCtx.stroke();
+  }
+  for(let y=Math.ceil(yMin/step)*step;y<=yMax;y+=step){
+    const sy=cmpToScreen(0,y).y;
+    cmpCtx.strokeStyle=Math.abs(y%1)<0.01?'#c0c6d8':'#dde0ea';
+    cmpCtx.lineWidth=Math.abs(y%1)<0.01?0.8:0.4;
+    cmpCtx.beginPath();cmpCtx.moveTo(0,sy);cmpCtx.lineTo(w,sy);cmpCtx.stroke();
+  }
+}
+
+function cmpDrawAxes(w,h){
+  cmpCtx.strokeStyle='#1a1e2e';cmpCtx.lineWidth=2;
+  const y0=cmpToScreen(0,0).y,x0=cmpToScreen(0,0).x;
+  if(y0>=0&&y0<=h){cmpCtx.beginPath();cmpCtx.moveTo(0,y0);cmpCtx.lineTo(w,y0);cmpCtx.stroke();}
+  if(x0>=0&&x0<=w){cmpCtx.beginPath();cmpCtx.moveTo(x0,0);cmpCtx.lineTo(x0,h);cmpCtx.stroke();}
+  // Tick labels
+  cmpCtx.fillStyle='#3a4058';cmpCtx.font='bold 11px JetBrains Mono';
+  const step2=cmp.view.scale>100?1:cmp.view.scale>40?2:5;
+  const xMin=cmpToMath(0,0).x,xMax=cmpToMath(w,0).x;
+  cmpCtx.textAlign='center';
+  for(let x=Math.ceil(xMin/step2)*step2;x<=xMax;x+=step2){
+    if(Math.abs(x)<0.01)continue;
+    const sx=cmpToScreen(x,0).x;
+    if(y0>=0&&y0<=h){
+      cmpCtx.lineWidth=1.5;cmpCtx.beginPath();cmpCtx.moveTo(sx,y0-4);cmpCtx.lineTo(sx,y0+4);cmpCtx.stroke();
+      cmpCtx.fillText(fmtN(x),sx,Math.min(h-4,Math.max(14,y0+18)));
+    }
+  }
+  cmpCtx.textAlign='right';
+  const yMin=cmpToMath(0,h).y,yMax2=cmpToMath(0,0).y;
+  for(let y=Math.ceil(yMin/step2)*step2;y<=yMax2;y+=step2){
+    if(Math.abs(y)<0.01)continue;
+    const sy=cmpToScreen(0,y).y;
+    if(x0>=0&&x0<=w){
+      cmpCtx.lineWidth=1.5;cmpCtx.beginPath();cmpCtx.moveTo(x0-4,sy);cmpCtx.lineTo(x0+4,sy);cmpCtx.stroke();
+      cmpCtx.fillStyle='#3a4058';cmpCtx.fillText(fmtN(y),Math.min(w-4,Math.max(30,x0-8)),sy+4);
+    }
+  }
+  if(x0>=0&&x0<=w&&y0>=0&&y0<=h){cmpCtx.textAlign='right';cmpCtx.fillStyle='#1a1e2e';cmpCtx.font='bold 12px JetBrains Mono';cmpCtx.fillText('0',x0-8,y0+16);}
+}
+
+function cmpZoomIn(){cmp.view.scale*=1.3;cmp.view.scale=Math.min(300,cmp.view.scale);cmpDraw()}
+function cmpZoomOut(){cmp.view.scale*=0.7;cmp.view.scale=Math.max(10,cmp.view.scale);cmpDraw()}
+function cmpResetView(){cmp.view={cx:0,cy:0,scale:60};cmpDraw()}
+function cmpToggleGrid(){cmp.showGrid=!cmp.showGrid;document.getElementById('cmpBtnGrid').classList.toggle('active',cmp.showGrid);cmpDraw()}
+
+/* ═══════════════════════════════════════
+   TERMINOLOGIE — Expression parser + analyzer
+   ═══════════════════════════════════════ */
+function setExpr(expr){
+  document.getElementById('tInput').value=expr;
+  analyzeFunction();
+}
+
+function safeParse(expr){
+  // Preprocess: add * between number and letter, handle ^, abs, sqrt, log, ln
+  let s=expr.trim();
+  s=s.replace(/\s+/g,'');
+  // Replace common notations
+  s=s.replace(/(\d)([a-zA-Z(])/g,'$1*$2');  // 2x → 2*x
+  s=s.replace(/([)])(\d)/g,'$1*$2');          // )2 → )*2
+  s=s.replace(/([)])([(a-zA-Z])/g,'$1*$2');  // )(, )x → )*(, )*x
+  s=s.replace(/\^/g,'**');                     // ^ → **
+  s=s.replace(/\|([^|]+)\|/g,'abs($1)');       // |x| → abs(x)
+  // Make safe for eval with Math functions
+  s=s.replace(/\bsqrt\b/g,'Math.sqrt');
+  s=s.replace(/\babs\b/g,'Math.abs');
+  s=s.replace(/\bln\b/g,'Math.log');
+  s=s.replace(/\blog10\b/g,'Math.log10');
+  s=s.replace(/\blog\b/g,'Math.log10');  // log = log10 by default
+  s=s.replace(/\bpi\b/gi,'Math.PI');
+  s=s.replace(/\be\b/g,'Math.E');
+  s=s.replace(/\bsin\b/g,'Math.sin');
+  s=s.replace(/\bcos\b/g,'Math.cos');
+  s=s.replace(/\btan\b/g,'Math.tan');
+  return s;
+}
+
+function makeFunc(expr){
+  const parsed=safeParse(expr);
+  try{
+    const fn=new Function('x','try{return '+parsed+'}catch(e){return NaN}');
+    fn(0); fn(1); fn(-1); // test
+    return fn;
+  }catch(e){return null;}
+}
+
+function analyzeFunction(){
+  const expr=document.getElementById('tInput').value.trim();
+  const x0=parseFloat(document.getElementById('tX0').value)||0;
+  const errEl=document.getElementById('tError');
+  const resEl=document.getElementById('tResults');
+
+  if(!expr){errEl.textContent='⚠️ Écris une expression.';resEl.style.display='none';return;}
+
+  const fn=makeFunc(expr);
+  if(!fn){errEl.textContent='❌ Expression invalide. Vérifie la syntaxe.';resEl.style.display='none';return;}
+  errEl.textContent='';
+  resEl.style.display='';
+
+  // Evaluate at many points for analysis
+  const vals=[];
+  for(let x=-20;x<=20;x+=0.01){
+    const y=fn(x);
+    if(isFinite(y)) vals.push({x:Math.round(x*100)/100,y});
+  }
+
+  // Detect type
+  const type=detectType(fn,vals,expr);
+  const fx0=fn(x0);
+
+  // Type card
+  document.getElementById('tTypeIcon').textContent=type.icon;
+  document.getElementById('tType').textContent=type.name;
+  document.getElementById('tTypeSub').textContent=type.sub;
+
+  // Evaluation card
+  document.getElementById('tFx0').textContent=isFinite(fx0)?fmtN(fx0):'Non définie';
+  document.getElementById('tFx0Sub').innerHTML=isFinite(fx0)?
+    `f(<span style="color:var(--cyan)">${fmtN(x0)}</span>) = <span style="color:var(--amber)">${fmtN(fx0)}</span><br>Le point (${fmtN(x0)}, ${fmtN(fx0)}) est sur la courbe`
+    :`f(${fmtN(x0)}) n'existe pas — x₀ hors du domaine`;
+
+  // Vocabulary
+  buildVocab(type,fn,x0,fx0,expr);
+
+  // Properties
+  buildTermProps(type,fn,vals);
+
+  // Table
+  buildTermTable(fn);
+
+  // Summary
+  buildTermSummary(type,fn,x0,fx0,expr);
+}
+
+function detectType(fn,vals,expr){
+  // Test constante
+  if(vals.length>10){
+    const y0=vals[0].y;
+    const isConst=vals.every(v=>Math.abs(v.y-y0)<1e-8);
+    if(isConst) return{id:'constante',name:'Constante',icon:'➖',sub:`f(x) = ${fmtN(y0)} pour tout x`,degree:0};
+  }
+
+  // Test linéaire/affine: check if f is degree 1
+  const y0=fn(0),y1=fn(1),y2=fn(2),y3=fn(3),ym1=fn(-1);
+  if(isFinite(y0)&&isFinite(y1)&&isFinite(y2)&&isFinite(y3)){
+    const d1=y1-y0, d2=y2-y1, d3=y3-y2;
+    if(Math.abs(d1-d2)<1e-6&&Math.abs(d2-d3)<1e-6){
+      const a=d1, b=y0;
+      if(Math.abs(b)<1e-8) return{id:'lineaire',name:'Linéaire',icon:'📏',sub:`f(x) = ${fmtN(a)}x — proportionnalité`,degree:1,a,b:0};
+      return{id:'affine',name:'Affine',icon:'📈',sub:`f(x) = ${fmtN(a)}x + ${fmtN(b)} — droite`,degree:1,a,b};
+    }
+
+    // Test quadratique: second differences constant
+    const dd1=(y2-y1)-(y1-y0), dd2=(y3-y2)-(y2-y1);
+    if(Math.abs(dd1-dd2)<1e-5&&Math.abs(dd1)>1e-8){
+      const a2=dd1/2;
+      const b2=y1-y0-a2;
+      const c2=y0;
+      return{id:'quadra',name:'Quadratique (parabole)',icon:'〰️',sub:`f(x) = ${fmtN(a2)}x² + ${fmtN(b2)}x + ${fmtN(c2)}`,degree:2,a:a2,b:b2,c:c2};
+    }
+  }
+
+  // Test abs (V-shape): check symmetry + linear branches
+  if(expr.includes('abs')||expr.includes('|')){
+    return{id:'abs',name:'Valeur absolue',icon:'📐',sub:'Forme en V — non dérivable au sommet',degree:'V'};
+  }
+
+  // Test exponential
+  if(expr.includes('^x')||expr.includes('**x')||/\d\^x/.test(expr)){
+    return{id:'expon',name:'Exponentielle',icon:'📈',sub:'Croissance ou décroissance exponentielle',degree:'exp'};
+  }
+
+  // Test log
+  if(expr.includes('log')||expr.includes('ln')){
+    return{id:'log',name:'Logarithme',icon:'📉',sub:'Réciproque de l\'exponentielle',degree:'log'};
+  }
+
+  // Test sqrt
+  if(expr.includes('sqrt')){
+    return{id:'racine',name:'Racine carrée',icon:'√',sub:'Définie pour x ≥ 0',degree:'sqrt'};
+  }
+
+  // Test inverse (1/x pattern)
+  if(expr.includes('/x')||expr.includes('/ x')){
+    return{id:'inverse',name:'Inverse (hyperbole)',icon:'🔄',sub:'Asymptotes en x=0 et y→0',degree:-1};
+  }
+
+  return{id:'autre',name:'Autre fonction',icon:'🔣',sub:'Type non identifié automatiquement',degree:'?'};
+}
+
+function buildVocab(type,fn,x0,fx0,expr){
+  const items=[];
+
+  // Antécédent / Image
+  items.push({term:'Image',def:`L'image de <span class="t-vval">${fmtN(x0)}</span> par f est <span class="t-vval">${isFinite(fx0)?fmtN(fx0):'∅'}</span>. On écrit f(${fmtN(x0)}) = ${isFinite(fx0)?fmtN(fx0):'∅'}.`});
+
+  if(isFinite(fx0)){
+    items.push({term:'Antécédent',def:`<span class="t-vval">${fmtN(x0)}</span> est un antécédent de <span class="t-vval">${fmtN(fx0)}</span> par f. Attention : il peut y avoir plusieurs antécédents pour une même image.`});
+  }
+
+  // Domain
+  let domStr='ℝ (tous les réels)';
+  if(type.id==='inverse') domStr='ℝ \\ {0} — tout sauf x = 0';
+  else if(type.id==='log') domStr=']0, +∞[ — strictement positifs';
+  else if(type.id==='racine') domStr='[0, +∞[ — positifs ou nul';
+  items.push({term:'Domaine',def:`Ensemble des valeurs de x pour lesquelles f(x) existe : <span class="t-vval">${domStr}</span>`});
+
+  // Ensemble image
+  let imgStr='ℝ';
+  if(type.id==='constante') imgStr=`{${fmtN(fn(0))}}`;
+  else if(type.id==='quadra'&&type.a){
+    const xv=-type.b/(2*type.a), yv=type.a*xv*xv+type.b*xv+type.c;
+    imgStr=type.a>0?`[${fmtN(yv)}, +∞[`:`]−∞, ${fmtN(yv)}]`;
+  }
+  else if(type.id==='racine') imgStr='[0, +∞[';
+  else if(type.id==='expon') imgStr=']0, +∞[';
+  items.push({term:'Ensemble image',def:`Ensemble des valeurs que f(x) peut prendre : <span class="t-vval">${imgStr}</span>`});
+
+  // Ordonnée à l'origine
+  const f0=fn(0);
+  if(isFinite(f0)){
+    items.push({term:'Ordonnée à l\'origine',def:`f(0) = <span class="t-vval">${fmtN(f0)}</span> — c'est le point où la courbe coupe l'axe Y : (0, ${fmtN(f0)}).`});
+  }
+
+  // Zeros
+  const zeros=findZeros(fn);
+  if(zeros.length>0){
+    items.push({term:'Zéro(s) / Racine(s)',def:`f(x) = 0 quand <span class="t-vval">x = ${zeros.map(z=>fmtN(z)).join(' ou ')}</span> — point(s) où la courbe coupe l'axe X.`});
+  } else {
+    items.push({term:'Zéro(s) / Racine(s)',def:'La courbe ne coupe pas l\'axe X (pas de solution à f(x) = 0 trouvée).'});
+  }
+
+  // Signe
+  items.push({term:'Signe',def:`En x = ${fmtN(x0)} : f(${fmtN(x0)}) = ${isFinite(fx0)?fmtN(fx0):'∅'} → ${fx0>0?'<span class="t-vval">positif (+)</span>':fx0<0?'<span class="t-vval">négatif (−)</span>':'<span class="t-vval">nul (0)</span>'}`});
+
+  // Variation
+  if(isFinite(fx0)){
+    const eps=0.001;
+    const fBefore=fn(x0-eps), fAfter=fn(x0+eps);
+    if(isFinite(fBefore)&&isFinite(fAfter)){
+      const sens=fAfter>fBefore?'croissante ↗':fAfter<fBefore?'décroissante ↘':'constante →';
+      items.push({term:'Variation locale',def:`Au voisinage de x = ${fmtN(x0)}, la fonction est <span class="t-vval">${sens}</span>`});
+    }
+  }
+
+  // Render
+  document.getElementById('tVocab').innerHTML=items.map(it=>
+    `<div class="t-vocab-item"><div class="t-vterm">${it.term}</div><div class="t-vdef">${it.def}</div></div>`
+  ).join('');
+}
+
+function findZeros(fn){
+  const zeros=[];
+  let prevY=fn(-15);
+  for(let x=-14.9;x<=15;x+=0.1){
+    const y=fn(x);
+    if(!isFinite(y)){prevY=y;continue;}
+    if(Math.abs(y)<1e-6){zeros.push(Math.round(x*100)/100);prevY=y;continue;}
+    if(isFinite(prevY)&&prevY*y<0){
+      // Bisect
+      let lo=x-0.1,hi=x;
+      for(let i=0;i<30;i++){
+        const mid=(lo+hi)/2;
+        if(fn(lo)*fn(mid)<=0) hi=mid; else lo=mid;
+      }
+      zeros.push(Math.round((lo+hi)/2*100)/100);
+    }
+    prevY=y;
+  }
+  // Deduplicate
+  return [...new Set(zeros.map(z=>fmtN(z)))].map(Number).slice(0,6);
+}
+
+function buildTermProps(type,fn,vals){
+  const items=[];
+
+  // Monotonicity (global)
+  if(vals.length>10){
+    let incr=true,decr=true;
+    for(let i=1;i<vals.length;i++){
+      if(vals[i].y<vals[i-1].y-1e-6) incr=false;
+      if(vals[i].y>vals[i-1].y+1e-6) decr=false;
+    }
+    items.push({n:'Monotonie globale',v:incr?'↗ Croissante':decr?'↘ Décroissante':'Ni croissante ni décroissante'});
+  }
+
+  // Parity
+  const testParity=[1,2,3,4.7];
+  let even=true,odd=true;
+  for(const x of testParity){
+    const fp=fn(x),fm=fn(-x);
+    if(!isFinite(fp)||!isFinite(fm)){even=false;odd=false;break;}
+    if(Math.abs(fp-fm)>1e-4) even=false;
+    if(Math.abs(fp+fm)>1e-4) odd=false;
+  }
+  items.push({n:'Parité',v:even&&odd?'Paire et impaire (= 0)':even?'Paire (symétrie / axe Y)':odd?'Impaire (symétrie / origine)':'Ni paire ni impaire'});
+
+  // Specific to type
+  if(type.id==='affine'||type.id==='lineaire'){
+    items.push({n:'Pente',v:fmtN(type.a)});
+    if(type.b!==undefined) items.push({n:'Ordonnée à l\'origine',v:fmtN(type.b)});
+  }
+  if(type.id==='quadra'&&type.a){
+    const xv=-type.b/(2*type.a), yv=type.a*xv*xv+type.b*xv+type.c;
+    const delta=type.b*type.b-4*type.a*type.c;
+    items.push({n:'Sommet',v:`(${fmtN(xv)}, ${fmtN(yv)})`});
+    items.push({n:'Axe de symétrie',v:`x = ${fmtN(xv)}`});
+    items.push({n:'Discriminant Δ',v:fmtN(delta)});
+    items.push({n:'Ouverture',v:type.a>0?'↑ Vers le haut':'↓ Vers le bas'});
+  }
+
+  // Boundedness
+  if(vals.length>10){
+    const yMin=Math.min(...vals.map(v=>v.y)), yMax=Math.max(...vals.map(v=>v.y));
+    items.push({n:'Min observé',v:fmtN(yMin)+' (sur [−20,20])'});
+    items.push({n:'Max observé',v:fmtN(yMax)+' (sur [−20,20])'});
+  }
+
+  document.getElementById('tProps').innerHTML=items.map(p=>
+    `<div class="prop"><span class="prop-name">${p.n}</span><span class="prop-val">${p.v}</span></div>`
+  ).join('');
+}
+
+function buildTermTable(fn){
+  const xs=[-5,-4,-3,-2,-1,0,1,2,3,4,5];
+  let html='<tr><th>x</th>'+xs.map(x=>`<th>${x}</th>`).join('')+'</tr>';
+  html+='<tr><td style="color:var(--muted);font-weight:700">f(x)</td>'+xs.map(x=>{
+    const y=fn(x);
+    return `<td class="yv">${isFinite(y)?fmtN(y):'—'}</td>`;
+  }).join('')+'</tr>';
+  document.getElementById('tTable').innerHTML=html;
+}
+
+function buildTermSummary(type,fn,x0,fx0,expr){
+  let s=`<strong>Fonction analysée</strong> : f(x) = <em>${expr}</em><br><br>`;
+
+  s+=`<strong>Type</strong> : ${type.name}. `;
+  switch(type.id){
+    case'constante':s+=`C'est une droite horizontale. Tous les points ont la même ordonnée. `;break;
+    case'lineaire':s+=`Droite passant par l'origine avec une pente de <em>${fmtN(type.a)}</em>. Elle traduit une proportionnalité. `;break;
+    case'affine':s+=`Droite de pente <em>${fmtN(type.a)}</em> et d'ordonnée à l'origine <em>${fmtN(type.b)}</em>. ${type.a>0?'Elle monte':'Elle descend'} de gauche à droite. `;break;
+    case'quadra':s+=`Parabole ${type.a>0?'ouverte vers le haut ↑':'ouverte vers le bas ↓'}. `;
+      if(type.a){
+        const xv=-type.b/(2*type.a), yv=type.a*xv*xv+type.b*xv+type.c;
+        s+=`Le sommet est en <em>(${fmtN(xv)}, ${fmtN(yv)})</em>. `;
+        const delta=type.b*type.b-4*type.a*type.c;
+        s+=`Le discriminant Δ = <em>${fmtN(delta)}</em> → `;
+        if(delta>0) s+=`2 racines réelles. `;
+        else if(delta===0) s+=`1 racine double. `;
+        else s+=`pas de racine réelle. `;
+      }break;
+    case'abs':s+=`Fonction en forme de V. Elle n'est pas dérivable au point anguleux (sommet du V). `;break;
+    case'inverse':s+=`Hyperbole avec deux branches. Non définie en x = 0 (asymptote verticale). `;break;
+    case'racine':s+=`Définie uniquement pour x ≥ 0. La courbe croît de plus en plus lentement. `;break;
+    case'expon':s+=`La fonction exponentielle croît (ou décroît) de plus en plus vite. Elle a une asymptote horizontale. `;break;
+    case'log':s+=`Le logarithme est la réciproque de l'exponentielle. Il n'est défini que pour x > 0 et croît de plus en plus lentement. `;break;
+    default:s+=`Type non identifié automatiquement. `;
+  }
+
+  s+=`<br><br><strong>Évaluation</strong> : f(${fmtN(x0)}) = <em>${isFinite(fx0)?fmtN(fx0):'non définie'}</em>. `;
+  if(isFinite(fx0)){
+    s+=`Cela signifie que <em>${fmtN(fx0)}</em> est l'image de <em>${fmtN(x0)}</em>, et <em>${fmtN(x0)}</em> est un antécédent de <em>${fmtN(fx0)}</em>.`;
+  }
+
+  document.getElementById('tSummary').innerHTML=s;
+}
+
+/* ═══════════════════════════════════════
+   QUIZ ENGINE
+   ═══════════════════════════════════════ */
+const Q_TOPICS=[
+  {id:'image',name:'Image / f(x)',on:true},
+  {id:'type',name:'Type de fonction',on:true},
+  {id:'sens',name:'Sens de variation',on:true},
+  {id:'zero',name:'Zéros / Racines',on:true},
+  {id:'domaine',name:'Domaine',on:true},
+  {id:'sommet',name:'Sommet parabole',on:true},
+  {id:'lecture',name:'Lecture graphique',on:true},
+  {id:'sign',name:'Signe de f(x)',on:true},
+];
+let qDiff='facile', qQuestions=[], qIdx=0, qCorrect=0, qStreak=0, qTimer=null, qTimeLeft=30, qHistory=[];
+let qUseTimer=true, qTimerDuration=30;
+const Q_TOTAL=10;
+
+function qInitTopics(){
+  document.getElementById('qTopics').innerHTML=Q_TOPICS.map(t=>
+    `<button class="q-topic${t.on?' on':''}" onclick="this.classList.toggle('on');Q_TOPICS.find(x=>x.id==='${t.id}').on=this.classList.contains('on')">${t.name}</button>`
+  ).join('');
+}
+function qSetDiff(d,btn){
+  qDiff=d;
+  document.querySelectorAll('.q-diff-btn[data-d]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function qSetTimer(on){
+  qUseTimer=on;
+  document.getElementById('qTimerOn').classList.toggle('active',on);
+  document.getElementById('qTimerOff').classList.toggle('active',!on);
+  document.getElementById('qTimerDurWrap').style.display=on?'':'none';
+}
+
+// ─── Question generators ───
+function randInt(a,b){return a+Math.floor(Math.random()*(b-a+1))}
+function randPick(arr){return arr[Math.floor(Math.random()*arr.length)]}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a}
+
+function genQuestion(){
+  const active=Q_TOPICS.filter(t=>t.on).map(t=>t.id);
+  if(!active.length) return null;
+  const topic=randPick(active);
+  const hard=qDiff==='difficile', easy=qDiff==='facile';
+
+  switch(topic){
+    case'image': return genImage(easy,hard);
+    case'type': return genType(easy,hard);
+    case'sens': return genSens(easy,hard);
+    case'zero': return genZero(easy,hard);
+    case'domaine': return genDomaine(easy,hard);
+    case'sommet': return genSommet(easy,hard);
+    case'lecture': return genLecture(easy,hard);
+    case'sign': return genSign(easy,hard);
+  }
+  return genImage(easy,hard);
+}
+
+function genImage(easy,hard){
+  let a,b,x,expr,ans;
+  if(easy){
+    a=randInt(1,4);b=randInt(0,6);x=randInt(0,5);
+    expr=`${a}x + ${b}`;ans=a*x+b;
+  } else if(hard){
+    a=randPick([-2,-1,1,2]);const c=randInt(-4,4);x=randInt(-3,3);
+    expr=`${a}x² ${c>=0?'+ '+c:'− '+(-c)}`;ans=a*x*x+c;
+  } else {
+    a=randInt(-3,3)||1;b=randInt(-4,4);x=randInt(-3,4);
+    expr=`${a}x ${b>=0?'+ '+b:'− '+(-b)}`;ans=a*x+b;
+  }
+  const wrongs=new Set();
+  const offsets=shuffle([-3,-2,-1,1,2,3]);
+  for(const o of offsets){if(wrongs.size>=3) break;const w=ans+o;if(w!==ans) wrongs.add(w);}
+  let expl=`<b>Méthode :</b> pour trouver l'image de x = ${x}, on remplace <b>chaque x</b> de la formule par ${x}.<br><br>`;
+  expl+=`<b>Étape 1 :</b> On écrit f(${x}) = ${expr.replace(/x/g,'('+x+')')}<br>`;
+  if(hard){
+    expl+=`<b>Étape 2 :</b> On calcule le carré : (${x})² = ${x*x}<br>`;
+    expl+=`<b>Étape 3 :</b> On multiplie : ${a} × ${x*x} = ${a*x*x}<br>`;
+    expl+=`<b>Étape 4 :</b> On termine : ${a*x*x} ${ans-a*x*x>=0?'+ '+(ans-a*x*x):'− '+Math.abs(ans-a*x*x)} = <b>${ans}</b>`;
+  } else {
+    expl+=`<b>Étape 2 :</b> On multiplie : ${a} × ${x} = ${a*x}<br>`;
+    expl+=`<b>Étape 3 :</b> On additionne : ${a*x} ${b>=0?'+ '+b:'− '+(-b)} = <b>${ans}</b>`;
+  }
+  expl+=`<br><br>📌 <b>Rappel :</b> L'image de ${x}, c'est la valeur f(${x}). Le point (${x}, ${ans}) est sur la courbe.`;
+  return{topic:'Image',q:`Quelle est l'<b>image</b> de x = <b>${x}</b> par f ?`,formula:`f(x) = ${expr}`,
+    answers:shuffle([{v:ans,ok:true},...[...wrongs].map(w=>({v:w,ok:false}))]),
+    explain:expl};
+}
+
+function genType(easy,hard){
+  const types=[
+    {expr:'3x + 2',name:'Affine',wrongs:['Linéaire','Quadratique','Constante'],
+     why:`<b>Règle :</b> la forme est f(x) = <b>ax + b</b> avec a = 3 et b = 2.<br><br>• Si b = 0, ce serait linéaire (passe par l'origine).<br>• Ici b = 2 ≠ 0, donc c'est <b>affine</b>.<br>• Une fonction affine trace une droite qui NE passe PAS par l'origine.<br><br>📌 <b>Comment reconnaître :</b> x est au degré 1, pas de x², pas de x en exposant.`},
+    {expr:'−4x',name:'Linéaire',wrongs:['Affine','Constante','Quadratique'],
+     why:`<b>Règle :</b> la forme est f(x) = <b>ax</b> avec a = −4 et <b>pas de terme constant</b> (b = 0).<br><br>• C'est un cas particulier de la fonction affine.<br>• Elle passe par l'origine (0, 0) car f(0) = 0.<br>• Elle traduit une <b>proportionnalité</b> de coefficient −4.<br><br>📌 <b>Piège :</b> −4x est linéaire, −4x + 1 serait affine.`},
+    {expr:'7',name:'Constante',wrongs:['Linéaire','Affine','Quadratique'],
+     why:`<b>Règle :</b> f(x) = 7 ne dépend pas de x → <b>quel que soit x, f(x) vaut toujours 7</b>.<br><br>• C'est une droite horizontale y = 7.<br>• La pente est nulle (a = 0).<br>• On peut l'écrire f(x) = 0·x + 7.<br><br>📌 <b>Comment reconnaître :</b> il n'y a pas de x dans la formule.`},
+    {expr:'x² − 3x + 1',name:'Quadratique',wrongs:['Affine','Linéaire','Exponentielle'],
+     why:`<b>Règle :</b> on reconnaît la forme f(x) = <b>ax² + bx + c</b> avec a = 1, b = −3, c = 1.<br><br>• La plus haute puissance de x est <b>x²</b> → fonction du 2ᵉ degré.<br>• Son graphique est une <b>parabole</b>.<br>• Comme a = 1 > 0, la parabole s'ouvre vers le haut ↑.<br><br>📌 <b>Comment reconnaître :</b> il y a un x² (et pas de x³ ou plus).`},
+    {expr:'2ˣ',name:'Exponentielle',wrongs:['Quadratique','Affine','Logarithme'],
+     why:`<b>Règle :</b> le x est <b>en exposant</b> (2<sup>x</sup>), pas en base → c'est une <b>exponentielle</b>.<br><br>• Attention à ne pas confondre : x² (x en base, quadratique) ≠ 2ˣ (x en exposant, exponentielle) !<br>• La base est 2, donc f(x) double chaque fois que x augmente de 1.<br>• Croissance très rapide : f(10) = 1024.<br><br>📌 <b>Comment reconnaître :</b> la variable x est en haut (exposant).`},
+    {expr:'log(x)',name:'Logarithme',wrongs:['Exponentielle','Inverse','Racine carrée'],
+     why:`<b>Règle :</b> <b>log(x)</b> est la fonction logarithme (base 10).<br><br>• C'est la <b>réciproque de l'exponentielle</b> : si 10<sup>y</sup> = x, alors log(x) = y.<br>• Elle n'est définie que pour x > 0.<br>• Elle croît très lentement : log(1000) = 3 seulement.<br><br>📌 <b>Comment reconnaître :</b> le mot « log » ou « ln » dans la formule.`},
+    {expr:'1/x',name:'Inverse',wrongs:['Logarithme','Linéaire','Racine carrée'],
+     why:`<b>Règle :</b> f(x) = 1/x est la <b>fonction inverse</b> (hyperbole).<br><br>• Elle n'est pas définie en x = 0 (division par zéro).<br>• Quand x grandit, f(x) s'approche de 0 sans jamais l'atteindre.<br>• Son graphique a deux branches séparées par les axes.<br><br>📌 <b>Comment reconnaître :</b> x est au dénominateur (1/x, a/x).`},
+    {expr:'√x',name:'Racine carrée',wrongs:['Quadratique','Logarithme','Inverse'],
+     why:`<b>Règle :</b> le symbole √ indique la <b>racine carrée</b>.<br><br>• C'est la réciproque de x² (pour x ≥ 0).<br>• Elle n'est définie que pour x ≥ 0.<br>• La courbe part de (0, 0) et croît de plus en plus lentement.<br><br>📌 <b>Comment reconnaître :</b> le symbole √ ou le mot « sqrt ».`},
+    {expr:'|x − 2|',name:'Valeur absolue',wrongs:['Affine','Quadratique','Linéaire'],
+     why:`<b>Règle :</b> les barres |…| indiquent la <b>valeur absolue</b>.<br><br>• |x − 2| donne toujours un résultat ≥ 0 (la distance entre x et 2).<br>• Le graphique a une forme en <b>V</b> avec le sommet en x = 2.<br>• À gauche du sommet la droite descend, à droite elle monte.<br><br>📌 <b>Comment reconnaître :</b> les barres verticales |…| dans la formule.`},
+  ];
+  const pool=easy?types.slice(0,4):hard?types:types.slice(0,7);
+  const t=randPick(pool);
+  return{topic:'Type de fonction',q:'Quel est le <b>type</b> de cette fonction ?',formula:`f(x) = ${t.expr}`,
+    answers:shuffle([{v:t.name,ok:true},...t.wrongs.map(w=>({v:w,ok:false}))]),
+    explain:t.why};
+}
+
+function genSens(easy,hard){
+  const a=easy?randPick([1,2,3,-1,-2,-3]):randInt(-5,5)||1;
+  const b=randInt(-4,4);
+  const sens=a>0?'Croissante ↗':'Décroissante ↘';
+  const other=a>0?'Décroissante ↘':'Croissante ↗';
+  let expl=`<b>Règle :</b> pour f(x) = <b>a</b>x + b, c'est le coefficient <b>a</b> qui décide du sens :<br><br>`;
+  expl+=`• Si a > 0 → la droite <b>monte</b> de gauche à droite → <b>croissante ↗</b><br>`;
+  expl+=`• Si a < 0 → la droite <b>descend</b> de gauche à droite → <b>décroissante ↘</b><br>`;
+  expl+=`• Si a = 0 → la droite est horizontale → <b>constante</b><br><br>`;
+  expl+=`Ici, a = <b>${a}</b>. Comme ${a} ${a>0?'> 0':'< 0'}, la fonction est <b>${sens.toLowerCase()}</b>.<br><br>`;
+  expl+=`📌 <b>Astuce :</b> le nombre b ne change PAS le sens de variation — il décale seulement la droite vers le haut ou le bas.`;
+  return{topic:'Variation',q:'La fonction f est-elle <b>croissante ou décroissante</b> ?',
+    formula:`f(x) = ${a}x ${b>=0?'+ '+b:'− '+(-b)}`,
+    answers:shuffle([{v:sens,ok:true},{v:other,ok:false},{v:'Constante →',ok:false},{v:'On ne peut pas savoir',ok:false}]),
+    explain:expl};
+}
+
+function genZero(easy,hard){
+  if(easy||!hard){
+    const r=randInt(-4,4);const a=randPick([1,2,3]);const b=-a*r;
+    const wrongs=[r+1,r-1,r+2].filter(w=>w!==r).slice(0,3);
+    let expl=`<b>Méthode :</b> trouver le zéro = résoudre f(x) = 0.<br><br>`;
+    expl+=`<b>Étape 1 :</b> On pose l'équation : ${a}x ${b>=0?'+ '+b:'− '+(-b)} = 0<br>`;
+    if(b>=0) expl+=`<b>Étape 2 :</b> On passe ${b} de l'autre côté : ${a}x = −${b}<br>`;
+    else expl+=`<b>Étape 2 :</b> On passe ${-b} de l'autre côté : ${a}x = ${-b}<br>`;
+    expl+=`<b>Étape 3 :</b> On divise par ${a} : x = ${-b} ÷ ${a} = <b>${r}</b><br><br>`;
+    expl+=`<b>Vérification :</b> f(${r}) = ${a}×(${r}) ${b>=0?'+ '+b:'− '+(-b)} = ${a*r} ${b>=0?'+ '+b:'− '+(-b)} = 0 ✓<br><br>`;
+    expl+=`📌 <b>Rappel :</b> le zéro (ou racine) est la valeur de x où la courbe <b>coupe l'axe X</b>. Au point (${r}, 0).`;
+    return{topic:'Zéro / Racine',q:'Pour quel <b>x</b> a-t-on f(x) = 0 ?',
+      formula:`f(x) = ${a}x ${b>=0?'+ '+b:'− '+(-b)}`,
+      answers:shuffle([{v:`x = ${r}`,ok:true},...wrongs.map(w=>({v:`x = ${w}`,ok:false}))]),
+      explain:expl};
+  } else {
+    const r1=randInt(-3,-1),r2=randInt(1,3);
+    const b=-(r1+r2),c=r1*r2;
+    const delta=b*b-4*c;
+    let expl=`<b>Méthode du discriminant :</b><br><br>`;
+    expl+=`<b>Étape 1 — Identifier :</b> a = 1, b = ${b}, c = ${c}<br>`;
+    expl+=`<b>Étape 2 — Calculer Δ :</b> Δ = b² − 4ac = (${b})² − 4×1×(${c}) = ${b*b} − (${4*c}) = <b>${delta}</b><br><br>`;
+    expl+=`<b>Règle du discriminant :</b><br>`;
+    expl+=`• Δ > 0 → <b>2 racines</b> distinctes (la parabole coupe l'axe X en 2 points)<br>`;
+    expl+=`• Δ = 0 → <b>1 racine</b> double (la parabole touche l'axe X en 1 point)<br>`;
+    expl+=`• Δ < 0 → <b>0 racine</b> (la parabole ne touche pas l'axe X)<br><br>`;
+    expl+=`Ici Δ = ${delta} > 0, donc <b>2 racines</b> : x₁ = ${r1} et x₂ = ${r2}.<br><br>`;
+    expl+=`📌 <b>Vérification :</b> f(${r1}) = (${r1})² ${b>=0?'+ '+b+'×('+r1+')':'− '+(-b)+'×('+r1+')'} ${c>=0?'+ '+c:'− '+(-c)} = 0 ✓`;
+    return{topic:'Zéro / Racine',q:'Combien de <b>racines</b> cette parabole a-t-elle ?',
+      formula:`f(x) = x² ${b>=0?'+ '+b+'x':'− '+(-b)+'x'} ${c>=0?'+ '+c:'− '+(-c)}`,
+      answers:shuffle([{v:'2 racines',ok:true},{v:'1 racine',ok:false},{v:'0 racine',ok:false},{v:'Impossible à dire',ok:false}]),
+      explain:expl};
+  }
+}
+
+function genDomaine(easy,hard){
+  const fns=[
+    {expr:'3x + 1',dom:'ℝ (tous les réels)',wrongs:['[0, +∞[',']−∞, 0[','ℝ \\ {0}'],
+     why:`<b>Règle :</b> une fonction affine (ax + b) est définie pour <b>tout nombre réel</b>.<br><br>On peut remplacer x par n'importe quelle valeur. Il n'y a :<br>• ❌ Pas de division (donc pas de risque de ÷ 0)<br>• ❌ Pas de racine carrée (pas de risque de √négatif)<br>• ❌ Pas de logarithme (pas de risque de log(≤0))<br><br>Exemples : f(−100) = −299 ✓, f(0) = 1 ✓, f(1000) = 3001 ✓<br><br>📌 <b>Domaine = ℝ</b> (l'ensemble de tous les nombres réels).`},
+    {expr:'x²',dom:'ℝ (tous les réels)',wrongs:['[0, +∞[',']0, +∞[','ℝ \\ {0}'],
+     why:`<b>Règle :</b> on peut élever <b>n'importe quel nombre au carré</b>.<br><br>• (−5)² = 25 ✓<br>• (0)² = 0 ✓<br>• (3.7)² = 13.69 ✓<br><br>Aucune restriction → <b>domaine = ℝ</b>.<br><br>📌 <b>Piège courant :</b> les élèves confondent parfois avec √x. Le carré accepte tout x, c'est la racine qui impose x ≥ 0.`},
+    {expr:'1/x',dom:'ℝ \\ {0}',wrongs:['ℝ','[0, +∞[',']0, +∞['],
+     why:`<b>Règle :</b> on ne peut jamais <b>diviser par zéro</b>.<br><br>On cherche quelle valeur de x rend le dénominateur = 0 :<br>Dénominateur = x → x = 0 est interdit.<br><br>• f(2) = 1/2 = 0.5 ✓<br>• f(−3) = 1/(−3) = −0.33 ✓<br>• f(0) = 1/<b>0</b> = <b>INTERDIT ❌</b><br><br>📌 <b>Domaine = ℝ \\ {0}</b> → « tous les réels SAUF 0 ».`},
+    {expr:'√x',dom:'[0, +∞[',wrongs:['ℝ',']0, +∞[','ℝ \\ {0}'],
+     why:`<b>Règle :</b> on ne peut pas prendre la racine carrée d'un nombre <b>négatif</b>.<br><br>• √4 = 2 ✓<br>• √0 = 0 ✓ (zéro est accepté !)<br>• √(−1) = <b>IMPOSSIBLE ❌</b> (aucun réel au carré ne donne −1)<br><br>Il faut que x ≥ 0 (positif <b>ou nul</b>).<br><br>📌 <b>Domaine = [0, +∞[</b><br>Le crochet <b>[</b> signifie « 0 est inclus ». C'est la différence avec ]0, +∞[ où 0 serait exclu.`},
+    {expr:'log(x)',dom:']0, +∞[',wrongs:['ℝ','[0, +∞[','ℝ \\ {0}'],
+     why:`<b>Règle :</b> le logarithme n'existe que pour les nombres <b>strictement positifs</b> (x > 0).<br><br>• log(100) = 2 ✓<br>• log(1) = 0 ✓<br>• log(<b>0</b>) = <b>INTERDIT ❌</b> (le log tend vers −∞)<br>• log(<b>−5</b>) = <b>IMPOSSIBLE ❌</b><br><br>📌 <b>Domaine = ]0, +∞[</b><br>Le crochet <b>]</b> signifie « 0 est EXCLU ». Contrairement à √x, ici 0 n'est PAS accepté.`},
+    {expr:'1/(x − 3)',dom:'ℝ \\ {3}',wrongs:['ℝ','ℝ \\ {0}',']3, +∞['],
+     why:`<b>Règle :</b> on ne peut pas diviser par zéro. On cherche quand le dénominateur = 0.<br><br><b>Étape 1 :</b> dénominateur = (x − 3)<br><b>Étape 2 :</b> x − 3 = 0 → x = <b>3</b> est interdit.<br><br>• f(0) = 1/(0−3) = −1/3 ✓<br>• f(5) = 1/(5−3) = 1/2 ✓<br>• f(<b>3</b>) = 1/(3−3) = 1/<b>0</b> = <b>INTERDIT ❌</b><br><br>📌 <b>Domaine = ℝ \\ {3}</b> → « tous les réels sauf 3 ».<br>⚠️ <b>Piège :</b> la valeur interdite est 3, pas 0 ! C'est x − 3 au dénominateur, pas x.`},
+  ];
+  const pool=easy?fns.slice(0,3):hard?fns:fns.slice(0,5);
+  const f=randPick(pool);
+  return{topic:'Domaine',q:'Quel est le <b>domaine de définition</b> de f ?',formula:`f(x) = ${f.expr}`,
+    answers:shuffle([{v:f.dom,ok:true},...f.wrongs.map(w=>({v:w,ok:false}))]),
+    explain:f.why};
+}
+
+function genSommet(easy,hard){
+  const a=randPick([-1,1]);
+  const xv=randInt(-2,2);const yv=randInt(-3,3);
+  const b=-2*a*xv;const c=a*xv*xv+yv;
+  let fstr=`${a===1?'':a===-1?'−':''+a}x²`;
+  if(b!==0) fstr+=` ${b>0?'+ '+b:'− '+(-b)}x`;
+  if(c!==0) fstr+=` ${c>0?'+ '+c:'− '+(-c)}`;
+  const wrongs=[
+    `(${xv+1}, ${yv})`,`(${xv}, ${yv+1})`,`(${-xv}, ${yv})`
+  ].filter(w=>w!==`(${xv}, ${yv})`).slice(0,3);
+  let expl=`<b>Méthode en 3 étapes :</b> pour f(x) = ax² + bx + c, le sommet est au point (x_s, y_s).<br><br>`;
+  expl+=`<b>Étape 1 — Identifier a, b, c :</b><br>a = ${a}, b = ${b}, c = ${c}<br><br>`;
+  expl+=`<b>Étape 2 — Calculer x_s avec la formule :</b><br>`;
+  expl+=`x_s = <b>−b / (2a)</b> = −(${b}) / (2 × ${a}) = ${-b} / ${2*a} = <b>${xv}</b><br><br>`;
+  expl+=`<b>Étape 3 — Calculer y_s = f(x_s) :</b><br>`;
+  expl+=`f(${xv}) = ${a}×(${xv})² ${b>=0?'+ '+b:'− '+(-b)}×(${xv}) ${c>=0?'+ '+c:'− '+(-c)}<br>`;
+  expl+=`f(${xv}) = ${a*xv*xv} ${b*xv>=0?'+ '+(b*xv):'− '+(-b*xv)} ${c>=0?'+ '+c:'− '+(-c)} = <b>${yv}</b><br><br>`;
+  expl+=`<b>Conclusion :</b> Sommet = <b>(${xv}, ${yv})</b><br><br>`;
+  expl+=`📌 Le sommet est le point ${a>0?'le plus <b>bas</b> (minimum) car a > 0 → parabole ouverte vers le haut ↑':'le plus <b>haut</b> (maximum) car a < 0 → parabole ouverte vers le bas ↓'}.`;
+  return{topic:'Sommet',q:'Quel est le <b>sommet</b> de cette parabole ?',
+    formula:`f(x) = ${fstr}`,
+    answers:shuffle([{v:`(${xv}, ${yv})`,ok:true},...wrongs.map(w=>({v:w,ok:false}))]),
+    explain:expl};
+}
+
+function genLecture(easy,hard){
+  const a=easy?randPick([1,-1]):randPick([-2,-1,1,2]);
+  const b=randInt(-2,2);
+  let x0,ans;
+  do{
+    x0=randInt(-3,3);
+    ans=a*x0+b;
+  }while(Math.abs(ans)>4||x0===0);
+  const wrongs=new Set();
+  for(const o of [-1,1,-2,2]){if(wrongs.size>=3) break;const w=ans+o;if(w!==ans) wrongs.add(w);}
+  let expl=`<b>Méthode de lecture graphique en 4 étapes :</b><br><br>`;
+  expl+=`<b>①</b> Repérer <b>x = ${x0}</b> sur l'axe horizontal (en bas).<br>`;
+  expl+=`<b>②</b> Monter (ou descendre) <b>verticalement</b> — c'est le trait rouge pointillé — jusqu'à toucher la courbe bleue.<br>`;
+  expl+=`<b>③</b> Aller <b>horizontalement</b> — c'est le trait orange pointillé — vers la gauche jusqu'à l'axe vertical.<br>`;
+  expl+=`<b>④</b> Lire la valeur sur l'axe des y → on trouve <b>y = ${ans}</b>.<br><br>`;
+  expl+=`Donc <b>f(${x0}) = ${ans}</b>.<br><br>`;
+  expl+=`📌 <b>Vocabulaire :</b><br>• ${ans} est l'<b>image</b> de ${x0} par f.<br>• ${x0} est un <b>antécédent</b> de ${ans} par f.<br>• Le point <b>(${x0}, ${ans})</b> est sur la courbe.`;
+  return{topic:'Lecture graphique',q:`Lis sur le graphique : <b>f(${x0})</b> = ?`,formula:'',
+    graphFn:x=>a*x+b, graphX0:x0, graphAns:ans,
+    answers:shuffle([{v:ans,ok:true},...[...wrongs].map(w=>({v:w,ok:false}))]),
+    explain:expl};
+}
+
+function genSign(easy,hard){
+  const a=randPick([1,2,-1,-2]);const b=randInt(-3,3);
+  const x0=randInt(0,4);const val=a*x0+b;
+  if(val===0) return genSign(easy,hard);
+  const sign=val>0?'Positif (> 0)':'Négatif (< 0)';
+  const other=val>0?'Négatif (< 0)':'Positif (> 0)';
+  let expl=`<b>Méthode :</b> on calcule f(${x0}) puis on regarde si le résultat est positif ou négatif.<br><br>`;
+  expl+=`<b>Étape 1 :</b> f(${x0}) = ${a} × ${x0} ${b>=0?'+ '+b:'− '+(-b)}<br>`;
+  expl+=`<b>Étape 2 :</b> f(${x0}) = ${a*x0} ${b>=0?'+ '+b:'− '+(-b)}<br>`;
+  expl+=`<b>Étape 3 :</b> f(${x0}) = <b>${val}</b><br><br>`;
+  expl+=`${val} ${val>0?'> 0 → le résultat est <b>positif</b>':'< 0 → le résultat est <b>négatif</b>'}.<br><br>`;
+  expl+=`📌 <b>Interprétation graphique :</b><br>`;
+  expl+=`• f(x) > 0 → la courbe est <b>au-dessus</b> de l'axe X (zone positive)<br>`;
+  expl+=`• f(x) < 0 → la courbe est <b>en-dessous</b> de l'axe X (zone négative)<br>`;
+  expl+=`• f(x) = 0 → la courbe <b>touche</b> l'axe X (c'est un zéro / une racine)`;
+  return{topic:'Signe',q:`Quel est le <b>signe</b> de f(${x0}) ?`,
+    formula:`f(x) = ${a}x ${b>=0?'+ '+b:'− '+(-b)}`,
+    answers:shuffle([{v:sign,ok:true},{v:other,ok:false},{v:'Nul (= 0)',ok:false},{v:'On ne peut pas savoir',ok:false}]),
+    explain:expl};
+}
+
+
+// ─── Quiz flow ───
+function qStart(){
+  qQuestions=[];qIdx=0;qCorrect=0;qStreak=0;qHistory=[];
+  qTimerDuration=parseInt(document.getElementById('qTimerSlider').value)||30;
+  for(let i=0;i<Q_TOTAL;i++){
+    const q=genQuestion();
+    if(q) qQuestions.push(q);
+  }
+  if(!qQuestions.length){alert('Sélectionne au moins un thème.');return;}
+  while(qQuestions.length<Q_TOTAL) qQuestions.push(genQuestion());
+  document.getElementById('qSettings').style.display='none';
+  document.getElementById('qArea').style.display='';
+  document.getElementById('qResult').style.display='none';
+  // Hide/show timer display
+  const timerCell=document.getElementById('qTime').closest('.qsb-item');
+  if(timerCell) timerCell.classList.toggle('timer-off',!qUseTimer);
+  qShowQuestion();
+}
+
+function qShowQuestion(){
+  const q=qQuestions[qIdx];
+  document.getElementById('qNum').textContent=`${qIdx+1}/${Q_TOTAL}`;
+  document.getElementById('qScore').textContent=qCorrect;
+  document.getElementById('qStreak').textContent=`${qStreak} 🔥`;
+  document.getElementById('qProgFill').style.width=((qIdx)/Q_TOTAL*100)+'%';
+  document.getElementById('qType').textContent=q.topic;
+  document.getElementById('qText').innerHTML=q.q;
+  document.getElementById('qFormula').textContent=q.formula||'';
+  document.getElementById('qFormula').style.display=q.formula?'':'none';
+  document.getElementById('qFeedback').className='quiz-feedback';
+  document.getElementById('qFeedback').style.display='none';
+  document.getElementById('qFeedback').innerHTML='';
+  document.getElementById('qNextRow').style.display='none';
+  document.getElementById('qExplainBtn').style.display='none';
+
+  // Graph?
+  const gw=document.getElementById('qGraphWrap');
+  if(q.graphFn){
+    gw.style.display='';
+    qDrawMiniGraph(q.graphFn, q.graphX0, q.graphAns);
+  } else gw.style.display='none';
+
+  // Answers
+  document.getElementById('qAnswers').innerHTML=q.answers.map((a,i)=>
+    `<button class="q-ans" onclick="qAnswer(${i})">${typeof a.v==='number'?a.v:a.v}</button>`
+  ).join('');
+
+  // Timer
+  if(qUseTimer){
+    qTimeLeft=qTimerDuration;
+    document.getElementById('qTime').textContent=qTimeLeft;
+    if(qTimer) clearInterval(qTimer);
+    qTimer=setInterval(()=>{
+      qTimeLeft--;
+      document.getElementById('qTime').textContent=qTimeLeft;
+      if(qTimeLeft<=0){clearInterval(qTimer);qAutoFail();}
+    },1000);
+  } else {
+    document.getElementById('qTime').textContent='∞';
+    if(qTimer) clearInterval(qTimer);qTimer=null;
+  }
+}
+
+function qAnswer(idx){
+  if(qTimer) clearInterval(qTimer);
+  const q=qQuestions[qIdx];
+  const btns=document.querySelectorAll('.q-ans');
+  btns.forEach(b=>b.classList.add('disabled'));
+
+  const chosen=q.answers[idx];
+  const correctIdx=q.answers.findIndex(a=>a.ok);
+  const fb=document.getElementById('qFeedback');
+  const nextRow=document.getElementById('qNextRow');
+  const explBtn=document.getElementById('qExplainBtn');
+  const nextBtn=document.getElementById('qNextBtn');
+
+  // Always bind next button
+  nextBtn.onclick=qNext;
+
+  if(chosen.ok){
+    // ─── CORRECT ───
+    btns[idx].classList.add('correct');
+    qCorrect++;qStreak++;
+    fb.className='quiz-feedback show ok';
+    fb.style.display='block';
+    fb.innerHTML=`<div style="font-size:1.1rem;margin-bottom:4px">✅ <b>Bravo, c'est correct !</b></div>`;
+    qHistory.push({q:q.q,ok:true});
+    // Show explain button + next
+    nextRow.style.display='flex';
+    explBtn.style.display='inline-block';
+    explBtn.onclick=function(){
+      fb.innerHTML=`<div style="font-size:1.1rem;margin-bottom:8px">✅ <b>Correct !</b></div><div style="margin-top:6px;padding:10px 12px;background:rgba(46,125,50,.06);border-radius:8px;border-left:3px solid #2e7d32;font-size:.85rem;line-height:1.6;color:#1a1e2e">📝 <b>Explication :</b><br>${q.explain}</div>`;
+      explBtn.style.display='none';
+    };
+  } else {
+    // ─── WRONG ───
+    btns[idx].classList.add('wrong');
+    btns[correctIdx].classList.add('reveal');
+    qStreak=0;
+    // Full explanation immediately
+    fb.className='quiz-feedback show ko';
+    fb.style.display='block';
+    fb.innerHTML=`<div style="font-size:1.1rem;margin-bottom:8px">❌ <b>Mauvaise réponse</b></div><div style="margin-top:6px;padding:10px 12px;background:rgba(198,40,40,.04);border-radius:8px;border-left:3px solid #c62828;font-size:.85rem;line-height:1.6;color:#1a1e2e">📝 <b>Explication :</b><br>${q.explain}</div>`;
+    qHistory.push({q:q.q,ok:false});
+    // Only next button
+    nextRow.style.display='flex';
+    explBtn.style.display='none';
+  }
+  document.getElementById('qScore').textContent=qCorrect;
+  document.getElementById('qStreak').textContent=`${qStreak} 🔥`;
+}
+
+function qAutoFail(){
+  const q=qQuestions[qIdx];
+  const btns=document.querySelectorAll('.q-ans');
+  btns.forEach(b=>b.classList.add('disabled'));
+  const correctIdx=q.answers.findIndex(a=>a.ok);
+  btns[correctIdx].classList.add('reveal');
+  qStreak=0;
+  const fb=document.getElementById('qFeedback');
+  fb.className='quiz-feedback show ko';
+  fb.style.display='block';
+  fb.innerHTML=`<div style="font-size:1.1rem;margin-bottom:8px">⏰ <b>Temps écoulé !</b></div><div style="margin-top:6px;padding:10px 12px;background:rgba(198,40,40,.04);border-radius:8px;border-left:3px solid #c62828;font-size:.85rem;line-height:1.6;color:#1a1e2e">📝 <b>Explication :</b><br>${q.explain}</div>`;
+  qHistory.push({q:q.q,ok:false});
+  document.getElementById('qStreak').textContent=`${qStreak} 🔥`;
+  document.getElementById('qNextRow').style.display='flex';
+  document.getElementById('qExplainBtn').style.display='none';
+  document.getElementById('qNextBtn').onclick=qNext;
+}
+
+function qNext(){
+  qIdx++;
+  if(qIdx>=Q_TOTAL){qShowResult();return;}
+  qShowQuestion();
+}
+
+function qShowResult(){
+  document.getElementById('qArea').style.display='none';
+  document.getElementById('qResult').style.display='';
+  document.getElementById('qProgFill').style.width='100%';
+  const pct=Math.round(qCorrect/Q_TOTAL*100);
+  document.getElementById('qResScore').textContent=`${qCorrect}/${Q_TOTAL}`;
+  const emoji=pct>=90?'🏆':pct>=70?'🎉':pct>=50?'👍':pct>=30?'💪':'📚';
+  const msg=pct>=90?'Excellent !':pct>=70?'Très bien !':pct>=50?'Pas mal !':pct>=30?'Continue !':'Révise et réessaie !';
+  document.getElementById('qResEmoji').textContent=emoji;
+  document.getElementById('qResMsg').textContent=msg+` (${pct}%)`;
+  document.getElementById('qResDetails').innerHTML=qHistory.map((h,i)=>
+    `<div class="qrd-item"><span class="${h.ok?'qrd-ok':'qrd-ko'}">${h.ok?'✅':'❌'}</span><span>Q${i+1}</span></div>`
+  ).join('');
+}
+
+function qRestart(){
+  document.getElementById('qSettings').style.display='';
+  document.getElementById('qArea').style.display='none';
+  document.getElementById('qResult').style.display='none';
+  document.getElementById('qProgFill').style.width='0%';
+  qInitTopics();
+}
+
+function qDrawMiniGraph(fn, x0, ans){
+  const cvs=document.getElementById('qGraph');
+  cvs.width=500;cvs.height=350;
+  const ctx2=cvs.getContext('2d');
+  const w=cvs.width,h=cvs.height;
+  ctx2.clearRect(0,0,w,h);
+  ctx2.fillStyle='#f8f9fc';ctx2.fillRect(0,0,w,h);
+
+  // Scale: show x from -5 to 5, y from -5 to 5
+  const scale=35,cx=w/2,cy=h/2;
+
+  // Grid (light)
+  ctx2.lineWidth=0.4;
+  for(let x=-8;x<=8;x++){
+    const sx=cx+x*scale;
+    ctx2.strokeStyle=x===0?'transparent':(Math.abs(x)<=5?'#d0d4e0':'#eaedf4');
+    ctx2.beginPath();ctx2.moveTo(sx,0);ctx2.lineTo(sx,h);ctx2.stroke();
+  }
+  for(let y=-8;y<=8;y++){
+    const sy=cy-y*scale;
+    ctx2.strokeStyle=y===0?'transparent':(Math.abs(y)<=5?'#d0d4e0':'#eaedf4');
+    ctx2.beginPath();ctx2.moveTo(0,sy);ctx2.lineTo(w,sy);ctx2.stroke();
+  }
+
+  // Axes (thick black)
+  ctx2.strokeStyle='#1a1e2e';ctx2.lineWidth=2;
+  ctx2.beginPath();ctx2.moveTo(0,cy);ctx2.lineTo(w,cy);ctx2.stroke();
+  ctx2.beginPath();ctx2.moveTo(cx,0);ctx2.lineTo(cx,h);ctx2.stroke();
+
+  // Tick labels
+  ctx2.fillStyle='#3a4058';ctx2.font='bold 10px JetBrains Mono';ctx2.textAlign='center';
+  for(let x=-5;x<=5;x++){
+    if(x===0) continue;
+    const sx=cx+x*scale;
+    ctx2.lineWidth=1;ctx2.strokeStyle='#1a1e2e';
+    ctx2.beginPath();ctx2.moveTo(sx,cy-3);ctx2.lineTo(sx,cy+3);ctx2.stroke();
+    ctx2.fillText(x,sx,cy+16);
+  }
+  ctx2.textAlign='right';
+  for(let y=-4;y<=4;y++){
+    if(y===0) continue;
+    const sy=cy-y*scale;
+    ctx2.lineWidth=1;ctx2.strokeStyle='#1a1e2e';
+    ctx2.beginPath();ctx2.moveTo(cx-3,sy);ctx2.lineTo(cx+3,sy);ctx2.stroke();
+    ctx2.fillText(y,cx-8,sy+4);
+  }
+  ctx2.textAlign='right';ctx2.fillStyle='#1a1e2e';ctx2.font='bold 11px JetBrains Mono';
+  ctx2.fillText('0',cx-8,cy+16);
+
+  // Curve (thick blue)
+  ctx2.strokeStyle='#0077b6';ctx2.lineWidth=3;ctx2.lineJoin='round';
+  ctx2.beginPath();
+  let started=false;
+  for(let px=0;px<w;px++){
+    const mx=(px-cx)/scale;
+    const my=fn(mx);
+    if(!isFinite(my)){started=false;continue;}
+    const sy=cy-my*scale;
+    if(sy<-50||sy>h+50){started=false;continue;}
+    if(!started){ctx2.moveTo(px,sy);started=true;}else ctx2.lineTo(px,sy);
+  }
+  ctx2.stroke();
+
+  // Guide lines from x0: vertical dashed line x=x0, then horizontal to y-axis
+  if(x0!==undefined&&ans!==undefined){
+    const sx0=cx+x0*scale;
+    const sy0=cy-ans*scale;
+
+    // Vertical dashed line from x-axis to curve
+    ctx2.strokeStyle='#c62828';ctx2.lineWidth=1.5;ctx2.setLineDash([5,4]);
+    ctx2.beginPath();ctx2.moveTo(sx0,cy);ctx2.lineTo(sx0,sy0);ctx2.stroke();
+
+    // Horizontal dashed line from curve to y-axis
+    ctx2.strokeStyle='#e65100';ctx2.setLineDash([5,4]);
+    ctx2.beginPath();ctx2.moveTo(sx0,sy0);ctx2.lineTo(cx,sy0);ctx2.stroke();
+    ctx2.setLineDash([]);
+
+    // Point on curve
+    ctx2.beginPath();ctx2.arc(sx0,sy0,6,0,Math.PI*2);
+    ctx2.fillStyle='#c62828';ctx2.fill();
+    ctx2.strokeStyle='#fff';ctx2.lineWidth=2;ctx2.stroke();
+
+    // x0 label on x-axis (red)
+    ctx2.fillStyle='#c62828';ctx2.font='bold 11px JetBrains Mono';ctx2.textAlign='center';
+    ctx2.fillText('x='+x0,sx0,cy+30);
+
+    // "?" label on y-axis
+    ctx2.fillStyle='#e65100';ctx2.font='bold 12px JetBrains Mono';ctx2.textAlign='left';
+    ctx2.fillText('?',cx+8,sy0+4);
+  }
+}
+
+/* ═══ START ═══ */
+init();
+document.getElementById('tInput').addEventListener('keydown',e=>{if(e.key==='Enter')analyzeFunction()});
+</script>
+</body>
+</html>
