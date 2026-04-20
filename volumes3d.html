@@ -1,995 +1,2197 @@
 <!DOCTYPE html>
-<html lang="fr">
-<head>
+<html lang="fr"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Visualiser — Volumes 3D</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>Visualiser les volumes</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bleu:#144BA5;--bluebg:#E8F1FF;
-  --vert:#147D32;--vertbg:#E1F8E6;
-  --orange:#BE5000;--orangebg:#FFF2DC;
-  --violet:#6E1996;--violetbg:#F3E8FF;
-  --rouge:#A50A0A;--rougebg:#FFE8E8;
-  --cyan:#00788C;--cyanbg:#DCF8FC;
-  --jaune:#9B7300;--jaunebg:#FFFCD7;
-  --gris:#888;--grisbg:#EFEFEF;
-  --bg:#F7F8FC;--white:#fff;
-  --shadow:0 2px 12px rgba(0,0,0,.09);
-  --radius:12px;
+  /* Palette manuel scolaire moderne */
+  --paper:#FAFAF7;
+  --paper-2:#F2F1EB;
+  --ink:#1A1A1A;
+  --ink-2:#55504A;
+  --ink-3:#8A857E;
+  --line:#E4E1D8;
+  --line-2:#CFCBBE;
+
+  /* Accents harmonieux (oklch, chroma partagé ~0.10) */
+  --terra:#C65A3A;     /* volume, accent principal */
+  --terra-soft:#F5E3DB;
+  --sage:#6B8E5A;       /* base */
+  --sage-soft:#E3ECDD;
+  --slate:#4A6B8A;      /* surface, dimensions */
+  --slate-soft:#DCE4EC;
+  --ochre:#B8893A;      /* hauteur */
+  --ochre-soft:#F2E7D0;
+  --plum:#8A4A6B;       /* section */
+  --plum-soft:#ECDCE4;
+
+  --radius:14px;
+  --radius-sm:8px;
+  --shadow:0 1px 0 rgba(0,0,0,.03), 0 4px 20px rgba(30,25,20,.06);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:#1a1a2e;line-height:1.6;font-size:15px;padding:20px 16px 60px}
-.wrap{max-width:1080px;margin:0 auto}
-a.back{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:700;color:var(--gris);text-decoration:none;margin-bottom:14px;transition:color .2s}
-a.back:hover{color:var(--cyan)}
-.hero{background:linear-gradient(135deg,#00788C 0%,#0097A7 40%,#26C6DA 100%);border-radius:var(--radius);padding:36px 32px;color:#fff;margin-bottom:28px;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;right:-40px;top:-40px;width:220px;height:220px;background:rgba(255,255,255,.06);border-radius:50%}
-.hero h1{font-family:'Playfair Display',serif;font-size:clamp(1.5rem,4vw,2.1rem);margin-bottom:6px}
-.hero p{opacity:.88;font-size:.95rem;max-width:580px}
-.mode-tabs{display:flex;gap:0;margin-bottom:24px;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-.mode-tab{flex:1;padding:14px 20px;border:none;cursor:pointer;font-family:inherit;font-size:.92rem;font-weight:700;color:#888;background:#fff;transition:all .2s;text-align:center}
-.mode-tab:hover{color:var(--cyan);background:var(--cyanbg)}
-.mode-tab.active{color:#fff;background:linear-gradient(135deg,#00788C,#0097A7)}
-.shape-sel{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
-.sh-btn{padding:10px 18px;border-radius:10px;border:2px solid #ddd;background:#fff;cursor:pointer;font-size:.85rem;font-weight:700;color:#555;transition:all .18s;font-family:inherit}
-.sh-btn:hover{border-color:var(--cyan);color:var(--cyan)}
-.sh-btn.active{border-color:var(--cyan);background:var(--cyanbg);color:var(--cyan)}
-.vis-layout{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start}
-@media(max-width:820px){.vis-layout{grid-template-columns:1fr}}
-.canvas-wrap{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;position:relative}
-.canvas-wrap canvas{display:block;width:100%!important;height:auto!important}
-.hint-3d{position:absolute;bottom:14px;left:14px;background:rgba(0,0,0,.55);color:#fff;font-size:.72rem;font-weight:700;padding:5px 12px;border-radius:20px;pointer-events:none;opacity:1;transition:opacity 1s}
-.step-bar{padding:14px 18px;border-top:1px solid rgba(0,120,140,.1);font-size:.88rem;min-height:48px;line-height:1.5}
-.step-bar.cyan{background:var(--cyanbg)}
-.step-bar.cyan strong{color:var(--cyan)}
-.step-bar.violet{background:var(--violetbg);border-top-color:rgba(110,25,150,.1)}
-.step-bar.violet strong{color:var(--violet)}
-.panel{display:flex;flex-direction:column;gap:16px}
-.card{background:#fff;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
-.card h3{font-family:'Playfair Display',serif;font-size:.95rem;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+html,body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body{padding:28px 20px 80px}
+.wrap{max-width:1200px;margin:0 auto}
+
+/* HEADER */
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.head-left .eyebrow{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:8px}
+.head-left h1{font-family:'Fraunces',serif;font-weight:500;font-size:2.4rem;line-height:1;letter-spacing:-.02em}
+.head-left h1 em{font-style:italic;color:var(--terra)}
+.head-left .sub{color:var(--ink-2);font-size:.95rem;margin-top:10px;max-width:520px}
+.head-right{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.chip{padding:6px 12px;border:1px solid var(--line-2);border-radius:100px;font-size:.75rem;font-weight:600;color:var(--ink-2);background:var(--paper)}
+.chip b{color:var(--terra)}
+
+/* SHAPE TABS */
+.shapes{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:24px}
+@media(max-width:900px){.shapes{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:560px){.shapes{grid-template-columns:repeat(3,1fr)}}
+.sh{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 8px 10px;cursor:pointer;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:inherit;color:var(--ink-2)}
+.sh:hover{border-color:var(--ink-3);color:var(--ink);transform:translateY(-1px)}
+.sh.on{border-color:var(--ink);background:#fff;box-shadow:0 0 0 1px var(--ink) inset;color:var(--ink)}
+.sh svg{width:36px;height:36px;stroke-width:1.5}
+.sh .nm{font-size:.78rem;font-weight:600;text-align:center;line-height:1.2}
+.sh .rl{font-size:.68rem;color:var(--ink-3);font-style:italic}
+.sh.on .rl{color:var(--ink-2)}
+
+/* LAYOUT */
+.grid{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+@media(max-width:960px){.grid{grid-template-columns:1fr}}
+
+/* CANVAS CARD */
+.stage{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;position:relative;box-shadow:var(--shadow)}
+.stage-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--paper)}
+.stage-title{display:flex;align-items:center;gap:10px;font-weight:600;font-size:.9rem}
+.stage-title .pill{width:7px;height:7px;border-radius:50%;background:var(--terra)}
+.stage-title .obj{font-size:.75rem;color:var(--ink-3);font-style:italic;margin-left:8px}
+.view-group{display:flex;gap:4px;background:#fff;border:1px solid var(--line);border-radius:100px;padding:3px}
+.vbtn{padding:5px 11px;border-radius:100px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--ink-2);transition:all .15s}
+.vbtn:hover{color:var(--ink)}
+.vbtn.on{background:var(--ink);color:#fff}
+.canvas-box{position:relative;background:#fff;background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:20px 20px}
+.canvas-box canvas{display:block;width:100%!important;height:auto!important}
+.hint{position:absolute;bottom:14px;left:14px;background:rgba(26,26,26,.88);color:#fff;font-size:.72rem;font-weight:500;padding:6px 11px;border-radius:100px;pointer-events:none;transition:opacity .6s;display:flex;align-items:center;gap:6px}
+.hint svg{width:12px;height:12px}
+
+/* STEP NARRATION */
+.step{padding:14px 18px;background:var(--paper);border-top:1px solid var(--line);font-size:.88rem;min-height:52px;display:flex;align-items:center;gap:12px;line-height:1.4}
+.step-icon{width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;flex-shrink:0}
+.step-icon svg{width:14px;height:14px}
+.step-text{flex:1}
+.step-text b{color:var(--terra)}
+.step-text .fx{font-family:'Fraunces',serif;font-weight:500;font-size:1rem}
+
+/* TOOLBAR — actions under canvas */
+.tools{display:flex;gap:6px;padding:10px 14px;border-top:1px solid var(--line);background:#fff;flex-wrap:wrap}
+.tool{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--line);background:#fff;cursor:pointer;font-family:inherit;font-size:.78rem;font-weight:600;color:var(--ink-2);transition:all .15s}
+.tool:hover{border-color:var(--ink);color:var(--ink);background:var(--paper)}
+.tool.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tool svg{width:14px;height:14px;flex-shrink:0}
+.tool .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* SIDE PANEL */
+.side{display:flex;flex-direction:column;gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.card h3{font-family:'Fraunces',serif;font-weight:500;font-size:1.05rem;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.card .ch-sub{font-size:.75rem;color:var(--ink-3);margin-bottom:14px}
+
+/* SLIDERS */
 .ctrl{margin-bottom:12px}
-.ctrl label{display:flex;justify-content:space-between;font-size:.82rem;font-weight:700;color:#555;margin-bottom:5px}
-.ctrl-val{font-weight:800}
-.ctrl input[type=range]{width:100%;height:6px}
-.btn-row{display:flex;gap:6px;flex-wrap:wrap}
-.abtn{padding:9px 14px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:700;color:#fff;transition:all .15s;display:flex;align-items:center;gap:5px}
-.abtn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.15)}
-.abtn:active{transform:scale(.97)}
-.abtn.vol{background:linear-gradient(135deg,var(--cyan),#0097A7)}
-.abtn.lat{background:linear-gradient(135deg,var(--bleu),#1565c0)}
-.abtn.base{background:linear-gradient(135deg,var(--vert),#2e7d32)}
-.abtn.hgt{background:linear-gradient(135deg,var(--orange),#e65100)}
-.abtn.wire{background:linear-gradient(135deg,var(--violet),#8e24aa)}
-.abtn.rst{background:linear-gradient(135deg,#999,#666)}
-.abtn.slice{background:linear-gradient(135deg,var(--rouge),#c62828)}
-.abtn.unfold{background:linear-gradient(135deg,var(--violet),#9c27b0)}
-.abtn.fold{background:linear-gradient(135deg,var(--cyan),#0097A7)}
-.abtn.off{opacity:.35;pointer-events:none}
-.view-row{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
-.vbtn{padding:6px 10px;border-radius:6px;border:2px solid #ddd;background:#fff;cursor:pointer;font-size:.72rem;font-weight:700;color:#666;font-family:inherit;transition:all .15s}
-.vbtn:hover{border-color:var(--cyan);color:var(--cyan)}
-.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.icard{border-radius:10px;padding:12px;text-align:center}
-.icard.vc{background:var(--cyanbg)}.icard.lc{background:var(--bluebg)}
-.icard .il{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#666;margin-bottom:3px}
-.icard .iv{font-size:1.2rem;font-weight:800;font-family:'Playfair Display',serif}
-.icard.vc .iv{color:var(--cyan)}.icard.lc .iv{color:var(--bleu)}
-.icard .if{font-size:.72rem;color:#999;margin-top:3px}
-.dims{display:flex;flex-direction:column;gap:5px;margin-top:4px}
-.dm{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;background:var(--bg);font-size:.83rem}
-.dm-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.65rem;font-weight:800;flex-shrink:0}
-.dm-name{flex:1;font-weight:600}.dm-val{font-weight:800;font-family:'Playfair Display',serif}
-.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.78rem;color:#888;margin-top:8px}
-.legend span{display:flex;align-items:center;gap:4px}
-.ldot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
-.face-legend{display:flex;flex-direction:column;gap:4px;margin-top:4px}
-.face-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;background:var(--bg);font-size:.82rem}
-.face-swatch{width:16px;height:16px;border-radius:4px;flex-shrink:0;border:1px solid rgba(0,0,0,.15)}
-.face-name{flex:1;font-weight:600}
-.face-area{font-weight:800;font-family:'Playfair Display',serif;color:var(--violet)}
-.progress-track{width:100%;height:8px;background:#e8e8e8;border-radius:4px;margin-top:8px;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--violet),#9c27b0);border-radius:4px;transition:width .05s;width:0%}
-.tip-box{margin-top:10px;padding:10px;background:var(--violetbg);border-radius:8px;font-size:.8rem;color:var(--violet)}
-#modeVolume,#modePatron{display:none}
-#modeVolume.vis,#modePatron.vis{display:block}
-.pat-info-table{width:100%;border-collapse:collapse;font-size:.78rem;margin-top:6px}
-.pat-info-table td{padding:4px 6px;border-bottom:1px solid #eee}
-.pat-info-table td:first-child{font-weight:700;color:#555;width:45%}
-.pat-info-table td:last-child{font-weight:800;color:var(--violet);text-align:right}
-.pat-total{margin-top:8px;padding:8px 10px;background:var(--violetbg);border-radius:8px;display:flex;justify-content:space-between;font-size:.85rem}
-.pat-total span:first-child{font-weight:700;color:var(--violet)}
-.pat-total span:last-child{font-weight:800;font-family:'Playfair Display',serif;color:var(--violet);font-size:1rem}
+.ctrl:last-child{margin-bottom:0}
+.ctrl label{display:flex;justify-content:space-between;align-items:baseline;font-size:.82rem;font-weight:600;color:var(--ink-2);margin-bottom:6px;gap:8px}
+.ctrl label .nm-wrap{display:flex;align-items:center;gap:6px}
+.ctrl .dmk{width:14px;height:14px;border-radius:50%;display:inline-grid;place-items:center;font-size:.6rem;font-weight:700;color:#fff;flex-shrink:0}
+.ctrl .val{color:var(--ink);font-weight:700;font-family:'Fraunces',serif;font-size:1rem;letter-spacing:-.01em}
+.ctrl .val .u{color:var(--ink-3);font-size:.75rem;font-weight:500;font-family:'Inter',sans-serif;margin-left:2px}
+.ctrl input[type=range]{width:100%;appearance:none;height:4px;background:var(--line);border-radius:100px;outline:none}
+.ctrl input[type=range]::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;background:var(--ink);cursor:pointer;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.ctrl input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--ink);cursor:pointer;border:3px solid #fff}
+
+/* RESULTS */
+.res{display:grid;grid-template-columns:1fr;gap:10px}
+.res-row{padding:12px 14px;border-radius:var(--radius-sm);background:var(--paper);border-left:3px solid var(--terra);display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.res-row.s{border-left-color:var(--slate)}
+.res-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:600}
+.res-value{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:500;color:var(--ink);letter-spacing:-.02em}
+.res-value .u{font-family:'Inter',sans-serif;font-size:.78rem;color:var(--ink-3);font-weight:500;margin-left:2px}
+.res-formula{font-family:'Fraunces',serif;font-size:.85rem;color:var(--ink-2);font-style:italic;margin-top:4px;padding-top:6px;border-top:1px dashed var(--line-2)}
+
+/* VOCAB */
+.vocab-list{display:flex;flex-direction:column;gap:4px}
+.vocab{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-sm);background:var(--paper);font-size:.85rem;cursor:help;transition:background .15s}
+.vocab:hover{background:var(--paper-2)}
+.vocab .dmk{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:.7rem;font-weight:700;font-family:'Fraunces',serif;flex-shrink:0}
+.vocab .word{flex:1;font-weight:500}
+.vocab .word small{display:block;font-size:.68rem;color:var(--ink-3);font-weight:400;font-style:italic;margin-top:1px}
+.vocab .amt{font-family:'Fraunces',serif;font-weight:600;font-size:.95rem}
+
+/* UNITS (cm³ dm³ m³ L conversion) */
+.units{margin-top:10px;padding:10px 12px;background:var(--paper);border-radius:var(--radius-sm);font-size:.75rem;color:var(--ink-2);line-height:1.6}
+.units b{color:var(--ink);font-weight:700}
+.units .hdr{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:600;margin-bottom:5px}
+
+/* QUIZ */
+.quiz{padding:18px}
+.quiz-q{font-family:'Fraunces',serif;font-size:1rem;font-weight:500;margin-bottom:14px;line-height:1.35}
+.quiz-opts{display:flex;flex-direction:column;gap:6px}
+.qopt{padding:10px 14px;border:1px solid var(--line);border-radius:var(--radius-sm);background:#fff;cursor:pointer;font-family:inherit;font-size:.85rem;font-weight:500;color:var(--ink);text-align:left;transition:all .15s}
+.qopt:hover{border-color:var(--ink);background:var(--paper)}
+.qopt.correct{border-color:var(--sage);background:var(--sage-soft);color:var(--sage)}
+.qopt.wrong{border-color:var(--terra);background:var(--terra-soft);color:var(--terra)}
+.quiz-foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:.78rem;color:var(--ink-3)}
+.qnext{border:none;background:var(--ink);color:#fff;padding:7px 14px;border-radius:100px;cursor:pointer;font-family:inherit;font-size:.78rem;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s}
+.qnext.show{opacity:1;pointer-events:auto}
+
+/* TOOLTIP */
+.tip{position:fixed;background:var(--ink);color:#fff;padding:8px 12px;border-radius:6px;font-size:.78rem;max-width:240px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:100;line-height:1.4}
+.tip.show{opacity:1}
+.tip::after{content:'';position:absolute;top:100%;left:20px;border:6px solid transparent;border-top-color:var(--ink)}
+
+/* legend */
+.legend{display:flex;flex-wrap:wrap;gap:8px;padding:10px 14px;background:var(--paper);border-top:1px solid var(--line);font-size:.72rem;color:var(--ink-2)}
+.legend-item{display:inline-flex;align-items:center;gap:5px}
+.legend-item .sw{width:10px;height:10px;border-radius:2px}
+
+/* ═══ AREA SECTION (Comprendre l'aire) ═══ */
+.area-section{margin-top:40px;padding-top:30px;border-top:1px solid var(--line)}
+.area-head{display:flex;align-items:flex-end;justify-content:space-between;gap:30px;margin-bottom:24px;flex-wrap:wrap}
+.area-head h2{font-family:'Fraunces',serif;font-weight:500;font-size:1.9rem;line-height:1.1;letter-spacing:-.02em;margin-top:6px}
+.area-head h2 em{font-style:italic;color:var(--sage)}
+.area-sub{color:var(--ink-2);font-size:.92rem;max-width:620px;margin-top:10px}
+.area-concept{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.concept-card{display:flex;flex-direction:column;align-items:center;padding:12px 16px;border:1px solid var(--line);border-radius:var(--radius-sm);background:#fff;text-align:center;min-width:110px}
+.concept-card:first-child{color:var(--terra)}
+.concept-card:last-child{color:var(--sage)}
+.concept-card svg{width:36px;height:36px;margin:4px 0 6px}
+.concept-card .c-lbl{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.concept-card .c-txt{font-size:.75rem;color:var(--ink-2);line-height:1.35}
+.concept-card .c-txt b{color:var(--ink)}
+.concept-card .c-txt span{font-style:italic;color:var(--ink-3)}
+.concept-vs{font-family:'Fraunces',serif;font-style:italic;color:var(--ink-3);font-size:1rem}
+
+.area-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;align-items:stretch}
+@media(max-width:900px){.area-grid{grid-template-columns:1fr}}
+
+.area-canvas-card,.area-formula-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+.area-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--paper);flex-wrap:wrap;gap:10px}
+.area-title{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.9rem}
+.area-title .pill{width:7px;height:7px;border-radius:50%}
+.area-modes{display:flex;gap:4px;background:#fff;border:1px solid var(--line);border-radius:100px;padding:3px}
+.mode-btn{padding:5px 11px;border-radius:100px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:600;color:var(--ink-2);transition:all .15s}
+.mode-btn:hover{color:var(--ink)}
+.mode-btn.on{background:var(--ink);color:#fff}
+
+.area-svg-wrap{position:relative;background:#fff;background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:20px 20px;flex:1;min-height:380px;display:flex;align-items:center;justify-content:center;padding:16px}
+#areaSvg{width:100%;height:100%;max-height:460px}
+.area-hint{position:absolute;bottom:12px;left:12px;right:12px;text-align:center;font-size:.72rem;color:var(--ink-3);pointer-events:none;font-style:italic}
+
+.area-actions{display:flex;gap:6px;padding:10px 14px;border-top:1px solid var(--line);background:#fff;flex-wrap:wrap;align-items:center}
+.net-speed-bar{display:flex;align-items:center;gap:10px;padding:8px 14px;margin-top:10px;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-sm);flex-wrap:wrap}
+.net-speed-bar .nsb-lbl{font-family:'Inter',sans-serif;font-size:.78rem;color:var(--ink-2);font-weight:600}
+.net-speed-bar .nsb-hint{font-family:'Inter',sans-serif;font-size:.72rem;color:var(--ink-3);font-style:italic;margin-left:auto}
+.net-speed-bar .nsb-hint b{color:var(--sage);font-style:normal}
+.tool.hide{display:none}
+.tool.flash{animation:toolFlash 1s ease infinite}
+@keyframes toolFlash{0%,100%{box-shadow:0 0 0 0 rgba(185,109,66,.45)}50%{box-shadow:0 0 0 8px rgba(185,109,66,0)}}
+.speed-ctrl{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:4px 8px;background:var(--paper);border-radius:999px;border:1px solid var(--line)}
+.speed-ctrl .sc-lbl{font-family:'Inter',sans-serif;font-size:.72rem;color:var(--ink-3);font-weight:500;margin-right:2px}
+.mode-pill{background:transparent;border:none;font-family:'Inter',sans-serif;font-size:.72rem;color:var(--ink-2);padding:3px 8px;border-radius:999px;cursor:pointer;transition:all .2s}
+.mode-pill:hover{background:#fff}
+.mode-pill.on{background:var(--ink);color:#F5F0E4;font-weight:600}
+.speed-slider{display:inline-flex;align-items:center;gap:6px;margin-left:4px;padding-left:8px;border-left:1px solid var(--line)}
+.speed-slider.hide{display:none}
+.speed-slider input[type=range]{width:110px;accent-color:var(--terra);cursor:pointer}
+.speed-slider .spd-val{font-family:'Fraunces',serif;font-size:.78rem;color:var(--ink);font-weight:500;min-width:32px}
+
+/* Face styles (SVG) */
+.face{cursor:pointer;transition:all .2s;stroke:#1A1A1A;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-width:1.2}
+.face:hover{stroke-width:2;filter:brightness(1.05)}
+.face.dim{opacity:.15}
+.face.active{stroke-width:2.4;filter:drop-shadow(0 0 6px rgba(0,0,0,.2))}
+.face-label{font-family:'Fraunces',serif;font-weight:600;fill:#1A1A1A;pointer-events:none;text-anchor:middle;dominant-baseline:middle}
+.face-area{font-family:'Inter',sans-serif;font-weight:600;fill:#1A1A1A;pointer-events:none;text-anchor:middle;opacity:.85}
+
+/* Formula card */
+.area-formula-card{padding:0}
+.formula-head{padding:18px 18px 4px}
+.face-list{list-style:none;padding:8px 18px;margin:0;flex:1;overflow-y:auto;max-height:360px}
+.face-list li{display:flex;align-items:center;gap:10px;padding:8px 10px;margin-bottom:4px;border-radius:var(--radius-sm);background:var(--paper);font-size:.83rem;opacity:.45;transition:all .3s;border-left:3px solid transparent}
+.face-list li.on{opacity:1;background:#fff;border-left-color:currentColor;box-shadow:0 0 0 1px var(--line)}
+.face-list li .fl-dot{width:16px;height:16px;border-radius:4px;flex-shrink:0;border:1px solid rgba(0,0,0,.15)}
+.face-list li .fl-name{flex:1;font-weight:600;color:var(--ink)}
+.face-list li .fl-name small{display:block;font-size:.68rem;color:var(--ink-3);font-weight:400;font-style:italic}
+.face-list li .fl-calc{font-family:'Fraunces',serif;font-size:.88rem;font-weight:500}
+.face-list li .fl-calc b{color:var(--terra)}
+
+.formula-total{padding:16px 20px;background:var(--sage-soft);border-top:1px solid var(--line)}
+.ft-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--sage);margin-bottom:4px}
+.ft-value{font-family:'Fraunces',serif;font-size:2rem;font-weight:500;color:#2E4722;letter-spacing:-.02em;line-height:1}
+.step-calc{background:#FFFBF2;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:18px 20px;display:none;animation:fadeInStep .4s ease}
+.step-calc.on{display:block}
+@keyframes fadeInStep{from{opacity:0}to{opacity:1}}
+.sc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sc-badge{background:var(--ink);color:#F5F0E4;font-family:'Inter',sans-serif;font-size:.72rem;font-weight:600;padding:4px 10px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase}
+.sc-face{font-family:'Fraunces',serif;font-size:1rem;color:var(--ink);font-weight:600}
+.sc-face .sc-dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle;border:1px solid rgba(0,0,0,.15)}
+.sc-formula{font-family:'Fraunces',serif;font-size:1.35rem;color:var(--ink);margin:8px 0 4px;line-height:1.3;text-align:center}
+.sc-formula .sc-var{color:var(--ink-2);font-style:italic}
+.sc-formula .sc-num{color:#1A1A1A}
+.sc-formula .sc-eq{color:var(--terra);font-weight:600}
+.sc-explain{text-align:center;font-family:'Inter',sans-serif;font-size:.78rem;color:var(--ink-2);font-style:italic;margin-bottom:14px}
+.sc-addition{background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 16px;font-family:'Fraunces',serif;margin-top:10px}
+.sc-addition-title{font-family:'Inter',sans-serif;font-size:.72rem;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.sc-add-line{display:flex;align-items:baseline;gap:8px;font-size:1.1rem;color:var(--ink);line-height:1.6}
+.sc-add-line .sc-add-op{color:var(--ink-3);width:18px;text-align:center;font-weight:500}
+.sc-add-line .sc-add-num{font-weight:500;min-width:40px;text-align:right}
+.sc-add-line .sc-add-label{font-family:'Inter',sans-serif;font-size:.72rem;color:var(--ink-3);font-style:italic;margin-left:auto}
+.sc-add-line.new{color:var(--terra);animation:popIn .5s ease}
+.sc-add-line.new .sc-add-num{color:var(--terra);font-weight:600}
+@keyframes popIn{0%{opacity:0;transform:translateX(-8px)}100%{opacity:1;transform:translateX(0)}}
+.sc-sum-line{display:flex;align-items:baseline;gap:8px;border-top:2px solid var(--ink);padding-top:8px;margin-top:8px;font-size:1.3rem;color:var(--ink);font-weight:600}
+.sc-sum-line .sc-add-num{color:var(--sage);font-weight:700}
+.sc-progress{display:flex;gap:3px;margin-top:12px}
+.sc-progress .sc-pip{flex:1;height:4px;background:var(--line);border-radius:2px;transition:background .3s}
+.sc-progress .sc-pip.done{background:var(--sage)}
+.sc-progress .sc-pip.current{background:var(--terra)}
+.ft-value .ft-u{font-family:'Inter',sans-serif;font-size:.9rem;color:var(--ink-2);font-weight:500;margin-left:4px}
+.ft-conv{font-size:.72rem;color:var(--ink-2);margin-top:4px;font-style:italic}
+
+.area-vocab{padding:12px 18px 18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.av-item{font-size:.8rem}
+.av-item b{color:var(--ink);font-weight:700}
+.av-item .sep{color:var(--ink-3);font-style:italic;margin:0 4px}
+.av-item small{display:block;color:var(--ink-2);font-size:.75rem;margin-top:2px}
+.av-item small em{color:var(--sage);font-style:italic}
+
+/* Tweaks panel */
+#tweaksPanel{position:fixed;bottom:20px;right:20px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:200;width:260px;display:none}
+#tweaksPanel.on{display:block}
+#tweaksPanel h4{font-family:'Fraunces',serif;font-weight:500;font-size:.95rem;margin-bottom:10px}
+#tweaksPanel .tw-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:.82rem}
+#tweaksPanel .tw-row:last-child{margin-bottom:0}
+.toggle{position:relative;width:36px;height:20px;background:var(--line);border-radius:100px;cursor:pointer;transition:background .2s}
+.toggle.on{background:var(--sage)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(16px)}
 </style>
 </head>
 <body>
+
 <div class="wrap">
-<a class="back" href="index.html">← Retour à l'accueil</a>
-<div class="hero">
-  <h1>🧊 Visualiser les volumes en 3D</h1>
-  <p>Manipule les solides, observe les formules, découpe les sections et déplie les patrons en 3D.</p>
-</div>
-<div class="mode-tabs">
-  <button class="mode-tab active" id="tabVol" onclick="switchMode('volume')">🧊 Volumes 3D</button>
-  <button class="mode-tab" id="tabPat" onclick="switchMode('patron')">✂️ Patrons 3D→2D</button>
-</div>
-<div class="shape-sel" id="shapeSel"></div>
 
-<!-- ═══ VOLUME ═══ -->
-<div id="modeVolume" class="vis">
-<div class="vis-layout">
-  <div>
-    <div class="canvas-wrap" id="volWrap">
-      <div class="hint-3d" id="hintVol">🖱️ Glisser · Molette zoomer</div>
-      <div class="step-bar cyan" id="volStep"><strong>💡</strong> Choisis un solide et explore ses propriétés.</div>
-    </div>
+<header class="head">
+  <div class="head-left">
+    <div class="eyebrow">Géométrie — CM1 · CM2</div>
+    <h1>Visualiser <em>les volumes</em></h1>
+    <p class="sub">Manipule les solides, découvre leur vocabulaire et comprends comment on calcule leur volume.</p>
   </div>
-  <div class="panel">
-    <div class="card"><h3 style="color:var(--cyan)">⚙️ Paramètres</h3><div id="volCtrls"></div></div>
-    <div class="card">
-      <h3 style="color:var(--orange)">▶️ Visualisations</h3>
-      <div class="btn-row">
-        <button class="abtn vol" onclick="animVolume()">🧊 Volume</button>
-        <button class="abtn lat" onclick="showLateral()">📐 Surface</button>
-        <button class="abtn base" onclick="showBase()">⬡ Base</button>
-        <button class="abtn hgt" onclick="showHeight()">⊥ Hauteur</button>
-        <button class="abtn wire" onclick="toggleWire()">🔲 Fil de fer</button>
-        <button class="abtn slice" onclick="animSlice()">🔪 Section</button>
-        <button class="abtn rst" onclick="resetVol()">↺</button>
-      </div>
-      <div class="view-row">
-        <button class="vbtn" onclick="volCam('face')">Face</button>
-        <button class="vbtn" onclick="volCam('dessus')">Dessus</button>
-        <button class="vbtn" onclick="volCam('cote')">Côté</button>
-        <button class="vbtn" onclick="volCam('3d')">3D</button>
-        <button class="vbtn" onclick="volCam('spin')">🔄</button>
-      </div>
-    </div>
-    <div class="card">
-      <h3 style="color:var(--bleu)">📊 Résultats <span style="font-size:.65rem;background:#ffe0b2;color:#e65100;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:800">π = 3</span></h3>
-      <div class="info-grid">
-        <div class="icard vc"><div class="il">Volume</div><div class="iv" id="vV">—</div><div class="if" id="fV"></div></div>
-        <div class="icard lc"><div class="il">Surface</div><div class="iv" id="vS">—</div><div class="if" id="fS"></div></div>
-      </div>
-      <div class="dims" id="dims"></div>
-    </div>
+  <div class="head-right">
+    <span class="chip">Solide actuel : <b id="chipShape">Pavé droit</b></span>
   </div>
-</div>
+</header>
+
+<!-- SHAPE PICKER -->
+<nav class="shapes" id="shapeSel"></nav>
+
+<div class="grid">
+
+  <!-- LEFT: CANVAS -->
+  <section>
+    <div class="stage">
+      <div class="stage-top">
+        <div class="stage-title">
+          <span class="pill"></span>
+          <span id="stageShapeName">Pavé droit</span>
+          <span class="obj" id="stageObj">— comme une boîte à chaussures</span>
+        </div>
+        <div class="view-group" id="viewGroup">
+          <button class="vbtn on" data-v="3d">3D</button>
+          <button class="vbtn" data-v="face">Face</button>
+          <button class="vbtn" data-v="dessus">Dessus</button>
+          <button class="vbtn" data-v="cote">Côté</button>
+          <button class="vbtn" data-v="spin">Rotation</button>
+        </div>
+      </div>
+
+      <div class="canvas-box" id="canvasBox">
+        <div class="hint" id="hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"></path></svg>
+          Glisse pour tourner · molette pour zoomer
+        </div>
+      </div>
+
+      <div class="tools">
+        <button class="tool" data-act="units"><span class="dot" style="background:var(--terra)"></span>Remplir de cubes-unité</button>
+        <button class="tool" data-act="slices"><span class="dot" style="background:var(--plum)"></span>Tranches empilées</button>
+        <button class="tool" data-act="net"><span class="dot" style="background:var(--sage)"></span>Patron déplié</button>
+        <button class="tool" data-act="height"><span class="dot" style="background:var(--ochre)"></span>Hauteur</button>
+        <button class="tool" data-act="base"><span class="dot" style="background:var(--sage)"></span>Base</button>
+        <button class="tool" data-act="labels"><span class="dot" style="background:var(--slate)"></span>Étiquettes</button>
+        <button class="tool" data-act="wire">Fil de fer</button>
+        <button class="tool" data-act="reset" style="margin-left:auto">↺ Réinitialiser</button>
+      </div>
+
+      <div class="net-speed-bar on" id="netSpeedBar" title="Régle la durée avant de cliquer sur Patron déplié">
+        <span class="nsb-lbl">⏱ Durée du dépliage</span>
+        <div class="speed-slider">
+          <input type="range" id="netSpeedSlider" min="500" max="15000" step="500" value="2500">
+          <span class="spd-val" id="netSpdVal">2.5 s</span>
+        </div>
+        <span class="nsb-hint">→ règle puis clique sur <b>Patron déplié</b></span>
+      </div>
+
+      <div class="step" id="step">
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+        </div>
+        <div class="step-text">Choisis un outil pour explorer le solide. Chaque outil t'aide à comprendre une idée différente.</div>
+      </div>
+
+      <div class="legend">
+        <span class="legend-item"><span class="sw" style="background:var(--terra)"></span>Volume</span>
+        <span class="legend-item"><span class="sw" style="background:var(--slate)"></span>Dimensions</span>
+        <span class="legend-item"><span class="sw" style="background:var(--sage)"></span>Base</span>
+        <span class="legend-item"><span class="sw" style="background:var(--ochre)"></span>Hauteur</span>
+        <span class="legend-item"><span class="sw" style="background:var(--plum)"></span>Section / tranche</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT: PANEL -->
+  <aside class="side">
+
+    <!-- Sliders -->
+    <div class="card">
+      <h3>Dimensions</h3>
+      <p class="ch-sub">Glisse les curseurs pour changer la taille du solide.</p>
+      <div id="ctrls"></div>
+    </div>
+
+    <!-- Results -->
+    <div class="card">
+      <h3>Résultats</h3>
+      <p class="ch-sub">Calculs mis à jour en direct.</p>
+      <div class="res">
+        <div class="res-row">
+          <div>
+            <div class="res-label">Volume</div>
+            <div class="res-formula" id="fV">—</div>
+          </div>
+          <div class="res-value" id="vV">—<span class="u" id="uV">cm³</span></div>
+        </div>
+        <div class="res-row s">
+          <div>
+            <div class="res-label">Aire totale</div>
+            <div class="res-formula" id="fS">—</div>
+          </div>
+          <div class="res-value" id="vS">—<span class="u">cm²</span></div>
+        </div>
+      </div>
+
+      <div class="units">
+        <div class="hdr">Conversions du volume</div>
+        <div id="convBox">—</div>
+      </div>
+    </div>
+
+    <!-- Vocabulary -->
+    <div class="card">
+      <h3>Vocabulaire</h3>
+      <p class="ch-sub">Passe la souris sur un mot pour voir sa définition.</p>
+      <div class="vocab-list" id="vocabList"></div>
+    </div>
+
+    <!-- Quiz -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:18px 18px 0"><h3>Mini-quiz</h3><p class="ch-sub">Vérifie ta compréhension.</p></div>
+      <div class="quiz" id="quizBox"></div>
+    </div>
+
+  </aside>
 </div>
 
-<!-- ═══ PATRON ═══ -->
-<div id="modePatron">
-<div class="vis-layout">
-  <div>
-    <div class="canvas-wrap" id="patWrap">
-      <div class="hint-3d" id="hintPat">🖱️ Glisser · Molette zoomer</div>
-      <div class="step-bar violet" id="patStep"><strong>📦</strong> Solide en 3D. Appuie sur <b>Déplier</b>.</div>
+<!-- ════════════════════════════════════════════════════════
+     SECTION : COMPRENDRE L'AIRE (SURFACES)
+════════════════════════════════════════════════════════ -->
+<section class="area-section" id="areaSection">
+  <div class="area-head">
+    <div>
+      <div class="eyebrow">Comprendre les surfaces</div>
+      <h2>Le calcul de <em>l'aire</em>, pas à pas</h2>
+      <p class="area-sub">L'aire d'un solide, c'est la surface totale qu'on pourrait <b>peindre</b>. Pour la calculer, on déplie le solide en <b>patron</b>, et on additionne l'aire de chaque face.</p>
+    </div>
+    <div class="area-concept">
+      <div class="concept-card">
+        <div class="c-lbl">Volume</div>
+        <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 14 L20 8 L32 14 L32 28 L20 34 L8 28 Z"></path><path d="M8 14 L20 20 L32 14 M20 20 L20 34"></path></svg>
+        <div class="c-txt">ce que le solide <b>contient</b><br><span>(cm³, L)</span></div>
+      </div>
+      <div class="concept-vs">vs</div>
+      <div class="concept-card">
+        <div class="c-lbl">Aire</div>
+        <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="8" y="8" width="24" height="24" fill="currentColor" fill-opacity=".15"></rect><rect x="8" y="8" width="24" height="24"></rect></svg>
+        <div class="c-txt">la surface <b>extérieure</b><br><span>(cm², m²)</span></div>
+      </div>
     </div>
   </div>
-  <div class="panel">
-    <div class="card"><h3 style="color:var(--cyan)">⚙️ Paramètres</h3><div id="patCtrls"></div></div>
-    <div class="card">
-      <h3 style="color:var(--violet)">✂️ Dépliage 3D → 2D</h3>
-      <div class="btn-row">
-        <button class="abtn unfold" id="btnU" onclick="doUnfold()">✂️ Déplier</button>
-        <button class="abtn fold off" id="btnF" onclick="doFold()">📦 Replier</button>
-        <button class="abtn rst" onclick="resetPat()">↺</button>
+
+  <div class="area-grid">
+    <!-- LEFT : the net canvas -->
+    <div class="area-canvas-card">
+      <div class="area-top">
+        <div class="area-title"><span class="pill" style="background:var(--sage)"></span>Patron de <span id="areaShapeName">—</span></div>
+        <div class="area-modes">
+          <button class="mode-btn on" data-mode="total">Aire totale</button>
+          <button class="mode-btn" data-mode="laterale">Aire latérale seulement</button>
+          <button class="mode-btn" data-mode="base">Aire des bases</button>
+        </div>
       </div>
-      <div style="margin-top:14px">
-        <label style="display:flex;justify-content:space-between;font-size:.82rem;font-weight:700;color:#555">Progression <span class="unfold-pct" id="pctLabel">0%</span></label>
-        <div class="progress-track"><div class="progress-fill" id="pctBar"></div></div>
+      <div class="area-svg-wrap" id="areaSvgWrap">
+        <svg id="areaSvg" viewBox="-50 -50 100 100" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="area-hint" id="areaHint">Clique sur une face pour l'isoler · ou lance l'animation pas à pas</div>
       </div>
-      <div style="margin-top:12px">
-        <label style="display:flex;justify-content:space-between;font-size:.82rem;font-weight:700;color:#555">Vitesse <span id="speedLabel" style="color:var(--violet);font-weight:800">×1</span></label>
-        <input type="range" min="1" max="5" value="2" step="1" style="width:100%;accent-color:var(--violet);height:6px" id="speedSlider" oninput="updateSpeed(this.value)">
-        <div style="display:flex;justify-content:space-between;font-size:.68rem;color:#aaa;margin-top:2px"><span>Lent</span><span>Rapide</span></div>
-      </div>
-      <div class="view-row" style="margin-top:12px">
-        <button class="vbtn" onclick="patCam('3d')">3D</button>
-        <button class="vbtn" onclick="patCam('dessus')">Dessus</button>
-        <button class="vbtn" onclick="patCam('face')">Face</button>
-        <button class="vbtn" onclick="patCam('spin')">🔄</button>
+      <div class="area-actions">
+        <button class="tool on" id="btnStep"><span class="dot" style="background:var(--terra)"></span>Animer face par face</button>
+        <button class="tool hide" id="btnNext" style="background:var(--sage-soft);border-color:var(--sage);color:#2E4722">Suivant ▶</button>
+        <div class="speed-ctrl">
+          <span class="sc-lbl">Rythme</span>
+          <button class="mode-pill" data-mode="manuel" id="spdManuel" title="Manuel — je clique pour avancer">✋ Manuel</button>
+          <button class="mode-pill on" data-mode="auto" id="spdAuto" title="Auto — avance tout seul">⏱ Auto</button>
+          <div class="speed-slider" id="speedSliderWrap">
+            <input type="range" id="speedSlider" min="1000" max="15000" step="500" value="2800">
+            <span class="spd-val" id="spdVal">2.8 s</span>
+          </div>
+        </div>
+        <button class="tool" id="btnResetArea" style="margin-left:auto">↺ Réinitialiser</button>
       </div>
     </div>
-    <div class="card">
-      <h3 style="color:var(--violet)">📐 Faces du patron <span style="font-size:.65rem;background:#ffe0b2;color:#e65100;padding:2px 8px;border-radius:10px;margin-left:6px;font-weight:800">π = 3</span></h3>
-      <div class="face-legend" id="faceLeg"></div>
-      <div id="patInfo" style="margin-top:8px"></div>
-      <div class="tip-box"><strong>💡</strong> Chaque face pivote autour de son arête. Observe le dépliage sous tous les angles !</div>
+
+    <!-- RIGHT : formula accumulator -->
+    <div class="area-formula-card">
+      <div class="formula-head">
+        <h3>Calcul en direct</h3>
+        <p class="ch-sub">Chaque face ajoute son aire au total.</p>
+      </div>
+      <ol class="face-list" id="faceList"></ol>
+      <div class="step-calc" id="stepCalc">
+        <div class="sc-head">
+          <span class="sc-badge" id="scBadge">Étape 1 sur 6</span>
+          <span class="sc-face" id="scFace"><span class="sc-dot"></span>—</span>
+        </div>
+        <div class="sc-formula" id="scFormula">—</div>
+        <div class="sc-explain" id="scExplain">On calcule l'aire de cette face.</div>
+        <div class="sc-addition">
+          <div class="sc-addition-title">On additionne les aires</div>
+          <div id="scAddLines"></div>
+          <div class="sc-sum-line" id="scSumLine" style="display:none">
+            <span class="sc-add-op">=</span>
+            <span class="sc-add-num" id="scSum">0</span>
+            <span class="sc-add-label">cm² jusqu'ici</span>
+          </div>
+        </div>
+        <div class="sc-progress" id="scProgress"></div>
+      </div>
+      <div class="formula-total">
+        <div class="ft-label" id="ftLabel">Aire totale</div>
+        <div class="ft-value">
+          <span id="ftPartial">0</span>
+          <span class="ft-u">cm²</span>
+        </div>
+        <div class="ft-conv" id="ftConv">= 0 dm² = 0 m²</div>
+      </div>
+      <div class="area-vocab">
+        <div class="av-item">
+          <b>Aire</b> <span class="sep">ou</span> <b>Surface</b>
+          <small>Même chose ! On mesure en <em>carrés unité</em> (cm²).</small>
+        </div>
+        <div class="av-item">
+          <b>Aire d'une face</b>
+          <small>Combien de carrés 1 cm × 1 cm recouvrent cette face.</small>
+        </div>
+        <div class="av-item">
+          <b>Aire latérale</b>
+          <small>Toutes les faces <em>sauf</em> les bases (le haut et le bas).</small>
+        </div>
+        <div class="av-item">
+          <b>Aire totale</b>
+          <small>Latérale <em>+</em> bases. C'est toute la peau du solide.</small>
+        </div>
+      </div>
     </div>
   </div>
+</section>
+
 </div>
-</div>
+
+<!-- Tooltip -->
+<div class="tip" id="tip"></div>
+
+<!-- Tweaks panel -->
+<div id="tweaksPanel">
+  <h4>Tweaks</h4>
+  <div class="tw-row"><span>Objets du quotidien</span><div class="toggle on" data-k="showObjects"></div></div>
+  <div class="tw-row"><span>Étiquettes sur le solide</span><div class="toggle on" data-k="showLabels"></div></div>
+  <div class="tw-row"><span>Grille de fond</span><div class="toggle on" data-k="showGrid"></div></div>
+  <div class="tw-row"><span>Langue simplifiée</span><div class="toggle" data-k="simpleLang"></div></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-/* ═══════════════════════════════════════
-   GLOBALS
-   ═══════════════════════════════════════ */
-const PI=Math.PI, HP=PI/2, rn=x=>Math.round(x*100)/100;
-const PD=3; // π affiché aux élèves (π≈3)
-const rnD=x=>Math.round(x*100)/100; // arrondi pour affichage
-let shape='pave', P={}, mode='volume';
-
-const SHAPES=[
-  {id:'pave',icon:'📦',name:'Pavé droit'},
-  {id:'cube',icon:'🧊',name:'Cube'},
-  {id:'cylindre',icon:'🥫',name:'Cylindre'},
-  {id:'cone',icon:'🍦',name:'Cône'},
-  {id:'pyramide',icon:'🔺',name:'Pyramide'},
-  {id:'prisme',icon:'📐',name:'Prisme tri.'},
-];
-
-const CFG={
-  pave:{
-    ctrls:[{id:'L',l:'Longueur L',mn:2,mx:14,v:8},{id:'l',l:'Largeur ℓ',mn:2,mx:10,v:5},{id:'h',l:'Hauteur h',mn:2,mx:10,v:4}],
-    vol:p=>p.L*p.l*p.h,surf:p=>2*(p.L*p.l+p.L*p.h+p.l*p.h),
-    fv:p=>`${p.L}×${p.l}×${p.h}=${rn(p.L*p.l*p.h)}`,fs:p=>`2(Ll+Lh+lh)=${rn(2*(p.L*p.l+p.L*p.h+p.l*p.h))}`,
-    dims:p=>[{n:'L',v:p.L,c:'#e74c3c'},{n:'ℓ',v:p.l,c:'#3498db'},{n:'h',v:p.h,c:'#f39c12'}],
-  },
-  cube:{
-    ctrls:[{id:'c',l:'Côté c',mn:2,mx:12,v:6}],
-    vol:p=>p.c**3,surf:p=>6*p.c**2,
-    fv:p=>`${p.c}³=${p.c**3}`,fs:p=>`6×${p.c}²=${6*p.c**2}`,
-    dims:p=>[{n:'c',v:p.c,c:'#e74c3c'}],
-  },
-  cylindre:{
-    ctrls:[{id:'r',l:'Rayon r',mn:1,mx:8,v:4},{id:'h',l:'Hauteur h',mn:2,mx:14,v:7}],
-    vol:p=>rnD(PD*p.r**2*p.h),surf:p=>rnD(2*PD*p.r*(p.r+p.h)),
-    fv:p=>`π×${p.r}²×${p.h} = ${PD}×${p.r**2}×${p.h} = ${rnD(PD*p.r**2*p.h)}`,
-    fs:p=>`2π×${p.r}×(${p.r}+${p.h}) = ${rnD(2*PD*p.r*(p.r+p.h))}`,
-    dims:p=>[{n:'r',v:p.r,c:'#e74c3c'},{n:'h',v:p.h,c:'#f39c12'}],
-  },
-  cone:{
-    ctrls:[{id:'r',l:'Rayon r',mn:1,mx:8,v:4},{id:'h',l:'Hauteur h',mn:2,mx:14,v:8}],
-    vol:p=>rnD(PD*p.r**2*p.h/3),surf:p=>{const g=Math.sqrt(p.r**2+p.h**2);return rnD(PD*p.r*(p.r+g))},
-    fv:p=>`π×${p.r}²×${p.h}/3 = ${rnD(PD*p.r**2*p.h/3)}`,
-    fs:p=>`πr(r+g) = ${rnD(PD*p.r*(p.r+Math.sqrt(p.r**2+p.h**2)))}`,
-    dims:p=>[{n:'r',v:p.r,c:'#e74c3c'},{n:'h',v:p.h,c:'#f39c12'},{n:'g',v:rn(Math.sqrt(p.r**2+p.h**2)),c:'#9b59b6'}],
-  },
-  pyramide:{
-    ctrls:[{id:'a',l:'Côté base a',mn:2,mx:12,v:6},{id:'h',l:'Hauteur h',mn:2,mx:14,v:8}],
-    vol:p=>rn(p.a**2*p.h/3),surf:p=>{const ap=Math.sqrt(p.h**2+(p.a/2)**2);return rn(p.a**2+2*p.a*ap)},
-    fv:p=>`${p.a}²×${p.h}/3 = ${rn(p.a**2*p.h/3)}`,fs:p=>`a²+2a·ap = ${rn(CFG.pyramide.surf(p))}`,
-    dims:p=>[{n:'a',v:p.a,c:'#e74c3c'},{n:'h',v:p.h,c:'#f39c12'},{n:'ap',v:rn(Math.sqrt(p.h**2+(p.a/2)**2)),c:'#9b59b6'}],
-  },
-  prisme:{
-    ctrls:[{id:'b',l:'Base tri. b',mn:2,mx:12,v:6},{id:'ht',l:'Haut. tri. ht',mn:2,mx:10,v:5},{id:'h',l:'Profondeur h',mn:2,mx:14,v:8}],
-    vol:p=>rn(p.b*p.ht/2*p.h),surf:p=>{const hyp=Math.sqrt((p.b/2)**2+p.ht**2);return rn(p.b*p.ht+p.b*p.h+2*hyp*p.h)},
-    fv:p=>`(${p.b}×${p.ht}/2)×${p.h} = ${rn(p.b*p.ht/2*p.h)}`,fs:p=>`${rn(CFG.prisme.surf(p))}`,
-    dims:p=>[{n:'b',v:p.b,c:'#e74c3c'},{n:'ht',v:p.ht,c:'#2ecc71'},{n:'h',v:p.h,c:'#f39c12'}],
-  },
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
+const PI = Math.PI;
+const rn = (x, n=2) => { const f = Math.pow(10,n); return Math.round(x*f)/f };
+const COL = {
+  terra:0xC65A3A, sage:0x6B8E5A, slate:0x4A6B8A, ochre:0xB8893A, plum:0x8A4A6B,
+  ink:0x1A1A1A, paper:0xFAFAF7, line:0xCFCBBE
 };
 
-// Colors for patron faces
-const FC=[
-  {hex:'#147D32',name:'Base'},
-  {hex:'#144BA5',name:'Dessus'},
-  {hex:'#00788C',name:'Avant'},
-  {hex:'#BE5000',name:'Arrière'},
-  {hex:'#6E1996',name:'Gauche'},
-  {hex:'#A50A0A',name:'Droite'},
-  {hex:'#9B7300',name:'Latérale'},
-  {hex:'#1abc9c',name:'Triangle'},
-];
+const TWEAKS = /*EDITMODE-BEGIN*/{
+  "showObjects": true,
+  "showLabels": false,
+  "showGrid": true,
+  "simpleLang": false
+}/*EDITMODE-END*/;
 
-/* ═══════════════════════════════════════
-   SHAPE SELECTOR
-   ═══════════════════════════════════════ */
-document.getElementById('shapeSel').innerHTML=SHAPES.map((s,i)=>
-  `<button class="sh-btn${i===0?' active':''}" data-s="${s.id}" onclick="pick('${s.id}',this)">${s.icon} ${s.name}</button>`
-).join('');
+// SVG icons for shape tabs
+const ICONS = {
+  pave:`<svg viewBox="0 0 48 48" fill="none" stroke="currentColor"><path d="M8 16 L24 8 L40 16 L40 36 L24 44 L8 36 Z"/><path d="M8 16 L24 24 L40 16 M24 24 L24 44"/></svg>`,
+  cube:`<svg viewBox="0 0 48 48" fill="none" stroke="currentColor"><path d="M10 14 L24 8 L38 14 L38 34 L24 40 L10 34 Z"/><path d="M10 14 L24 20 L38 14 M24 20 L24 40"/></svg>`,
+  cylindre:`<svg viewBox="0 0 48 48" fill="none" stroke="currentColor"><ellipse cx="24" cy="10" rx="14" ry="4"/><path d="M10 10 L10 38 A14 4 0 0 0 38 38 L38 10"/><ellipse cx="24" cy="38" rx="14" ry="4" stroke-dasharray="2 2" opacity=".5"/></svg>`,
+  cone:`<svg viewBox="0 0 48 48" fill="none" stroke="currentColor"><path d="M24 6 L10 38 A14 4 0 0 0 38 38 Z"/><ellipse cx="24" cy="38" rx="14" ry="4" stroke-dasharray="2 2" opacity=".5"/></svg>`,
+  sphere:`<svg viewBox="0 0 48 48" fill="none" stroke="currentColor"><circle cx="24" cy="24" r="16"/><ellipse cx="24" cy="24" rx="16" ry="6"/><ellipse cx="24" cy="24" rx="6" ry="16" opacity=".4"/></svg>`,
+  pyramide:`<svg viewBox="0 0 48 48" fill="none" stroke="currentColor"><path d="M24 6 L8 36 L40 36 Z"/><path d="M8 36 L24 32 L40 36 M24 6 L24 32" stroke-dasharray="2 2" opacity=".5"/></svg>`,
+  prisme:`<svg viewBox="0 0 48 48" fill="none" stroke="currentColor"><path d="M14 36 L24 10 L34 36 Z"/><path d="M14 36 L4 30 L14 4 L24 10 M34 36 L24 10 M4 30 L14 30"/></svg>`,
+};
 
-function pick(s,btn){
-  shape=s;
-  document.querySelectorAll('.sh-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  const c=CFG[s]; P={};c.ctrls.forEach(ct=>P[ct.id]=ct.v);
-  if(mode==='volume'){buildVolCtrls();refreshVol();}
-  else{buildPatCtrls();rebuildPat();}
-}
-
-function switchMode(m){
-  mode=m;
-  document.getElementById('tabVol').classList.toggle('active',m==='volume');
-  document.getElementById('tabPat').classList.toggle('active',m==='patron');
-  document.getElementById('modeVolume').classList.toggle('vis',m==='volume');
-  document.getElementById('modePatron').classList.toggle('vis',m==='patron');
-  if(m==='patron'){
-    if(!pat.renderer) initPat();
-    buildPatCtrls(); rebuildPat();
-  } else {
-    buildVolCtrls(); refreshVol();
+// Shape configurations
+const CFG = {
+  pave: {
+    name:'Pavé droit', obj:'comme une boîte à chaussures',
+    ctrls:[
+      {id:'L',l:'Longueur',sym:'L',mn:2,mx:12,v:8,c:'slate'},
+      {id:'l',l:'Largeur',sym:'ℓ',mn:2,mx:10,v:5,c:'slate'},
+      {id:'h',l:'Hauteur',sym:'h',mn:2,mx:10,v:4,c:'ochre'}
+    ],
+    vol: p=>p.L*p.l*p.h,
+    surf: p=>2*(p.L*p.l+p.L*p.h+p.l*p.h),
+    fv: p=>`V = L × ℓ × h = ${p.L}×${p.l}×${p.h}`,
+    fs: p=>`A = 2(L×ℓ + L×h + ℓ×h)`,
+    vocab:[
+      {sym:'L',w:'Longueur',d:'Le plus grand côté de la base.'},
+      {sym:'ℓ',w:'Largeur',d:'Le plus petit côté de la base.'},
+      {sym:'h',w:'Hauteur',d:'Dimension verticale, de bas en haut.'},
+      {sym:'F',w:'Face',d:'Surface plate du solide. Un pavé a 6 faces.'},
+      {sym:'A',w:'Arête',d:'Ligne où deux faces se rencontrent. Un pavé a 12 arêtes.'},
+      {sym:'S',w:'Sommet',d:'Coin du solide. Un pavé a 8 sommets.'}
+    ],
+    quiz:[
+      {q:'Combien de faces a un pavé droit ?',o:['4','6','8','12'],a:1},
+      {q:'Quelle formule donne le volume ?',o:['L + ℓ + h','L × ℓ × h','2 × L × ℓ','L × ℓ'],a:1},
+    ]
+  },
+  cube: {
+    name:'Cube', obj:'comme un dé',
+    ctrls:[{id:'c',l:'Côté',sym:'c',mn:2,mx:10,v:6,c:'slate'}],
+    vol: p=>p.c**3,
+    surf: p=>6*p.c**2,
+    fv: p=>`V = c³ = ${p.c}³`,
+    fs: p=>`A = 6 × c² = 6 × ${p.c}²`,
+    vocab:[
+      {sym:'c',w:'Côté (arête)',d:'Toutes les arêtes d\'un cube ont la même longueur.'},
+      {sym:'F',w:'Face',d:'6 faces identiques — des carrés.'},
+      {sym:'S',w:'Sommet',d:'8 sommets (coins).'},
+      {sym:'A',w:'Arête',d:'12 arêtes, toutes égales.'}
+    ],
+    quiz:[
+      {q:'Si le côté fait 3 cm, combien vaut le volume ?',o:['9 cm³','18 cm³','27 cm³','36 cm³'],a:2},
+      {q:'Combien d\'arêtes a un cube ?',o:['6','8','10','12'],a:3}
+    ]
+  },
+  cylindre: {
+    name:'Cylindre', obj:'comme une canette',
+    ctrls:[{id:'r',l:'Rayon',sym:'r',mn:1,mx:7,v:3,c:'slate'},{id:'h',l:'Hauteur',sym:'h',mn:2,mx:12,v:7,c:'ochre'}],
+    vol: p=>rn(PI*p.r**2*p.h),
+    surf: p=>rn(2*PI*p.r*(p.r+p.h)),
+    fv: p=>`V = π × r² × h ≈ ${rn(PI*p.r**2*p.h)}`,
+    fs: p=>`A = 2π × r × (r + h)`,
+    vocab:[
+      {sym:'r',w:'Rayon',d:'Distance du centre au bord du cercle.'},
+      {sym:'d',w:'Diamètre',d:'Distance d\'un bord à l\'autre en passant par le centre. d = 2r.'},
+      {sym:'h',w:'Hauteur',d:'Distance entre les deux bases circulaires.'},
+      {sym:'C',w:'Circonférence',d:'Longueur du bord d\'un cercle. C = 2πr.'},
+      {sym:'B',w:'Base',d:'Les deux cercles du haut et du bas.'}
+    ],
+    quiz:[
+      {q:'La base d\'un cylindre est un...',o:['carré','cercle','triangle','rectangle'],a:1},
+      {q:'Combien de bases a un cylindre ?',o:['0','1','2','6'],a:2}
+    ]
+  },
+  cone: {
+    name:'Cône', obj:'comme un cornet de glace',
+    ctrls:[{id:'r',l:'Rayon',sym:'r',mn:1,mx:7,v:3,c:'slate'},{id:'h',l:'Hauteur',sym:'h',mn:2,mx:12,v:7,c:'ochre'}],
+    vol: p=>rn(PI*p.r**2*p.h/3),
+    surf: p=>{const g=Math.sqrt(p.r**2+p.h**2);return rn(PI*p.r*(p.r+g))},
+    fv: p=>`V = (π × r² × h) ÷ 3 ≈ ${rn(PI*p.r**2*p.h/3)}`,
+    fs: p=>`A = π × r × (r + g)`,
+    vocab:[
+      {sym:'r',w:'Rayon',d:'Rayon du cercle à la base.'},
+      {sym:'h',w:'Hauteur',d:'Distance verticale du sommet à la base.'},
+      {sym:'g',w:'Génératrice',d:'Distance du sommet à un point du bord de la base.'},
+      {sym:'B',w:'Base',d:'Le cercle en dessous.'},
+      {sym:'S',w:'Sommet',d:'La pointe en haut.'}
+    ],
+    quiz:[
+      {q:'Un cône a combien de sommets pointus ?',o:['0','1','2','3'],a:1},
+      {q:'Le volume d\'un cône est... celui d\'un cylindre de même base.',o:['2 fois','la moitié de','un tiers de','égal à'],a:2}
+    ]
+  },
+  sphere: {
+    name:'Sphère', obj:'comme un ballon',
+    ctrls:[{id:'r',l:'Rayon',sym:'r',mn:1,mx:7,v:4,c:'slate'}],
+    vol: p=>rn(4/3*PI*p.r**3),
+    surf: p=>rn(4*PI*p.r**2),
+    fv: p=>`V = (4 ÷ 3) × π × r³ ≈ ${rn(4/3*PI*p.r**3)}`,
+    fs: p=>`A = 4 × π × r²`,
+    vocab:[
+      {sym:'r',w:'Rayon',d:'Distance du centre à la surface.'},
+      {sym:'d',w:'Diamètre',d:'Deux fois le rayon. Passe par le centre.'},
+      {sym:'C',w:'Centre',d:'Point au milieu de la sphère.'}
+    ],
+    quiz:[
+      {q:'La sphère a combien de faces planes ?',o:['0','1','2','6'],a:0},
+      {q:'Si le rayon double, le volume est multiplié par...',o:['2','4','6','8'],a:3}
+    ]
+  },
+  pyramide: {
+    name:'Pyramide', obj:'comme les pyramides d\'Égypte',
+    ctrls:[{id:'a',l:'Côté de la base',sym:'a',mn:2,mx:10,v:6,c:'sage'},{id:'h',l:'Hauteur',sym:'h',mn:2,mx:12,v:7,c:'ochre'}],
+    vol: p=>rn(p.a**2*p.h/3),
+    surf: p=>{const ap=Math.sqrt(p.h**2+(p.a/2)**2);return rn(p.a**2+2*p.a*ap)},
+    fv: p=>`V = (a² × h) ÷ 3 ≈ ${rn(p.a**2*p.h/3)}`,
+    fs: p=>`A = a² + 2 × a × apothème`,
+    vocab:[
+      {sym:'a',w:'Côté',d:'Côté du carré de la base.'},
+      {sym:'h',w:'Hauteur',d:'Distance verticale du sommet à la base.'},
+      {sym:'p',w:'Apothème',d:'Distance du sommet au milieu d\'un côté de la base.'},
+      {sym:'B',w:'Base',d:'Le carré en dessous.'},
+      {sym:'S',w:'Sommet',d:'La pointe en haut.'}
+    ],
+    quiz:[
+      {q:'Combien de faces triangulaires a une pyramide à base carrée ?',o:['2','3','4','5'],a:2},
+      {q:'Combien de sommets a-t-elle en tout ?',o:['4','5','6','8'],a:1}
+    ]
+  },
+  prisme: {
+    name:'Prisme triangulaire', obj:'comme une part de cake Toblerone',
+    ctrls:[{id:'b',l:'Base du triangle',sym:'b',mn:2,mx:10,v:6,c:'sage'},{id:'ht',l:'Hauteur du triangle',sym:'t',mn:2,mx:8,v:5,c:'sage'},{id:'h',l:'Profondeur',sym:'h',mn:2,mx:12,v:7,c:'ochre'}],
+    vol: p=>rn(p.b*p.ht/2*p.h),
+    surf: p=>{const hyp=Math.sqrt((p.b/2)**2+p.ht**2);return rn(p.b*p.ht+p.b*p.h+2*hyp*p.h)},
+    fv: p=>`V = (b × t ÷ 2) × h ≈ ${rn(p.b*p.ht/2*p.h)}`,
+    fs: p=>`A = Aire base + périmètre × profondeur`,
+    vocab:[
+      {sym:'b',w:'Base du triangle',d:'Côté horizontal du triangle.'},
+      {sym:'t',w:'Hauteur triangle',d:'Hauteur du triangle (la base à plat).'},
+      {sym:'h',w:'Profondeur',d:'Longueur du prisme d\'avant en arrière.'},
+      {sym:'B',w:'Base',d:'Les deux triangles identiques.'}
+    ],
+    quiz:[
+      {q:'La base d\'un prisme triangulaire est un...',o:['cercle','carré','triangle','rectangle'],a:2},
+      {q:'Combien de faces rectangulaires a-t-il ?',o:['1','2','3','4'],a:2}
+    ]
   }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let scene, camera, renderer, mainGroup, solidMesh, edgesObj, labelsGroup;
+let isDragging=false, prevMouse={x:0,y:0}, autoRotate=false, animId=null;
+let shape='pave', P={}, currentView='3d', isWire=false;
+let activeOverlay=null;   // 'units' | 'slices' | 'net' | 'height' | 'base' | null
+let overlayGroup;         // Three.js group for overlays
+let labels = [];          // HTML labels synced to 3D positions
+
+// ═══════════════════════════════════════════════════════════════
+// SHAPE PICKER
+// ═══════════════════════════════════════════════════════════════
+function buildShapeSel(){
+  const el = document.getElementById('shapeSel');
+  el.innerHTML = Object.keys(CFG).map(k=>`
+    <button class="sh ${k==='pave'?'on':''}" data-shape="${k}">
+      ${ICONS[k]}
+      <span class="nm">${CFG[k].name}</span>
+      <span class="rl obj-label">${CFG[k].obj}</span>
+    </button>
+  `).join('');
+  el.querySelectorAll('.sh').forEach(b=>{
+    b.onclick = ()=>pick(b.dataset.shape);
+  });
+  applyObjectsVisibility();
 }
 
-/* ═══════════════════════════════════════
-   VOLUME MODE — Three.js
-   ═══════════════════════════════════════ */
-const vol={scene:null,camera:null,renderer:null,group:null,mesh:null,edges:null,autoRot:false,animId:null};
-
-function initVol(){
-  const w=document.getElementById('volWrap'), W=w.clientWidth, H=Math.min(W*.7,500);
-  vol.scene=new THREE.Scene(); vol.scene.background=new THREE.Color(0xf7f8fc);
-  vol.camera=new THREE.PerspectiveCamera(45,W/H,.1,1000);
-  vol.camera.position.set(12,10,16);vol.camera.lookAt(0,0,0);
-  vol.renderer=new THREE.WebGLRenderer({antialias:true});
-  vol.renderer.setSize(W,H);vol.renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  w.insertBefore(vol.renderer.domElement,w.querySelector('.step-bar'));
-  vol.scene.add(new THREE.AmbientLight(0xffffff,.5));
-  const d=new THREE.DirectionalLight(0xffffff,.7);d.position.set(8,12,10);vol.scene.add(d);
-  vol.scene.add(new THREE.DirectionalLight(0xb0d4f1,.3)).position.set(-6,4,-8);
-  const g=new THREE.GridHelper(30,30,0xd0d0d0,0xe8e8e8);g.position.y=-.01;vol.scene.add(g);
-  vol.group=new THREE.Group();vol.scene.add(vol.group);
-  drag(vol.renderer.domElement,vol.group,()=>vol.autoRot=false);
-  zoom(vol.renderer.domElement,vol.camera);
-  vol.renderer.domElement.addEventListener('mousedown',()=>{const h=document.getElementById('hintVol');if(h)h.style.opacity='0'},{once:true});
-  (function loop(){requestAnimationFrame(loop);if(vol.autoRot)vol.group.rotation.y+=.005;vol.renderer.render(vol.scene,vol.camera)})();
-  window.addEventListener('resize',()=>{const W2=w.clientWidth,H2=Math.min(W2*.7,500);vol.camera.aspect=W2/H2;vol.camera.updateProjectionMatrix();vol.renderer.setSize(W2,H2)});
+function applyObjectsVisibility(){
+  document.querySelectorAll('.obj-label').forEach(e=>{
+    e.style.display = TWEAKS.showObjects?'block':'none';
+  });
+  const o=document.getElementById('stageObj');
+  if(o) o.style.display = TWEAKS.showObjects?'inline':'none';
 }
 
-function buildVolCtrls(){
-  const c=CFG[shape];
-  document.getElementById('volCtrls').innerHTML=c.ctrls.map(ct=>`<div class="ctrl"><label>${ct.l}<span class="ctrl-val" style="color:var(--cyan)" id="vc-${ct.id}">${P[ct.id]} cm</span></label><input type="range" min="${ct.mn}" max="${ct.mx}" value="${P[ct.id]}" step="0.5" style="accent-color:var(--cyan)" oninput="P['${ct.id}']=+this.value;document.getElementById('vc-${ct.id}').textContent=this.value+' cm';refreshVol()"></div>`).join('');
+// ═══════════════════════════════════════════════════════════════
+// THREE.JS INIT
+// ═══════════════════════════════════════════════════════════════
+function initThree(){
+  const wrap = document.getElementById('canvasBox');
+  const W = wrap.clientWidth;
+  const H = Math.min(W*0.62, 480);
+
+  scene = new THREE.Scene();
+  scene.background = null;
+  camera = new THREE.PerspectiveCamera(40, W/H, 0.1, 1000);
+  camera.position.set(14, 11, 16);
+  camera.lookAt(0,0,0);
+
+  renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  wrap.appendChild(renderer.domElement);
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.65);
+  dir.position.set(8, 14, 10);
+  scene.add(dir);
+  const fill = new THREE.DirectionalLight(0xb0c4d4, 0.25);
+  fill.position.set(-8, 4, -6);
+  scene.add(fill);
+
+  // Grid
+  const grid = new THREE.GridHelper(30, 30, 0xcfcbbe, 0xe4e1d8);
+  grid.position.y = -0.01;
+  grid.name='__grid';
+  scene.add(grid);
+
+  mainGroup = new THREE.Group();
+  scene.add(mainGroup);
+  overlayGroup = new THREE.Group();
+  scene.add(overlayGroup);
+  labelsGroup = new THREE.Group();
+  scene.add(labelsGroup);
+
+  // Mouse
+  const cvs = renderer.domElement;
+  cvs.style.cursor='grab';
+  cvs.addEventListener('mousedown', e=>{isDragging=true;autoRotate=false;prevMouse={x:e.clientX,y:e.clientY};cvs.style.cursor='grabbing'});
+  cvs.addEventListener('mousemove', e=>{
+    if(!isDragging) return;
+    const dx=e.clientX-prevMouse.x, dy=e.clientY-prevMouse.y;
+    mainGroup.rotation.y += dx*0.008;
+    mainGroup.rotation.x += dy*0.008;
+    mainGroup.rotation.x = Math.max(-PI/2, Math.min(PI/2, mainGroup.rotation.x));
+    overlayGroup.rotation.copy(mainGroup.rotation);
+    labelsGroup.rotation.copy(mainGroup.rotation);
+    prevMouse={x:e.clientX,y:e.clientY};
+  });
+  cvs.addEventListener('mouseup', ()=>{isDragging=false;cvs.style.cursor='grab'});
+  cvs.addEventListener('mouseleave', ()=>{isDragging=false});
+  cvs.addEventListener('touchstart', e=>{isDragging=true;autoRotate=false;prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY}},{passive:true});
+  cvs.addEventListener('touchmove', e=>{
+    if(!isDragging||!e.touches.length) return;
+    const dx=e.touches[0].clientX-prevMouse.x, dy=e.touches[0].clientY-prevMouse.y;
+    mainGroup.rotation.y += dx*0.008;
+    mainGroup.rotation.x += dy*0.008;
+    mainGroup.rotation.x = Math.max(-PI/2, Math.min(PI/2, mainGroup.rotation.x));
+    overlayGroup.rotation.copy(mainGroup.rotation);
+    labelsGroup.rotation.copy(mainGroup.rotation);
+    prevMouse={x:e.touches[0].clientX,y:e.touches[0].clientY};
+  },{passive:true});
+  cvs.addEventListener('touchend', ()=>{isDragging=false});
+  cvs.addEventListener('wheel', e=>{e.preventDefault();camera.position.multiplyScalar(e.deltaY>0?1.05:0.95);camera.position.clampLength(6,60)},{passive:false});
+
+  const hint=document.getElementById('hint');
+  const kill=()=>{if(hint) hint.style.opacity='0'};
+  cvs.addEventListener('mousedown', kill, {once:true});
+  cvs.addEventListener('touchstart', kill, {once:true});
+
+  function animate(){
+    requestAnimationFrame(animate);
+    if(autoRotate){
+      mainGroup.rotation.y += 0.005;
+      overlayGroup.rotation.copy(mainGroup.rotation);
+      labelsGroup.rotation.copy(mainGroup.rotation);
+    }
+    updateLabels();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', ()=>{
+    const W2 = wrap.clientWidth;
+    const H2 = Math.min(W2*0.62, 480);
+    camera.aspect = W2/H2;
+    camera.updateProjectionMatrix();
+    renderer.setSize(W2, H2);
+  });
 }
 
-function refreshVol(){
-  const c=CFG[shape];
-  document.getElementById('vV').textContent=c.vol(P)+' cm³';
-  document.getElementById('vS').textContent=c.surf(P)+' cm²';
-  document.getElementById('fV').textContent=c.fv(P);
-  document.getElementById('fS').textContent=c.fs(P);
-  const ds=c.dims(P);
-  document.getElementById('dims').innerHTML=ds.map((d,i)=>`<div class="dm"><div class="dm-dot" style="background:${d.c}">${d.n}</div><span class="dm-name">${d.n}</span><span class="dm-val" style="color:${d.c}">${d.v} cm</span></div>`).join('');
-  buildVolMesh();
-}
+// ═══════════════════════════════════════════════════════════════
+// BUILD SOLID
+// ═══════════════════════════════════════════════════════════════
+function clearGroup(g){ while(g.children.length) g.remove(g.children[0]) }
 
-function buildVolMesh(){
-  while(vol.group.children.length)vol.group.remove(vol.group.children[0]);
-  const mat=new THREE.MeshPhongMaterial({color:0x00788C,transparent:true,opacity:.55,side:THREE.DoubleSide});
+function buildSolid(){
+  clearGroup(mainGroup);
+  clearGroup(overlayGroup);
+  clearLabels();
+
+  const mat = new THREE.MeshPhongMaterial({
+    color:COL.terra, transparent:true, opacity:0.55,
+    side:THREE.DoubleSide, shininess:30, flatShading:false
+  });
   let geo;
+
   switch(shape){
-    case'pave':geo=new THREE.BoxGeometry(P.L,P.h,P.l);vol.mesh=new THREE.Mesh(geo,mat);vol.mesh.position.y=P.h/2;break;
-    case'cube':geo=new THREE.BoxGeometry(P.c,P.c,P.c);vol.mesh=new THREE.Mesh(geo,mat);vol.mesh.position.y=P.c/2;break;
-    case'cylindre':geo=new THREE.CylinderGeometry(P.r,P.r,P.h,48);vol.mesh=new THREE.Mesh(geo,mat);vol.mesh.position.y=P.h/2;break;
-    case'cone':geo=new THREE.ConeGeometry(P.r,P.h,48);vol.mesh=new THREE.Mesh(geo,mat);vol.mesh.position.y=P.h/2;break;
-    case'pyramide':{const a=P.a,h=P.h,v=new Float32Array([-a/2,0,-a/2,a/2,0,-a/2,a/2,0,a/2,-a/2,0,-a/2,a/2,0,a/2,-a/2,0,a/2,-a/2,0,a/2,a/2,0,a/2,0,h,0,a/2,0,a/2,a/2,0,-a/2,0,h,0,a/2,0,-a/2,-a/2,0,-a/2,0,h,0,-a/2,0,-a/2,-a/2,0,a/2,0,h,0]);geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(v,3));geo.computeVertexNormals();vol.mesh=new THREE.Mesh(geo,mat);break}
-    case'prisme':{const s=new THREE.Shape();s.moveTo(-P.b/2,0);s.lineTo(P.b/2,0);s.lineTo(0,P.ht);s.closePath();geo=new THREE.ExtrudeGeometry(s,{depth:P.h,bevelEnabled:false});vol.mesh=new THREE.Mesh(geo,mat);vol.mesh.rotation.x=-HP;vol.mesh.position.set(0,0,-P.h/2);break}
+    case 'pave': geo = new THREE.BoxGeometry(P.L, P.h, P.l); solidMesh=new THREE.Mesh(geo,mat); solidMesh.position.y=P.h/2; break;
+    case 'cube': geo = new THREE.BoxGeometry(P.c, P.c, P.c); solidMesh=new THREE.Mesh(geo,mat); solidMesh.position.y=P.c/2; break;
+    case 'cylindre': geo = new THREE.CylinderGeometry(P.r, P.r, P.h, 48); solidMesh=new THREE.Mesh(geo,mat); solidMesh.position.y=P.h/2; break;
+    case 'cone': geo = new THREE.ConeGeometry(P.r, P.h, 48); solidMesh=new THREE.Mesh(geo,mat); solidMesh.position.y=P.h/2; break;
+    case 'sphere': geo = new THREE.SphereGeometry(P.r, 48, 32); solidMesh=new THREE.Mesh(geo,mat); solidMesh.position.y=P.r; break;
+    case 'pyramide':{
+      const a=P.a,h=P.h;
+      const v = new Float32Array([
+        -a/2,0,-a/2, a/2,0,-a/2, a/2,0,a/2,
+        -a/2,0,-a/2, a/2,0,a/2, -a/2,0,a/2,
+        -a/2,0,a/2, a/2,0,a/2, 0,h,0,
+        a/2,0,a/2, a/2,0,-a/2, 0,h,0,
+        a/2,0,-a/2, -a/2,0,-a/2, 0,h,0,
+        -a/2,0,-a/2, -a/2,0,a/2, 0,h,0
+      ]);
+      geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(v,3));
+      geo.computeVertexNormals();
+      solidMesh = new THREE.Mesh(geo, mat);
+      break;
+    }
+    case 'prisme':{
+      const s = new THREE.Shape();
+      s.moveTo(-P.b/2,0); s.lineTo(P.b/2,0); s.lineTo(0,P.ht); s.lineTo(-P.b/2,0);
+      geo = new THREE.ExtrudeGeometry(s, {depth:P.h, bevelEnabled:false});
+      solidMesh = new THREE.Mesh(geo, mat);
+      solidMesh.rotation.x = -PI/2;
+      solidMesh.position.set(0, 0, -P.h/2);
+      break;
+    }
   }
-  if(vol.mesh){
-    vol.group.add(vol.mesh);
-    const eg=new THREE.EdgesGeometry(vol.mesh.geometry,20);
-    vol.edges=new THREE.LineSegments(eg,new THREE.LineBasicMaterial({color:0x004D5A}));
-    vol.edges.position.copy(vol.mesh.position);vol.edges.rotation.copy(vol.mesh.rotation);
-    vol.group.add(vol.edges);
+
+  if(solidMesh){
+    mainGroup.add(solidMesh);
+    const eg = new THREE.EdgesGeometry(solidMesh.geometry, 20);
+    edgesObj = new THREE.LineSegments(eg, new THREE.LineBasicMaterial({color:0x1A1A1A, linewidth:2}));
+    edgesObj.position.copy(solidMesh.position);
+    edgesObj.rotation.copy(solidMesh.rotation);
+    mainGroup.add(edgesObj);
   }
-  const d=Math.max(...Object.values(P))*1.4;
-  vol.camera.position.set(d*1.2,d,d*1.5);vol.camera.lookAt(0,d*.3,0);
+
+  // Camera fit
+  const maxDim = Math.max(...Object.values(P).filter(x=>typeof x==='number')) * 1.5;
+  camera.position.set(maxDim*1.1, maxDim*0.9, maxDim*1.3);
+  camera.lookAt(0, maxDim*0.2, 0);
+
+  buildLabels();
 }
 
-function volCam(v){vol.autoRot=false;const d=Math.max(...Object.values(P))*2;vol.group.rotation.set(0,0,0);
-  if(v==='face')vol.camera.position.set(0,d*.3,d*1.5);
-  else if(v==='dessus')vol.camera.position.set(0,d*2,.01);
-  else if(v==='cote')vol.camera.position.set(d*1.5,d*.3,0);
-  else if(v==='3d')vol.camera.position.set(d,d*.8,d*1.2);
-  else{vol.autoRot=true;vol.camera.position.set(d,d*.8,d*1.2)}
-  vol.camera.lookAt(0,d*.2,0)}
+// ═══════════════════════════════════════════════════════════════
+// 3D LABELS (HTML overlays positioned with projection)
+// ═══════════════════════════════════════════════════════════════
+function clearLabels(){
+  labels.forEach(l=>l.el.remove());
+  labels=[];
+}
 
-// Volume animations (compact)
-function animVolume(){if(!vol.mesh)return;vol.mesh.material.opacity=0;let t=0;function f(){t+=.015;if(t<=1){vol.mesh.material.opacity=t*.7;vol.mesh.scale.y=t;animReq(f)}else{vol.mesh.material.opacity=.55;vol.mesh.scale.set(1,1,1);buildVolMesh();document.getElementById('volStep').innerHTML=`<strong>🧊</strong> V = <b>${CFG[shape].vol(P)} cm³</b>`}}f()}
-function showLateral(){if(!vol.mesh)return;vol.mesh.material.color.setHex(0x144BA5);vol.mesh.material.opacity=.2;setTimeout(()=>{vol.mesh.material.color.setHex(0x00788C);vol.mesh.material.opacity=.55},2000);document.getElementById('volStep').innerHTML=`<strong>📐</strong> S = <b>${CFG[shape].surf(P)} cm²</b>`}
-function showBase(){
-  if(!vol.mesh)return;
-  const old=vol.group.getObjectByName('baseHL');if(old)vol.group.remove(old);
-  let geo;
+function addLabel(pos3, text, color){
+  const el = document.createElement('div');
+  el.className = 'lbl-3d';
+  el.textContent = text;
+  el.style.cssText = `position:absolute;background:${color};color:#fff;padding:3px 8px;border-radius:6px;font-size:.72rem;font-weight:700;font-family:'Fraunces',serif;pointer-events:none;transform:translate(-50%,-50%);white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.15);z-index:10;opacity:0;transition:opacity .3s`;
+  document.getElementById('canvasBox').appendChild(el);
+  labels.push({el, pos:pos3.clone()});
+  setTimeout(()=>el.style.opacity='1', 50);
+}
+
+function buildLabels(){
+  clearLabels();
+  if(!TWEAKS.showLabels) return;
+  const COLS = {terra:'#C65A3A',sage:'#6B8E5A',slate:'#4A6B8A',ochre:'#B8893A',plum:'#8A4A6B'};
+
   switch(shape){
-    case'pave':geo=new THREE.PlaneGeometry(P.L,P.l);break;
-    case'cube':geo=new THREE.PlaneGeometry(P.c,P.c);break;
-    case'cylindre':case'cone':geo=new THREE.CircleGeometry(P.r,48);break;
-    case'pyramide':geo=new THREE.PlaneGeometry(P.a,P.a);break;
-    case'prisme':geo=new THREE.PlaneGeometry(P.b,P.h);break;
-    default:return;
+    case 'pave':
+      addLabel(new THREE.Vector3(0, -0.3, P.l/2+0.4), `L = ${P.L}`, COLS.slate);
+      addLabel(new THREE.Vector3(P.L/2+0.4, -0.3, 0), `ℓ = ${P.l}`, COLS.slate);
+      addLabel(new THREE.Vector3(P.L/2+0.4, P.h/2, P.l/2+0.4), `h = ${P.h}`, COLS.ochre);
+      break;
+    case 'cube':
+      addLabel(new THREE.Vector3(0, -0.3, P.c/2+0.4), `c = ${P.c}`, COLS.slate);
+      addLabel(new THREE.Vector3(P.c/2+0.4, P.c/2, P.c/2+0.4), `c = ${P.c}`, COLS.slate);
+      break;
+    case 'cylindre':
+      addLabel(new THREE.Vector3(P.r/2, -0.3, 0), `r = ${P.r}`, COLS.slate);
+      addLabel(new THREE.Vector3(P.r+0.5, P.h/2, 0), `h = ${P.h}`, COLS.ochre);
+      break;
+    case 'cone':
+      addLabel(new THREE.Vector3(P.r/2, -0.3, 0), `r = ${P.r}`, COLS.slate);
+      addLabel(new THREE.Vector3(-0.5, P.h/2, 0), `h = ${P.h}`, COLS.ochre);
+      break;
+    case 'sphere':
+      addLabel(new THREE.Vector3(P.r/2, P.r, 0), `r = ${P.r}`, COLS.slate);
+      break;
+    case 'pyramide':
+      addLabel(new THREE.Vector3(0, -0.3, P.a/2+0.4), `a = ${P.a}`, COLS.sage);
+      addLabel(new THREE.Vector3(-0.5, P.h/2, 0), `h = ${P.h}`, COLS.ochre);
+      break;
+    case 'prisme':
+      addLabel(new THREE.Vector3(0, -0.3, -P.h/2+0.3), `b = ${P.b}`, COLS.sage);
+      addLabel(new THREE.Vector3(-P.b/2-0.5, P.ht/2, -P.h/2), `t = ${P.ht}`, COLS.sage);
+      addLabel(new THREE.Vector3(P.b/2+0.3, 0, 0), `h = ${P.h}`, COLS.ochre);
+      break;
   }
-  const hl=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:0x147D32,transparent:true,opacity:.5,side:THREE.DoubleSide}));
-  hl.rotation.x=-HP;hl.position.y=.03;hl.name='baseHL';vol.group.add(hl);
-  setTimeout(()=>{const o=vol.group.getObjectByName('baseHL');if(o)vol.group.remove(o)},3000);
-  const area=shape==='cylindre'||shape==='cone'?rnD(PD*P.r**2):shape==='pyramide'?P.a**2:shape==='prisme'?rn(P.b*P.ht/2):shape==='cube'?P.c**2:rn(P.L*P.l);
-  document.getElementById('volStep').innerHTML=`<strong>⬡</strong> Aire base = <b>${area} cm²</b>`;
 }
-function showHeight(){
-  if(!vol.mesh)return;
-  const old=vol.group.getObjectByName('htLine');if(old)vol.group.remove(old);
-  let h=P.h||P.c||P.ht||P.r*2;
-  const mat=new THREE.LineDashedMaterial({color:0xBE5000,dashSize:.3,gapSize:.15});
-  const geo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,h,0)]);
-  const ln=new THREE.Line(geo,mat);ln.computeLineDistances();ln.name='htLine';vol.group.add(ln);
-  setTimeout(()=>{const o=vol.group.getObjectByName('htLine');if(o)vol.group.remove(o)},4000);
-  document.getElementById('volStep').innerHTML=`<strong>⊥</strong> h = <b>${h} cm</b>`;
+
+function updateLabels(){
+  if(!labels.length) return;
+  const wrap = document.getElementById('canvasBox');
+  const rect = wrap.getBoundingClientRect();
+  labels.forEach(lb=>{
+    const v = lb.pos.clone();
+    v.applyEuler(mainGroup.rotation);
+    v.project(camera);
+    const x = (v.x*0.5+0.5) * rect.width;
+    const y = (-v.y*0.5+0.5) * rect.height;
+    lb.el.style.left = x+'px';
+    lb.el.style.top = y+'px';
+    lb.el.style.display = (v.z>1 || v.z<-1) ? 'none' : 'block';
+  });
 }
-let isWire=false;function toggleWire(){isWire=!isWire;if(vol.mesh){vol.mesh.material.wireframe=isWire;vol.mesh.material.opacity=isWire?.9:.55}}
-let sliceAF=null;
-function animSlice(){
-  if(!vol.mesh)return;
-  const old=vol.group.getObjectByName('slicePl');if(old)vol.group.remove(old);
-  if(sliceAF)cancelAnimationFrame(sliceAF);
-  let maxH=P.h||P.c||P.ht||P.r*2;
-  const pl=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshBasicMaterial({color:0xA50A0A,transparent:true,opacity:.2,side:THREE.DoubleSide}));
-  pl.rotation.x=-HP;pl.name='slicePl';vol.group.add(pl);
+
+// ═══════════════════════════════════════════════════════════════
+// OVERLAYS
+// ═══════════════════════════════════════════════════════════════
+function clearOverlay(){
+  clearGroup(overlayGroup);
+  stopNetAnim();
+  if(solidMesh){
+    solidMesh.visible = true;
+    solidMesh.material.opacity = 0.55;
+    solidMesh.material.wireframe = isWire;
+    solidMesh.scale.set(1,1,1);
+    resetMeshPosition();
+  }
+  if(edgesObj) edgesObj.visible = true;
+  if(animId){cancelAnimationFrame(animId); animId=null}
+  activeOverlay = null;
+  document.querySelectorAll('.tool').forEach(t=>t.classList.remove('on'));
+}
+
+function resetMeshPosition(){
+  if(!solidMesh) return;
+  switch(shape){
+    case 'pave': solidMesh.position.y=P.h/2; break;
+    case 'cube': solidMesh.position.y=P.c/2; break;
+    case 'cylindre': solidMesh.position.y=P.h/2; break;
+    case 'cone': solidMesh.position.y=P.h/2; break;
+    case 'sphere': solidMesh.position.y=P.r; break;
+    case 'pyramide': solidMesh.position.y=0; break;
+    case 'prisme': solidMesh.position.set(0,0,-P.h/2); break;
+  }
+  if(edgesObj){edgesObj.position.copy(solidMesh.position); edgesObj.rotation.copy(solidMesh.rotation)}
+}
+
+// — Overlay: UNITS (cubes-unité)
+function overlayUnits(){
+  clearOverlay();
+  activeOverlay = 'units';
+  if(solidMesh){solidMesh.material.opacity = 0.12}
+
+  // Build a grid of 1×1×1 cubes inside the shape's bounding box.
+  // For non-box shapes, only include cubes whose center is inside.
+  const cubeMat = new THREE.MeshPhongMaterial({color:COL.terra, transparent:true, opacity:0.85});
+  const cubeEdge = new THREE.LineBasicMaterial({color:0x5A2E1E, transparent:true, opacity:0.5});
+  const boxGeo = new THREE.BoxGeometry(0.9,0.9,0.9);
+  const edgeGeo = new THREE.EdgesGeometry(boxGeo);
+
+  let cubes = [];
+  const ix0=-10, ix1=10, iz0=-10, iz1=10, iy0=0, iy1=14;
+
+  function inside(x,y,z){
+    switch(shape){
+      case 'pave': return Math.abs(x)<=P.L/2 && Math.abs(z)<=P.l/2 && y>=0 && y<=P.h;
+      case 'cube': return Math.abs(x)<=P.c/2 && Math.abs(z)<=P.c/2 && y>=0 && y<=P.c;
+      case 'cylindre': return Math.sqrt(x*x+z*z)<=P.r && y>=0 && y<=P.h;
+      case 'cone':{
+        if(y<0||y>P.h) return false;
+        const rr = P.r*(1-y/P.h);
+        return Math.sqrt(x*x+z*z)<=rr;
+      }
+      case 'sphere':{
+        const dx=x, dy=y-P.r, dz=z;
+        return Math.sqrt(dx*dx+dy*dy+dz*dz)<=P.r;
+      }
+      case 'pyramide':{
+        if(y<0||y>P.h) return false;
+        const s = P.a*(1-y/P.h)/2;
+        return Math.abs(x)<=s && Math.abs(z)<=s;
+      }
+      case 'prisme':{
+        if(Math.abs(z)>P.h/2) return false;
+        // Triangle: base b on y=0, apex at (0, ht). Convert x->tri x, y->tri y
+        if(y<0 || y>P.ht) return false;
+        const span = P.b*(1-y/P.ht)/2;
+        return Math.abs(x)<=span;
+      }
+    }
+    return false;
+  }
+
+  for(let x=ix0;x<=ix1;x++){
+    for(let y=iy0;y<=iy1;y++){
+      for(let z=iz0;z<=iz1;z++){
+        const cx = x+0.5, cy=y+0.5, cz=z+0.5;
+        if(inside(cx,cy,cz)){
+          const m = new THREE.Mesh(boxGeo, cubeMat.clone());
+          m.position.set(cx, cy, cz);
+          m.material.opacity = 0;
+          const e = new THREE.LineSegments(edgeGeo, cubeEdge);
+          e.position.copy(m.position);
+          overlayGroup.add(m);
+          overlayGroup.add(e);
+          cubes.push({m, delay:(cy)*6 + (Math.abs(cx)+Math.abs(cz))*0.6});
+        }
+      }
+    }
+  }
+
+  // Animate: fade in cubes by layer
+  let t = 0;
+  function step(){
+    t += 0.4;
+    let allDone = true;
+    cubes.forEach(c=>{
+      const op = Math.min(0.85, Math.max(0, (t-c.delay)/6));
+      c.m.material.opacity = op;
+      if(op<0.85) allDone=false;
+    });
+    const n = cubes.length;
+    const filled = cubes.filter(c=>c.m.material.opacity>=0.8).length;
+    setStep(`<b>Cubes-unité :</b> chaque petit cube mesure 1 cm de côté et remplit exactement <span class="fx">1 cm³</span>. On en compte <b>${filled} / ${n}</b>. Le volume, c'est combien on peut en mettre dedans.`);
+    if(!allDone) animId = requestAnimationFrame(step);
+    else setStep(`<b>Compté !</b> Il y a <span class="fx">${n} cubes-unité</span> dans ce ${CFG[shape].name.toLowerCase()}. C'est pour ça qu'on dit que son volume est environ <span class="fx">${n} cm³</span> (valeur exacte : ${CFG[shape].vol(P)} cm³).`);
+  }
+  step();
+}
+
+// — Overlay: SLICES (tranches empilées)
+function overlaySlices(){
+  clearOverlay();
+  activeOverlay = 'slices';
+  if(solidMesh){ solidMesh.material.opacity = 0.1 }
+
+  const N = 8;
+  let totalH, sliceGroups = [];
+  switch(shape){
+    case 'pave': totalH=P.h; break;
+    case 'cube': totalH=P.c; break;
+    case 'cylindre': totalH=P.h; break;
+    case 'cone': totalH=P.h; break;
+    case 'sphere': totalH=P.r*2; break;
+    case 'pyramide': totalH=P.h; break;
+    case 'prisme': totalH=P.ht; break;
+  }
+  const sliceH = totalH/N;
+
+  for(let i=0;i<N;i++){
+    const y0 = i*sliceH;
+    const yMid = y0 + sliceH/2;
+    let geo, mesh;
+    const mat = new THREE.MeshPhongMaterial({color:COL.plum, transparent:true, opacity:0, side:THREE.DoubleSide});
+
+    switch(shape){
+      case 'pave': geo = new THREE.BoxGeometry(P.L, sliceH*0.85, P.l); mesh=new THREE.Mesh(geo, mat); mesh.position.y = yMid; break;
+      case 'cube': geo = new THREE.BoxGeometry(P.c, sliceH*0.85, P.c); mesh=new THREE.Mesh(geo, mat); mesh.position.y = yMid; break;
+      case 'cylindre': geo = new THREE.CylinderGeometry(P.r, P.r, sliceH*0.85, 48); mesh=new THREE.Mesh(geo, mat); mesh.position.y = yMid; break;
+      case 'cone':{
+        const r1 = P.r*(1-(y0)/P.h);
+        const r2 = P.r*(1-(y0+sliceH)/P.h);
+        geo = new THREE.CylinderGeometry(Math.max(0.01,r2), r1, sliceH*0.85, 48);
+        mesh=new THREE.Mesh(geo, mat); mesh.position.y=yMid;
+        break;
+      }
+      case 'sphere':{
+        const yc = yMid - P.r;
+        const rHere = Math.sqrt(Math.max(0, P.r*P.r - yc*yc));
+        geo = new THREE.CylinderGeometry(rHere, rHere, sliceH*0.85, 48);
+        mesh = new THREE.Mesh(geo, mat); mesh.position.y = yMid;
+        break;
+      }
+      case 'pyramide':{
+        const s1 = P.a*(1-y0/P.h);
+        const s2 = P.a*(1-(y0+sliceH)/P.h);
+        // Use ExtrudeGeometry? Use BoxGeometry tapering via custom → easier: frustum via CylinderGeometry(square) not ideal. Use BoxGeometry averaged:
+        const sAvg = (s1+s2)/2;
+        geo = new THREE.BoxGeometry(sAvg, sliceH*0.85, sAvg);
+        mesh = new THREE.Mesh(geo, mat); mesh.position.y = yMid;
+        break;
+      }
+      case 'prisme':{
+        // Triangle prism: horizontal slices would change triangle size along ht
+        const frac1 = 1-y0/P.ht;
+        const frac2 = 1-(y0+sliceH)/P.ht;
+        const bAvg = P.b * (frac1+frac2)/2;
+        geo = new THREE.BoxGeometry(bAvg, sliceH*0.85, P.h);
+        mesh = new THREE.Mesh(geo, mat); mesh.position.y = yMid;
+        break;
+      }
+    }
+    if(shape==='prisme') mesh.position.z = 0;
+    overlayGroup.add(mesh);
+    sliceGroups.push({mesh, i});
+  }
+
   let t=0;
-  (function f(){t+=.008;if(t<=1){pl.position.y=t*maxH;sliceAF=requestAnimationFrame(f);
-    document.getElementById('volStep').innerHTML=`<strong>🔪</strong> Section y = ${rn(t*maxH)} cm`;}
-  else{setTimeout(()=>{const o=vol.group.getObjectByName('slicePl');if(o)vol.group.remove(o)},2000);
-    document.getElementById('volStep').innerHTML=`<strong>🔪</strong> Section complète, h = ${maxH} cm`;}})();
-}
-function resetVol(){vol.autoRot=false;isWire=false;vol.group.rotation.set(0,0,0);document.getElementById('volStep').innerHTML='<strong>💡</strong> Choisis une animation.';refreshVol()}
-function animReq(f){requestAnimationFrame(f)}
-
-/* ═══════════════════════════════════════
-   PATRON MODE — Three.js with pivot hinges
-   ═══════════════════════════════════════
-
-   APPROACH:
-   - All faces are PlaneGeometry, created in the XY plane.
-   - Each non-base face is inside a "pivot" Group.
-   - The pivot is positioned at the hinge edge on the base.
-   - When angle=0 → face lies flat (unfolded patron).
-   - When angle=foldAngle → face is upright (3D solid).
-   - We start at folded (t=0 → angles=foldAngle) and animate to unfolded (t=1 → angles=0).
-
-   This guarantees that t=0 is a correct 3D solid, because we compute
-   foldAngle geometrically for each shape.
-   ═══════════════════════════════════════ */
-const pat={scene:null,camera:null,renderer:null,group:null,autoRot:false};
-let hinges=[]; // {pivot, foldAngle, axis:'x'|'z', label, area, colorHex}
-let unfoldT=0, unfoldAF=null;
-let animSpeed=2; // 1=very slow(4s), 2=normal(2s), 3=fast(1.2s), 4=vfast(0.7s), 5=instant(0.3s)
-const SPEED_DUR=[4000,2000,1200,700,300];
-const SPEED_LABELS=['×0.5','×1','×1.5','×2.5','×5'];
-function updateSpeed(v){
-  animSpeed=parseInt(v);
-  document.getElementById('speedLabel').textContent=SPEED_LABELS[animSpeed-1];
-}
-function getAnimDur(){return SPEED_DUR[animSpeed-1]||2000;}
-
-function initPat(){
-  const w=document.getElementById('patWrap'), W=w.clientWidth, H=Math.min(W*.7,500);
-  pat.scene=new THREE.Scene();pat.scene.background=new THREE.Color(0xf7f8fc);
-  pat.camera=new THREE.PerspectiveCamera(45,W/H,.1,1000);
-  pat.camera.position.set(14,12,18);pat.camera.lookAt(0,0,0);
-  pat.renderer=new THREE.WebGLRenderer({antialias:true});
-  pat.renderer.setSize(W,H);pat.renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  w.insertBefore(pat.renderer.domElement,w.querySelector('.step-bar'));
-  pat.scene.add(new THREE.AmbientLight(0xffffff,.55));
-  const d=new THREE.DirectionalLight(0xffffff,.65);d.position.set(8,14,10);pat.scene.add(d);
-  pat.scene.add(new THREE.DirectionalLight(0xb0d4f1,.3)).position.set(-6,4,-8);
-  const g=new THREE.GridHelper(40,40,0xd8d8d8,0xeaeaea);g.position.y=-.02;pat.scene.add(g);
-  pat.group=new THREE.Group();pat.scene.add(pat.group);
-  drag(pat.renderer.domElement,pat.group,()=>pat.autoRot=false);
-  zoom(pat.renderer.domElement,pat.camera);
-  pat.renderer.domElement.addEventListener('mousedown',()=>{const h=document.getElementById('hintPat');if(h)h.style.opacity='0'},{once:true});
-  (function loop(){requestAnimationFrame(loop);if(pat.autoRot)pat.group.rotation.y+=.004;pat.renderer.render(pat.scene,pat.camera)})();
-  window.addEventListener('resize',()=>{const W2=w.clientWidth,H2=Math.min(W2*.7,500);pat.camera.aspect=W2/H2;pat.camera.updateProjectionMatrix();pat.renderer.setSize(W2,H2)});
+  function step(){
+    t+=0.6;
+    sliceGroups.forEach(sg=>{
+      const op = Math.min(0.75, Math.max(0, (t-sg.i*3)/4));
+      sg.mesh.material.opacity = op;
+    });
+    const done = sliceGroups.every(sg=>sg.mesh.material.opacity>=0.7);
+    setStep(`<b>Tranches empilées :</b> on découpe le solide en <span class="fx">${N} tranches</span> fines. En additionnant leur volume, on obtient le volume total.`);
+    if(!done) animId = requestAnimationFrame(step);
+    else setStep(`<b>${N} tranches superposées.</b> Volume total ≈ <span class="fx">${CFG[shape].vol(P)} cm³</span>. C'est l'idée derrière <em>aire de base × hauteur</em>.`);
+  }
+  step();
 }
 
-function buildPatCtrls(){
-  const c=CFG[shape];
-  document.getElementById('patCtrls').innerHTML=c.ctrls.map(ct=>`<div class="ctrl"><label>${ct.l}<span class="ctrl-val" style="color:var(--violet)" id="pc-${ct.id}">${P[ct.id]} cm</span></label><input type="range" min="${ct.mn}" max="${ct.mx}" value="${P[ct.id]}" step="0.5" style="accent-color:var(--violet)" oninput="P['${ct.id}']=+this.value;document.getElementById('pc-${ct.id}').textContent=this.value+' cm';rebuildPat()"></div>`).join('');
+// — Overlay: NET (patron déplié)
+let netAnimTimers = [];
+let netDuration = 3000;
+let netMode = 'auto'; // 'auto' | 'manuel'
+let netAdvance = null;
+
+function stopNetAnim(){
+  netAnimTimers.forEach(t=>clearTimeout(t)); netAnimTimers = [];
+  netAdvance = null;
+  const b = document.getElementById('btnNetNext');
+  if(b){ b.classList.add('hide'); b.classList.remove('flash'); }
+  const bar = document.getElementById('netSpeedBar');
+  if(bar) bar.classList.remove('on');
 }
 
-/*
-  PATRON GEOMETRY ENGINE — XZ-plane approach
-  ─────────────────────────────────────────
-  ALL faces are quads/tris in the XZ plane (y=0).
-  Each face's hinge edge sits at the pivot Group's origin.
-  When angle=0 → face is flat on ground (patron).
-  When angle=foldAngle → face is rotated up to form 3D solid.
-  
-  ROTATION MATH (verified):
-  Pivot rotX by θ on a point at local (x, 0, z):
-    y' = -z·sin(θ)    z' = z·cos(θ)
-  So (x,0,z) with θ=-HP → y'=z, z'=0 → face stands up in +Y ✓
-  
-  Front face: pivot at z=+W/2, face flat at z>0 local.
-    foldAngle=-HP → local z maps to y → wall at z=W/2, going up in Y ✓
-  Back face: pivot at z=-W/2, face flat at z<0 local.
-    foldAngle=+HP → sin(HP)=1 → y'=-z·1=-z → for z<0: y>0 ✓, z'=0 ✓
-  Right face: pivot at x=+L/2, face flat at x>0 local.
-    pivotRotZ=+HP → x'=x·cos-y·sin=0, y'=x·sin+y·cos=x → stands up ✓
-  Left face: pivot at x=-L/2, face flat at x<0 local.
-    pivotRotZ=-HP → y'=x·sin(-HP)=-x → for x<0: y>0 ✓
-*/
-
-function colorMat(ci){
-  return new THREE.MeshPhongMaterial({color:new THREE.Color(FC[ci%8].hex),transparent:true,opacity:.55,side:THREE.DoubleSide});
+function playNetSequence(){
+  // Hinge-based unfold: t=0 (folded 3D) → t=1 (flat patron)
+  const pivots = overlayGroup.userData._pivots || [];
+  const morphs = overlayGroup.userData._morphs || [];
+  if(!pivots.length && !morphs.length) return;
+  const t0 = performance.now();
+  const dur = netDuration;
+  // Start at folded
+  applyPatronFold(0);
+  function step(){
+    const now = performance.now();
+    let p = Math.min(1, (now-t0)/dur);
+    // easeInOutCubic
+    const e = p<.5 ? 4*p*p*p : 1 - Math.pow(-2*p+2,3)/2;
+    applyPatronFold(e);
+    if(p<1) netAnimTimers.push(requestAnimationFrame(step));
+  }
+  netAnimTimers.push(requestAnimationFrame(step));
 }
-function makeQuadXZ(pts,ci){
-  // pts = [[x,z],...] 4 corners, y=0
-  const vs=new Float32Array([
+
+function applyPatronFold(t){
+  // t: 0 = folded (3D solid), 1 = fully unfolded (flat patron)
+  const pivots = overlayGroup.userData._pivots || [];
+  pivots.forEach(h=>{
+    if(!h.pivot) return;
+    // foldAngle at t=0, 0 at t=1
+    h.pivot.rotation[h.axis] = h.foldAngle * (1-t);
+  });
+  const morphs = overlayGroup.userData._morphs || [];
+  morphs.forEach(m=>{
+    if(m.kind === 'vertex'){
+      const p3 = m.pos3D, p2 = m.pos2D;
+      const arr = m.mesh.geometry.attributes.position.array;
+      for(let i=0;i<arr.length;i++) arr[i] = p3[i]*(1-t) + p2[i]*t;
+      m.mesh.geometry.attributes.position.needsUpdate = true;
+      m.mesh.geometry.computeVertexNormals();
+    } else if(m.kind === 'transform'){
+      const a = m.pos3D, b = m.pos2D;
+      m.mesh.position.set(a.x*(1-t)+b.x*t, a.y*(1-t)+b.y*t, a.z*(1-t)+b.z*t);
+      if(a.rx !== undefined) m.mesh.rotation.x = a.rx*(1-t)+b.rx*t;
+    }
+  });
+}
+
+function overlayNetAnimated(){
+  const bar = document.getElementById('netSpeedBar');
+  if(bar) bar.classList.add('on');
+  playNetSequence();
+}
+
+function _patMat(colHex){
+  return new THREE.MeshPhongMaterial({color:colHex, transparent:true, opacity:.7, side:THREE.DoubleSide});
+}
+function _patQuad(pts, colHex){
+  // pts: [[x,z],[x,z],[x,z],[x,z]] (4 corners in XZ, y=0)
+  const vs = new Float32Array([
     pts[0][0],0,pts[0][1], pts[1][0],0,pts[1][1], pts[2][0],0,pts[2][1],
     pts[0][0],0,pts[0][1], pts[2][0],0,pts[2][1], pts[3][0],0,pts[3][1]
   ]);
-  const geo=new THREE.BufferGeometry();
-  geo.setAttribute('position',new THREE.BufferAttribute(vs,3));
-  geo.computeVertexNormals();
-  const mesh=new THREE.Mesh(geo,colorMat(ci));
-  mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo,1),new THREE.LineBasicMaterial({color:0x222222})));
-  return mesh;
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(vs,3));
+  g.computeVertexNormals();
+  const m = new THREE.Mesh(g, _patMat(colHex));
+  m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({color:0x2F3E25})));
+  return m;
 }
-function makeTriXZ(pts,ci){
-  const vs=new Float32Array([pts[0][0],0,pts[0][1],pts[1][0],0,pts[1][1],pts[2][0],0,pts[2][1]]);
-  const geo=new THREE.BufferGeometry();
-  geo.setAttribute('position',new THREE.BufferAttribute(vs,3));
-  geo.computeVertexNormals();
-  const mesh=new THREE.Mesh(geo,colorMat(ci));
-  mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo,1),new THREE.LineBasicMaterial({color:0x222222})));
-  return mesh;
+function _patTri(pts, colHex){
+  const vs = new Float32Array([pts[0][0],0,pts[0][1], pts[1][0],0,pts[1][1], pts[2][0],0,pts[2][1]]);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(vs,3));
+  g.computeVertexNormals();
+  const m = new THREE.Mesh(g, _patMat(colHex));
+  m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({color:0x2F3E25})));
+  return m;
 }
-function makeDiskXZ(r,ci,N){
-  const geo=new THREE.CircleGeometry(r,N||48);
-  const mesh=new THREE.Mesh(geo,colorMat(ci));
-  mesh.rotation.x=-HP;
-  mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo,1),new THREE.LineBasicMaterial({color:0x222222})));
-  return mesh;
+function _patDisk(r, colHex){
+  const g = new THREE.CircleGeometry(r, 48);
+  const m = new THREE.Mesh(g, _patMat(colHex));
+  m.rotation.x = -PI/2;
+  m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({color:0x2F3E25})));
+  return m;
 }
-
-function rebuildPat(){
-  while(pat.group.children.length) pat.group.remove(pat.group.children[0]);
-  hinges=[];unfoldT=0;updatePct(0);
-  document.getElementById('btnU').classList.remove('off');
-  document.getElementById('btnF').classList.add('off');
-  switch(shape){
-    case'pave':patPave();break;case'cube':patCube();break;
-    case'cylindre':patCylindre();break;case'cone':patCone();break;
-    case'pyramide':patPyramide();break;case'prisme':patPrisme();break;
-  }
-  applyFold(0);
-  const d=Math.max(...Object.values(P))*1.6;
-  pat.camera.position.set(d*1.1,d*.9,d*1.4);pat.camera.lookAt(0,d*.15,0);
-  pat.group.rotation.set(0,0,0);pat.autoRot=false;
-  buildFaceLeg();
-  document.getElementById('patStep').innerHTML=`<strong>📦</strong> Solide en 3D. Appuie sur <b>Déplier</b>.`;
+function _addPivotFace(localPts, pos, axis, foldAngle, isTri, colHex){
+  const pv = new THREE.Group();
+  pv.position.set(pos.x, pos.y||0, pos.z);
+  overlayGroup.add(pv);
+  pv.add(isTri ? _patTri(localPts, colHex) : _patQuad(localPts, colHex));
+  overlayGroup.userData._pivots.push({pivot:pv, axis, foldAngle});
+  return pv;
 }
 
-/* ═══ PAVÉ (L along X, W=ℓ along Z, H=h = height) ═══ */
-function patPave(){
-  const L=P.L,W=P.l,H=P.h;
-  // Base on y=0
-  pat.group.add(makeQuadXZ([[-L/2,-W/2],[L/2,-W/2],[L/2,W/2],[-L/2,W/2]],0));
-  hinges.push({pivot:null,label:'Base',area:rn(L*W),colorHex:FC[0].hex});
-  // Front: hinge z=+W/2, flat extends in +z
-  addXZWall([[-L/2,0],[L/2,0],[L/2,H],[-L/2,H]], {x:0,y:0,z:W/2},'x',-HP,'Avant',rn(L*H),2);
-  // Back: hinge z=-W/2, flat extends in -z
-  addXZWall([[-L/2,0],[L/2,0],[L/2,-H],[-L/2,-H]], {x:0,y:0,z:-W/2},'x',HP,'Arrière',rn(L*H),3);
-  // Right: hinge x=+L/2, flat extends in +x
-  addXZWall([[0,-W/2],[H,-W/2],[H,W/2],[0,W/2]], {x:L/2,y:0,z:0},'z',HP,'Droite',rn(W*H),5);
-  // Left: hinge x=-L/2, flat extends in -x
-  addXZWall([[0,-W/2],[-H,-W/2],[-H,W/2],[0,W/2]], {x:-L/2,y:0,z:0},'z',-HP,'Gauche',rn(W*H),4);
-  // Top: secondary hinge on front face's far edge (local z=H)
-  const fp=hinges[1].pivot;
-  const tp=new THREE.Group();tp.position.set(0,0,H);fp.add(tp);
-  tp.add(makeQuadXZ([[-L/2,0],[L/2,0],[L/2,W],[-L/2,W]],1));
-  hinges.push({pivot:tp,axis:'x',foldAngle:-HP,label:'Dessus',area:rn(L*W),colorHex:FC[1].hex});
-}
+function overlayNet(){
+  clearOverlay();
+  activeOverlay = 'net';
+  if(solidMesh){solidMesh.visible=false}
+  if(edgesObj){edgesObj.visible=false}
+  overlayGroup.userData._pivots = [];
+  overlayGroup.userData._morphs = [];
 
-function addXZWall(localPts,pos,axis,foldAngle,label,area,ci){
-  const pv=new THREE.Group();
-  pv.position.set(pos.x,pos.y,pos.z);
-  pat.group.add(pv);
-  pv.add(makeQuadXZ(localPts,ci));
-  hinges.push({pivot:pv,axis,foldAngle,label,area,colorHex:FC[ci].hex});
-}
-
-/* ═══ CUBE ═══ */
-function patCube(){
-  const c=P.c;
-  pat.group.add(makeQuadXZ([[-c/2,-c/2],[c/2,-c/2],[c/2,c/2],[-c/2,c/2]],0));
-  hinges.push({pivot:null,label:'Base',area:c*c,colorHex:FC[0].hex});
-  addXZWall([[-c/2,0],[c/2,0],[c/2,c],[-c/2,c]],{x:0,y:0,z:c/2},'x',-HP,'Avant',c*c,2);
-  addXZWall([[-c/2,0],[c/2,0],[c/2,-c],[-c/2,-c]],{x:0,y:0,z:-c/2},'x',HP,'Arrière',c*c,3);
-  addXZWall([[0,-c/2],[c,-c/2],[c,c/2],[0,c/2]],{x:c/2,y:0,z:0},'z',HP,'Droite',c*c,5);
-  addXZWall([[0,-c/2],[-c,-c/2],[-c,c/2],[0,c/2]],{x:-c/2,y:0,z:0},'z',-HP,'Gauche',c*c,4);
-  const fp=hinges[1].pivot;
-  const tp=new THREE.Group();tp.position.set(0,0,c);fp.add(tp);
-  tp.add(makeQuadXZ([[-c/2,0],[c/2,0],[c/2,c],[-c/2,c]],1));
-  hinges.push({pivot:tp,axis:'x',foldAngle:-HP,label:'Dessus',area:c*c,colorHex:FC[1].hex});
-}
-
-/* ═══ CYLINDRE ═══
-   Vertex morphing approach: one mesh for lateral surface, vertices interpolated
-   between 3D cylinder and 2D flat rectangle. No pivot groups needed.
-   Disks are separate meshes that move/rotate into position.
-*/
-function patCylindre(){
-  const r=P.r,h=P.h,N=48;
-  const circ=2*PI*r; // circumference = flat rectangle width
-
-  // Bottom disk — static at y=0
-  const disk=makeDiskXZ(r,0,N);
-  pat.group.add(disk);
-  hinges.push({pivot:null,label:'Disque bas',area:rnD(PD*r*r),colorHex:FC[0].hex});
-
-  // Lateral surface — single mesh with N+1 columns × 2 rows
-  const pos3D=[],pos2D=[],indices=[];
-  const circDisp=rnD(2*PD*r); // display circumference with π=3
-  for(let i=0;i<=N;i++){
-    const a=i*2*PI/N;
-    const cx=r*Math.cos(a), cz=r*Math.sin(a);
-    const fx=-circ/2+i*circ/N; // flat x position
-    // Bottom vertex: 3D=(cx,0,cz), 2D=(fx,0,r+0.3) [just below disk in flat]
-    pos3D.push(cx,0,cz);
-    pos2D.push(fx,0,r+0.3);
-    // Top vertex: 3D=(cx,h,cz), 2D=(fx,0,r+0.3+h)
-    pos3D.push(cx,h,cz);
-    pos2D.push(fx,0,r+0.3+h);
-  }
-  for(let i=0;i<N;i++){
-    const bl=i*2, br=(i+1)*2, tl=i*2+1, tr=(i+1)*2+1;
-    indices.push(bl,br,tl, br,tr,tl);
-  }
-  const latGeo=new THREE.BufferGeometry();
-  latGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(pos3D),3));
-  latGeo.setIndex(indices);
-  latGeo.computeVertexNormals();
-  const latMesh=new THREE.Mesh(latGeo,colorMat(2));
-  // Store flat positions for morphing
-  latMesh.userData={pos3D:new Float32Array(pos3D),pos2D:new Float32Array(pos2D)};
-  // Edge wireframe
-  const wGeo=new THREE.EdgesGeometry(latGeo,15);
-  latMesh.add(new THREE.LineSegments(wGeo,new THREE.LineBasicMaterial({color:0x222222})));
-  pat.group.add(latMesh);
-  hinges.push({type:'morph',mesh:latMesh,label:'Surface latérale',area:rnD(circDisp*h),colorHex:FC[2].hex});
-
-  // Top disk — in 3D: at y=h. In 2D: offset next to rectangle
-  const topDisk=makeDiskXZ(r,1,N);
-  pat.group.add(topDisk);
-  // Store 3D and 2D transforms
-  topDisk.userData={
-    pos3D:{x:0,y:h,z:0,rx:-HP},
-    pos2D:{x:0,y:0,z:r+0.3+h+r+0.3,rx:-HP}
+  const C = {
+    base: 0x6B8E5A, top: 0x4A6B8A, front: 0x4A8BB0,
+    back: 0xB8893A, left: 0x8A4A6B, right: 0xC65A3A, lat: 0xB8893A
   };
-  hinges.push({type:'disk_morph',mesh:topDisk,label:'Disque haut',area:rnD(PD*r*r),colorHex:FC[1].hex});
-}
 
-/* ═══ CÔNE ═══
-   Same vertex-morphing approach. Lateral surface morphs between
-   cone (vertices on cone surface) and flat sector.
-*/
-function patCone(){
-  const r=P.r,h=P.h,N=48;
-  const g=Math.sqrt(r*r+h*h); // slant height
-  const sectorAngle=2*PI*r/g; // angle of the flat sector
-
-  // Bottom disk
-  const disk=makeDiskXZ(r,0,N);
-  pat.group.add(disk);
-  hinges.push({pivot:null,label:'Disque base',area:rnD(PD*r*r),colorHex:FC[0].hex});
-
-  // Lateral surface
-  const pos3D=[],pos2D=[],indices=[];
-  // Apex: 3D=(0,h,0), 2D=(0,0,-r-0.5) [center of sector above disk]
-  // We build rows from base (row 0) to apex (row nRows)
-  const nRows=16;
-  for(let j=0;j<=nRows;j++){
-    const t=j/nRows; // 0=base, 1=apex
-    const rowR=r*(1-t); // radius at this height on cone
-    const rowH=h*t;     // height on cone
-    const rowG=g*(1-t); // distance from apex on slant (for flat sector)
-    for(let i=0;i<=N;i++){
-      const a=i*2*PI/N;
-      // 3D: circle of radius rowR at height rowH
-      pos3D.push(rowR*Math.cos(a), rowH, rowR*Math.sin(a));
-      // 2D: sector centered at (0,0,-r-0.5-g), radius rowG from center
-      const flatA=-sectorAngle/2 + i*sectorAngle/N;
-      const scx=rowG*Math.sin(flatA);
-      const scz=-r-0.5-g+rowG*Math.cos(flatA);
-      pos2D.push(scx,0,scz);
-    }
-  }
-  for(let j=0;j<nRows;j++){
-    for(let i=0;i<N;i++){
-      const c=j*(N+1)+i, r1=c+1, u=c+(N+1), ur=u+1;
-      indices.push(c,r1,u, r1,ur,u);
-    }
-  }
-  const latGeo=new THREE.BufferGeometry();
-  latGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(pos3D),3));
-  latGeo.setIndex(indices);
-  latGeo.computeVertexNormals();
-  const latMesh=new THREE.Mesh(latGeo,colorMat(3));
-  latMesh.userData={pos3D:new Float32Array(pos3D),pos2D:new Float32Array(pos2D)};
-  latMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(latGeo,20),new THREE.LineBasicMaterial({color:0x222222})));
-  pat.group.add(latMesh);
-  hinges.push({type:'morph',mesh:latMesh,label:'Surface latérale',area:rnD(PD*r*g),colorHex:FC[3].hex});
-}
-
-/* Override applyFold to handle morph types */
-const _origApplyFold=function(t){
-  hinges.forEach(h=>{
-    if(!h.pivot) return;
-    if(h.type==='morph'||h.type==='disk_morph') return;
-    const a=h.foldAngle*(1-t);
-    h.pivot.rotation[h.axis]=a;
-  });
-};
-function applyFold(t){
-  hinges.forEach(h=>{
-    if(h.type==='morph'){
-      // Interpolate vertex positions
-      const m=h.mesh, p3=m.userData.pos3D, p2=m.userData.pos2D;
-      const pos=m.geometry.attributes.position.array;
-      for(let i=0;i<pos.length;i++) pos[i]=p3[i]*(1-t)+p2[i]*t;
-      m.geometry.attributes.position.needsUpdate=true;
-      m.geometry.computeVertexNormals();
-      // Update wireframe
-      if(m.children.length){m.remove(m.children[0]);}
-      m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry,15),new THREE.LineBasicMaterial({color:0x222222})));
-      return;
-    }
-    if(h.type==='disk_morph'){
-      const m=h.mesh, d3=m.userData.pos3D, d2=m.userData.pos2D;
-      m.position.set(
-        d3.x*(1-t)+d2.x*t,
-        d3.y*(1-t)+d2.y*t,
-        d3.z*(1-t)+d2.z*t
-      );
-      m.rotation.x=d3.rx*(1-t)+d2.rx*t;
-      return;
-    }
-    if(!h.pivot) return;
-    const a=h.foldAngle*(1-t);
-    h.pivot.rotation[h.axis]=a;
-  });
-}
-
-/* ═══ PYRAMIDE ═══
-   No rotY on pivots! Each face gets its own fold axis and triangle layout.
-   
-   Front: pivot(0,0,a/2), tri extends in +z, fold around X, angle=atan2(-h,-a/2)
-   Back:  pivot(0,0,-a/2), tri extends in -z, fold around X, angle=atan2(h,-a/2)
-   Right: pivot(a/2,0,0), tri extends in +x, fold around Z, angle=atan2(h,-a/2)
-   Left:  pivot(-a/2,0,0), tri extends in -x, fold around Z, angle=atan2(-h,-a/2)
-   
-   All apexes converge to world (0, h, 0). Verified numerically.
-*/
-function patPyramide(){
-  const a=P.a,h=P.h,ap=Math.sqrt(h*h+(a/2)*(a/2));
-  pat.group.add(makeQuadXZ([[-a/2,-a/2],[a/2,-a/2],[a/2,a/2],[-a/2,a/2]],0));
-  hinges.push({pivot:null,label:'Base carrée',area:a*a,colorHex:FC[0].hex});
-
-  // Front: hinge z=+a/2, triangle in XZ extending in +z
-  {const pv=new THREE.Group();pv.position.set(0,0,a/2);pat.group.add(pv);
-   pv.add(makeTriXZ([[-a/2,0],[a/2,0],[0,ap]],2));
-   hinges.push({pivot:pv,axis:'x',foldAngle:Math.atan2(-h,-a/2),label:'Avant',area:rn(a*ap/2),colorHex:FC[2].hex});}
-
-  // Back: hinge z=-a/2, triangle in XZ extending in -z
-  {const pv=new THREE.Group();pv.position.set(0,0,-a/2);pat.group.add(pv);
-   pv.add(makeTriXZ([[-a/2,0],[a/2,0],[0,-ap]],3));
-   hinges.push({pivot:pv,axis:'x',foldAngle:Math.atan2(h,-a/2),label:'Arrière',area:rn(a*ap/2),colorHex:FC[3].hex});}
-
-  // Right: hinge x=+a/2, triangle in XZ extending in +x
-  {const pv=new THREE.Group();pv.position.set(a/2,0,0);pat.group.add(pv);
-   pv.add(makeTriXZ([[0,-a/2],[0,a/2],[ap,0]],5));
-   hinges.push({pivot:pv,axis:'z',foldAngle:Math.atan2(h,-a/2),label:'Droite',area:rn(a*ap/2),colorHex:FC[5].hex});}
-
-  // Left: hinge x=-a/2, triangle in XZ extending in -x
-  {const pv=new THREE.Group();pv.position.set(-a/2,0,0);pat.group.add(pv);
-   pv.add(makeTriXZ([[0,-a/2],[0,a/2],[-ap,0]],4));
-   hinges.push({pivot:pv,axis:'z',foldAngle:Math.atan2(-h,-a/2),label:'Gauche',area:rn(a*ap/2),colorHex:FC[4].hex});}
-}
-
-/* ═══ PRISME TRIANGULAIRE ═══
-   Cross-section: isoceles triangle base=b, height=ht
-   Depth along Z = h
-   
-   Base rect: b×h on XZ plane (bottom face of the prism)
-   Left lateral: hyp×h, hinges at x=-b/2
-   Right lateral: hyp×h, hinges at x=+b/2
-   Front triangle: hinges at z=+h/2
-   Back triangle: hinges at z=-h/2
-   
-   Geometry check for left face:
-   - Pivot at (-b/2, 0, 0), face extends in LOCAL -x from 0 to -hyp
-   - Rotation around Z by angle θ: x'=x·cosθ - y·sinθ, y'=x·sinθ + y·cosθ
-   - For point (x=-hyp, y=0): x'=-hyp·cosθ, y'=-hyp·sinθ
-   - We want this point to end up at WORLD (-b/2 + (-b/2), ht, z) = (-b, ht, z)
-   - In LOCAL that's x'=-b/2, y'=ht
-   - -hyp·cosθ = -b/2 → cosθ = b/(2·hyp) ✓
-   - -hyp·sinθ = ht → sinθ = -ht/hyp → θ = -atan2(ht, b/2)
-   
-   For right face:
-   - Pivot at (b/2, 0, 0), face extends in LOCAL +x from 0 to +hyp
-   - Point (x=hyp, y=0): x'=hyp·cosθ, y'=hyp·sinθ
-   - Want LOCAL x'=b/2, y'=ht
-   - hyp·cosθ = b/2 → cosθ = b/(2·hyp) ✓
-   - hyp·sinθ = ht → sinθ = ht/hyp → θ = +atan2(ht, b/2)
-*/
-function patPrisme(){
-  const b=P.b,ht=P.ht,h=P.h,hyp=Math.sqrt((b/2)*(b/2)+ht*ht);
-  // Base rect (b×h on XZ)
-  pat.group.add(makeQuadXZ([[-b/2,-h/2],[b/2,-h/2],[b/2,h/2],[-b/2,h/2]],0));
-  hinges.push({pivot:null,label:'Dessous',area:rn(b*h),colorHex:FC[0].hex});
-  const ang=Math.atan2(ht,b/2);
-  // Left: hinge x=-b/2, extends in -x → foldAngle = -ang
-  addXZWall([[0,-h/2],[-hyp,-h/2],[-hyp,h/2],[0,h/2]],{x:-b/2,y:0,z:0},'z',-ang,'Lat. gauche',rn(hyp*h),4);
-  // Right: hinge x=+b/2, extends in +x → foldAngle = +ang
-  addXZWall([[0,-h/2],[hyp,-h/2],[hyp,h/2],[0,h/2]],{x:b/2,y:0,z:0},'z',ang,'Lat. droite',rn(hyp*h),5);
-  // Front tri: hinge z=+h/2
-  {const pv=new THREE.Group();pv.position.set(0,0,h/2);pat.group.add(pv);
-   pv.add(makeTriXZ([[-b/2,0],[b/2,0],[0,ht]],2));
-   hinges.push({pivot:pv,axis:'x',foldAngle:-HP,label:'Tri. avant',area:rn(b*ht/2),colorHex:FC[2].hex});}
-  // Back tri: hinge z=-h/2
-  {const pv=new THREE.Group();pv.position.set(0,0,-h/2);pv.rotation.y=PI;pat.group.add(pv);
-   pv.add(makeTriXZ([[-b/2,0],[b/2,0],[0,ht]],3));
-   hinges.push({pivot:pv,axis:'x',foldAngle:-HP,label:'Tri. arrière',area:rn(b*ht/2),colorHex:FC[3].hex});}
-}
-
-/* ═══ UNFOLD / FOLD ANIMATIONS ═══ */
-function doUnfold(){
-  if(unfoldAF) cancelAnimationFrame(unfoldAF);
-  document.getElementById('btnU').classList.add('off');
-  document.getElementById('btnF').classList.add('off');
-  const t0=unfoldT, start=performance.now(), dur=getAnimDur();
-  function frame(now){
-    let p=Math.min((now-start)/dur,1);
-    p=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
-    unfoldT=t0+(1-t0)*p;
-    applyFold(unfoldT); updatePct(unfoldT);
-    if(p<1) unfoldAF=requestAnimationFrame(frame);
-    else{unfoldT=1;applyFold(1);updatePct(1);
-      document.getElementById('btnF').classList.remove('off');
-      document.getElementById('btnU').classList.add('off');
-      document.getElementById('patStep').innerHTML=`<strong>✂️</strong> Patron déplié ! Appuie sur <b>Replier</b>.`;
-      setTimeout(()=>patCam('dessus'),400);
-    }
-  }
-  document.getElementById('patStep').innerHTML=`<strong>✂️</strong> Dépliage en cours…`;
-  unfoldAF=requestAnimationFrame(frame);
-}
-
-function doFold(){
-  if(unfoldAF) cancelAnimationFrame(unfoldAF);
-  document.getElementById('btnU').classList.add('off');
-  document.getElementById('btnF').classList.add('off');
-  patCam('3d');
-  const t0=unfoldT, start=performance.now(), dur=getAnimDur();
-  function frame(now){
-    let p=Math.min((now-start)/dur,1);
-    p=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
-    unfoldT=t0*(1-p);
-    applyFold(unfoldT); updatePct(unfoldT);
-    if(p<1) unfoldAF=requestAnimationFrame(frame);
-    else{unfoldT=0;applyFold(0);updatePct(0);
-      document.getElementById('btnU').classList.remove('off');
-      document.getElementById('btnF').classList.add('off');
-      document.getElementById('patStep').innerHTML=`<strong>📦</strong> Solide reconstitué ! Appuie sur <b>Déplier</b>.`;
-    }
-  }
-  document.getElementById('patStep').innerHTML=`<strong>📦</strong> Repliage en cours…`;
-  unfoldAF=requestAnimationFrame(frame);
-}
-
-function resetPat(){
-  if(unfoldAF) cancelAnimationFrame(unfoldAF);
-  rebuildPat();
-}
-
-function updatePct(t){
-  const p=Math.round(t*100);
-  document.getElementById('pctLabel').textContent=p+'%';
-  document.getElementById('pctBar').style.width=p+'%';
-}
-
-function patCam(v){
-  pat.autoRot=false;
-  const d=Math.max(...Object.values(P))*2;
-  pat.group.rotation.set(0,0,0);
-  if(v==='3d')pat.camera.position.set(d*1.1,d*.9,d*1.3);
-  else if(v==='dessus')pat.camera.position.set(0,d*2.5,.01);
-  else if(v==='face')pat.camera.position.set(0,d*.2,d*2);
-  else{pat.autoRot=true;pat.camera.position.set(d*1.1,d*.9,d*1.3)}
-  pat.camera.lookAt(0,0,0);
-}
-
-function buildFaceLeg(){
-  const shown=hinges.filter(h=>h.label);
-  document.getElementById('faceLeg').innerHTML=shown.map(h=>
-    `<div class="face-item"><div class="face-swatch" style="background:${h.colorHex}40;border-color:${h.colorHex}"></div><span class="face-name">${h.label}</span>${h.area?`<span class="face-area">${h.area} cm²</span>`:''}</div>`
-  ).join('');
-  // Detailed info panel
-  const info=document.getElementById('patInfo');
-  if(!info) return;
-  let html='';
-  const c=CFG[shape], totalS=c.surf(P);
-  // Per-shape dimension details
   switch(shape){
-    case'pave':{
-      const L=P.L,l=P.l,h=P.h;
-      html=`<table class="pat-info-table">
-        <tr><td>Longueur L</td><td>${L} cm</td></tr>
-        <tr><td>Largeur ℓ</td><td>${l} cm</td></tr>
-        <tr><td>Hauteur h</td><td>${h} cm</td></tr>
-        <tr><td>Face L×ℓ (×2)</td><td>${rn(L*l)} cm²</td></tr>
-        <tr><td>Face L×h (×2)</td><td>${rn(L*h)} cm²</td></tr>
-        <tr><td>Face ℓ×h (×2)</td><td>${rn(l*h)} cm²</td></tr>
-      </table>`;break}
-    case'cube':{
-      const c2=P.c;
-      html=`<table class="pat-info-table">
-        <tr><td>Côté c</td><td>${c2} cm</td></tr>
-        <tr><td>Aire 1 face</td><td>${rn(c2*c2)} cm²</td></tr>
-        <tr><td>Nombre de faces</td><td>6</td></tr>
-      </table>`;break}
-    case'cylindre':{
-      const r2=P.r,h2=P.h,circ=rnD(2*PD*r2);
-      html=`<table class="pat-info-table">
-        <tr><td>Rayon r</td><td>${r2} cm</td></tr>
-        <tr><td>Hauteur h</td><td>${h2} cm</td></tr>
-        <tr><td>π (approx.)</td><td><b>3</b></td></tr>
-        <tr><td>Périmètre base</td><td>2×3×${r2} = ${circ} cm</td></tr>
-        <tr><td>Rectangle latéral</td><td>${circ} × ${h2} cm</td></tr>
-        <tr><td>Aire latérale</td><td>${rnD(circ*h2)} cm²</td></tr>
-        <tr><td>Aire 1 disque</td><td>3×${r2}² = ${rnD(PD*r2*r2)} cm²</td></tr>
-      </table>`;break}
-    case'cone':{
-      const r2=P.r,h2=P.h,g=rn(Math.sqrt(r2*r2+h2*h2));
-      html=`<table class="pat-info-table">
-        <tr><td>Rayon r</td><td>${r2} cm</td></tr>
-        <tr><td>Hauteur h</td><td>${h2} cm</td></tr>
-        <tr><td>π (approx.)</td><td><b>3</b></td></tr>
-        <tr><td>Génératrice g</td><td>√(${r2}²+${h2}²) = ${g} cm</td></tr>
-        <tr><td>Secteur (rayon)</td><td>${g} cm</td></tr>
-        <tr><td>Aire latérale</td><td>3×${r2}×${g} = ${rnD(PD*r2*g)} cm²</td></tr>
-        <tr><td>Aire disque</td><td>3×${r2}² = ${rnD(PD*r2*r2)} cm²</td></tr>
-      </table>`;break}
-    case'pyramide':{
-      const a=P.a,h2=P.h,ap=rn(Math.sqrt(h2*h2+(a/2)*(a/2)));
-      html=`<table class="pat-info-table">
-        <tr><td>Côté base a</td><td>${a} cm</td></tr>
-        <tr><td>Hauteur h</td><td>${h2} cm</td></tr>
-        <tr><td>Apothème face</td><td>${ap} cm</td></tr>
-        <tr><td>Aire base (a²)</td><td>${rn(a*a)} cm²</td></tr>
-        <tr><td>Aire 1 triangle</td><td>${rn(a*ap/2)} cm²</td></tr>
-        <tr><td>4 triangles</td><td>${rn(2*a*ap)} cm²</td></tr>
-      </table>`;break}
-    case'prisme':{
-      const b=P.b,ht=P.ht,h2=P.h,hyp=rn(Math.sqrt((b/2)*(b/2)+ht*ht));
-      html=`<table class="pat-info-table">
-        <tr><td>Base triangle b</td><td>${b} cm</td></tr>
-        <tr><td>Hauteur triangle</td><td>${ht} cm</td></tr>
-        <tr><td>Profondeur p</td><td>${h2} cm</td></tr>
-        <tr><td>Côté incliné</td><td>${hyp} cm</td></tr>
-        <tr><td>Aire 1 triangle</td><td>${rn(b*ht/2)} cm²</td></tr>
-        <tr><td>Rectangle base</td><td>${b}×${h2} = ${rn(b*h2)} cm²</td></tr>
-        <tr><td>Rectangles lat.</td><td>${hyp}×${h2} (×2)</td></tr>
-      </table>`;break}
+    case 'pave':
+    case 'cube':{
+      const L = shape==='cube'?P.c:P.L;
+      const W = shape==='cube'?P.c:P.l;
+      const H = shape==='cube'?P.c:P.h;
+      // Base on y=0
+      overlayGroup.add(_patQuad([[-L/2,-W/2],[L/2,-W/2],[L/2,W/2],[-L/2,W/2]], C.base));
+      // Front: hinge z=+W/2, extends in +z
+      _addPivotFace([[-L/2,0],[L/2,0],[L/2,H],[-L/2,H]], {x:0,z:W/2},'x',-PI/2,false,C.front);
+      const frontPivot = overlayGroup.userData._pivots[overlayGroup.userData._pivots.length-1].pivot;
+      // Back: hinge z=-W/2, extends in -z
+      _addPivotFace([[-L/2,0],[L/2,0],[L/2,-H],[-L/2,-H]], {x:0,z:-W/2},'x',PI/2,false,C.back);
+      // Right: hinge x=+L/2, extends in +x
+      _addPivotFace([[0,-W/2],[H,-W/2],[H,W/2],[0,W/2]], {x:L/2,z:0},'z',PI/2,false,C.right);
+      // Left: hinge x=-L/2, extends in -x
+      _addPivotFace([[0,-W/2],[-H,-W/2],[-H,W/2],[0,W/2]], {x:-L/2,z:0},'z',-PI/2,false,C.left);
+      // Top: nested on front pivot, secondary hinge at local z=H
+      const tp = new THREE.Group(); tp.position.set(0,0,H); frontPivot.add(tp);
+      tp.add(_patQuad([[-L/2,0],[L/2,0],[L/2,W],[-L/2,W]], C.top));
+      overlayGroup.userData._pivots.push({pivot:tp, axis:'x', foldAngle:-PI/2});
+      setStep(`<b>Patron ${shape==='cube'?'du cube':'du pavé'} :</b> 6 faces reliées par leurs arêtes. Appuie sur <b>Patron déplié</b> pour voir le dépliage.`);
+      break;
+    }
+    case 'cylindre':{
+      const r = P.r, h = P.h, N = 48;
+      const circ = 2*PI*r;
+      // Bottom disk (static)
+      overlayGroup.add(_patDisk(r, C.base));
+      // Lateral morph mesh
+      const pos3D=[], pos2D=[], idx=[];
+      for(let i=0;i<=N;i++){
+        const a = i*2*PI/N;
+        const cx = r*Math.cos(a), cz = r*Math.sin(a);
+        const fx = -circ/2 + i*circ/N;
+        pos3D.push(cx,0,cz); pos2D.push(fx,0,r+0.4);
+        pos3D.push(cx,h,cz); pos2D.push(fx,0,r+0.4+h);
+      }
+      for(let i=0;i<N;i++){
+        const bl=i*2, br=(i+1)*2, tl=i*2+1, tr=(i+1)*2+1;
+        idx.push(bl,br,tl, br,tr,tl);
+      }
+      const lg = new THREE.BufferGeometry();
+      lg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos3D),3));
+      lg.setIndex(idx); lg.computeVertexNormals();
+      const lm = new THREE.Mesh(lg, _patMat(C.lat));
+      overlayGroup.add(lm);
+      overlayGroup.userData._morphs.push({kind:'vertex', mesh:lm, pos3D:new Float32Array(pos3D), pos2D:new Float32Array(pos2D)});
+      // Top disk morph
+      const td = _patDisk(r, C.top);
+      overlayGroup.add(td);
+      overlayGroup.userData._morphs.push({kind:'transform', mesh:td,
+        pos3D:{x:0,y:h,z:0,rx:-PI/2},
+        pos2D:{x:0,y:0,z:r+0.4+h+r+0.4,rx:-PI/2}});
+      setStep(`<b>Patron du cylindre :</b> un rectangle (la surface qui s'enroule) et deux disques (les bases).`);
+      break;
+    }
+    case 'cone':{
+      const r = P.r, h = P.h, N = 48, nRows = 16;
+      const g = Math.sqrt(r*r+h*h);
+      const sa = 2*PI*r/g;
+      overlayGroup.add(_patDisk(r, C.base));
+      const pos3D=[], pos2D=[], idx=[];
+      for(let j=0;j<=nRows;j++){
+        const t = j/nRows;
+        const rR = r*(1-t), rH = h*t, rG = g*(1-t);
+        for(let i=0;i<=N;i++){
+          const a = i*2*PI/N;
+          pos3D.push(rR*Math.cos(a), rH, rR*Math.sin(a));
+          const fA = -sa/2 + i*sa/N;
+          const scx = rG*Math.sin(fA);
+          const scz = -r-0.6-g + rG*Math.cos(fA);
+          pos2D.push(scx, 0, scz);
+        }
+      }
+      for(let j=0;j<nRows;j++){
+        for(let i=0;i<N;i++){
+          const c = j*(N+1)+i, r1=c+1, u=c+(N+1), ur=u+1;
+          idx.push(c,r1,u, r1,ur,u);
+        }
+      }
+      const lg = new THREE.BufferGeometry();
+      lg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos3D),3));
+      lg.setIndex(idx); lg.computeVertexNormals();
+      const lm = new THREE.Mesh(lg, _patMat(C.lat));
+      overlayGroup.add(lm);
+      overlayGroup.userData._morphs.push({kind:'vertex', mesh:lm, pos3D:new Float32Array(pos3D), pos2D:new Float32Array(pos2D)});
+      setStep(`<b>Patron du cône :</b> un disque (la base) et un secteur circulaire (la surface qui monte vers le sommet).`);
+      break;
+    }
+    case 'sphere':{
+      setStep(`<b>La sphère n'a pas de patron plat !</b> On ne peut pas l'aplatir sans la déformer. Essaie d'éplucher une orange d'un seul morceau…`);
+      // Decorative strips — no hinge animation
+      for(let i=0;i<6;i++){
+        const w = P.r*0.3, h = P.r*PI;
+        const s = new THREE.Shape();
+        s.moveTo(-w/2, 0);
+        s.quadraticCurveTo(-w, h/2, -w/2, h);
+        s.lineTo(w/2, h);
+        s.quadraticCurveTo(w, h/2, w/2, 0);
+        s.lineTo(-w/2, 0);
+        const g = new THREE.ShapeGeometry(s);
+        const m = new THREE.Mesh(g, _patMat(C.front));
+        m.rotation.x = -PI/2;
+        m.position.set((i-2.5)*(w+0.2), 0.01, 0);
+        overlayGroup.add(m);
+      }
+      return;
+    }
+    case 'pyramide':{
+      const a = P.a, hh = P.h;
+      const ap = Math.sqrt(hh*hh + (a/2)*(a/2));
+      overlayGroup.add(_patQuad([[-a/2,-a/2],[a/2,-a/2],[a/2,a/2],[-a/2,a/2]], C.base));
+      // Front: hinge z=+a/2, tri extends in +z
+      _addPivotFace([[-a/2,0],[a/2,0],[0,ap]], {x:0,z:a/2},'x',Math.atan2(-hh,-a/2),true,C.front);
+      // Back: hinge z=-a/2, tri extends in -z
+      _addPivotFace([[-a/2,0],[a/2,0],[0,-ap]], {x:0,z:-a/2},'x',Math.atan2(hh,-a/2),true,C.back);
+      // Right: hinge x=+a/2, tri extends in +x
+      _addPivotFace([[0,-a/2],[0,a/2],[ap,0]], {x:a/2,z:0},'z',Math.atan2(hh,-a/2),true,C.right);
+      // Left: hinge x=-a/2, tri extends in -x
+      _addPivotFace([[0,-a/2],[0,a/2],[-ap,0]], {x:-a/2,z:0},'z',Math.atan2(-hh,-a/2),true,C.left);
+      setStep(`<b>Patron de la pyramide :</b> un carré (base) et 4 triangles qui se replient pour former le sommet.`);
+      break;
+    }
+    case 'prisme':{
+      const b = P.b, ht = P.ht, hh = P.h;
+      const hyp = Math.sqrt((b/2)*(b/2) + ht*ht);
+      overlayGroup.add(_patQuad([[-b/2,-hh/2],[b/2,-hh/2],[b/2,hh/2],[-b/2,hh/2]], C.base));
+      const ang = Math.atan2(ht, b/2);
+      // Left: hinge x=-b/2, extends in -x
+      _addPivotFace([[0,-hh/2],[-hyp,-hh/2],[-hyp,hh/2],[0,hh/2]], {x:-b/2,z:0},'z',-ang,false,C.left);
+      // Right: hinge x=+b/2, extends in +x
+      _addPivotFace([[0,-hh/2],[hyp,-hh/2],[hyp,hh/2],[0,hh/2]], {x:b/2,z:0},'z',ang,false,C.right);
+      // Front triangle: hinge z=+hh/2
+      _addPivotFace([[-b/2,0],[b/2,0],[0,ht]], {x:0,z:hh/2},'x',-PI/2,true,C.front);
+      // Back triangle: hinge z=-hh/2
+      const pv = new THREE.Group(); pv.position.set(0,0,-hh/2); pv.rotation.y = PI; overlayGroup.add(pv);
+      pv.add(_patTri([[-b/2,0],[b/2,0],[0,ht]], C.back));
+      overlayGroup.userData._pivots.push({pivot:pv, axis:'x', foldAngle:-PI/2});
+      setStep(`<b>Patron du prisme :</b> un rectangle (base) + 2 rectangles latéraux + 2 triangles (les bases du prisme).`);
+      break;
+    }
   }
-  html+=`<div class="pat-total"><span>Surface totale</span><span>${totalS} cm²</span></div>`;
-  info.innerHTML=html;
+  // Start at folded (3D), then animate to unfolded (flat)
+  applyPatronFold(0);
+  playNetSequence();
 }
 
-/* ═══════════════════════════════════════
-   COMMON UTILS
-   ═══════════════════════════════════════ */
-function drag(cvs,group,onStart){
-  let d=false,pr={x:0,y:0};
-  const mv=(dx,dy)=>{group.rotation.y+=dx*.008;group.rotation.x+=dy*.008;group.rotation.x=Math.max(-HP,Math.min(HP,group.rotation.x))};
-  cvs.addEventListener('mousedown',e=>{d=true;pr={x:e.clientX,y:e.clientY};if(onStart)onStart()});
-  cvs.addEventListener('mousemove',e=>{if(!d)return;mv(e.clientX-pr.x,e.clientY-pr.y);pr={x:e.clientX,y:e.clientY}});
-  cvs.addEventListener('mouseup',()=>d=false);cvs.addEventListener('mouseleave',()=>d=false);
-  cvs.addEventListener('touchstart',e=>{d=true;pr={x:e.touches[0].clientX,y:e.touches[0].clientY};if(onStart)onStart()},{passive:true});
-  cvs.addEventListener('touchmove',e=>{if(!d||!e.touches.length)return;mv(e.touches[0].clientX-pr.x,e.touches[0].clientY-pr.y);pr={x:e.touches[0].clientX,y:e.touches[0].clientY}},{passive:true});
-  cvs.addEventListener('touchend',()=>d=false);
-}
-function zoom(cvs,cam){
-  cvs.addEventListener('wheel',e=>{e.preventDefault();cam.position.multiplyScalar(e.deltaY>0?1.05:.95);cam.position.clampLength(4,60)},{passive:false});
+// — Overlay: HEIGHT line
+function overlayHeight(){
+  clearOverlay();
+  activeOverlay = 'height';
+  let h = 0, y0 = 0;
+  switch(shape){
+    case 'pave': h=P.h; break;
+    case 'cube': h=P.c; break;
+    case 'cylindre': h=P.h; break;
+    case 'cone': h=P.h; break;
+    case 'sphere': h=P.r*2; break;
+    case 'pyramide': h=P.h; break;
+    case 'prisme': h=P.ht; break;
+  }
+  const pts = [new THREE.Vector3(0,y0,0), new THREE.Vector3(0, y0+h, 0)];
+  const g = new THREE.BufferGeometry().setFromPoints(pts);
+  const m = new THREE.LineDashedMaterial({color:COL.ochre, dashSize:0.3, gapSize:0.15, linewidth:3});
+  const line = new THREE.Line(g, m);
+  line.computeLineDistances();
+  overlayGroup.add(line);
+  // arrow caps
+  const coneG = new THREE.ConeGeometry(0.18, 0.4, 16);
+  const coneMat = new THREE.MeshBasicMaterial({color:COL.ochre});
+  const top = new THREE.Mesh(coneG, coneMat); top.position.set(0, y0+h, 0); overlayGroup.add(top);
+  const bot = new THREE.Mesh(coneG, coneMat); bot.position.set(0, y0, 0); bot.rotation.x=PI; overlayGroup.add(bot);
+  setStep(`<b>Hauteur</b> (h) = <span class="fx">${h} cm</span>. C'est la dimension verticale utilisée pour calculer le volume.`);
 }
 
-/* ═══ INIT ═══ */
-initVol();
-buildVolCtrls();
-refreshVol();
+// — Overlay: BASE highlight
+function overlayBase(){
+  clearOverlay();
+  activeOverlay = 'base';
+  const mat = new THREE.MeshBasicMaterial({color:COL.sage, transparent:true, opacity:0.55, side:THREE.DoubleSide});
+  let g, m;
+  switch(shape){
+    case 'pave': g = new THREE.PlaneGeometry(P.L, P.l); m = new THREE.Mesh(g,mat); m.rotation.x=-PI/2; m.position.y=0.02; break;
+    case 'cube': g = new THREE.PlaneGeometry(P.c, P.c); m = new THREE.Mesh(g,mat); m.rotation.x=-PI/2; m.position.y=0.02; break;
+    case 'cylindre': case 'cone': g = new THREE.CircleGeometry(P.r, 48); m = new THREE.Mesh(g,mat); m.rotation.x=-PI/2; m.position.y=0.02; break;
+    case 'sphere': g = new THREE.CircleGeometry(P.r, 48); m = new THREE.Mesh(g,mat); m.rotation.x=-PI/2; m.position.y=P.r; break;
+    case 'pyramide': g = new THREE.PlaneGeometry(P.a, P.a); m = new THREE.Mesh(g,mat); m.rotation.x=-PI/2; m.position.y=0.02; break;
+    case 'prisme':{
+      const s = new THREE.Shape();
+      s.moveTo(-P.b/2, -P.h/2); s.lineTo(P.b/2, -P.h/2); s.lineTo(P.b/2, P.h/2); s.lineTo(-P.b/2, P.h/2); s.lineTo(-P.b/2,-P.h/2);
+      g = new THREE.PlaneGeometry(P.b, P.h);
+      m = new THREE.Mesh(g, mat); m.rotation.x=-PI/2; m.position.y=0.02;
+      break;
+    }
+  }
+  if(m) overlayGroup.add(m);
+  const baseArea = shape==='cylindre'||shape==='cone' ? `π × r² ≈ ${rn(PI*P.r**2)}` :
+                   shape==='sphere' ? `π × r² ≈ ${rn(PI*P.r**2)} (grand cercle)` :
+                   shape==='pyramide' ? `a² = ${P.a**2}` :
+                   shape==='prisme' ? `b × t ÷ 2 = ${rn(P.b*P.ht/2)}` :
+                   shape==='cube' ? `c² = ${P.c**2}` : `L × ℓ = ${P.L*P.l}`;
+  setStep(`<b>Base :</b> c'est la face en dessous (ou qui sert de référence). Son aire = <span class="fx">${baseArea} cm²</span>.`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VIEW / TOOLS
+// ═══════════════════════════════════════════════════════════════
+function setView(v){
+  autoRotate = false;
+  const d = Math.max(...Object.values(P).filter(x=>typeof x==='number')) * 2;
+  mainGroup.rotation.set(0,0,0);
+  overlayGroup.rotation.set(0,0,0);
+  labelsGroup.rotation.set(0,0,0);
+  switch(v){
+    case 'face': camera.position.set(0, d*0.3, d*1.5); break;
+    case 'dessus': camera.position.set(0, d*2, 0.01); break;
+    case 'cote': camera.position.set(d*1.5, d*0.3, 0); break;
+    case '3d': camera.position.set(d*1.1, d*0.9, d*1.3); break;
+    case 'spin': autoRotate = true; camera.position.set(d*1.1, d*0.9, d*1.3); break;
+  }
+  camera.lookAt(0, d*0.2, 0);
+  currentView = v;
+  document.querySelectorAll('.vbtn').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
+}
+
+function setStep(html){
+  document.getElementById('step').querySelector('.step-text').innerHTML = html;
+}
+
+function toggleWire(){
+  isWire = !isWire;
+  if(solidMesh){
+    solidMesh.material.wireframe = isWire;
+    solidMesh.material.opacity = isWire ? 0.9 : 0.55;
+  }
+  const btn = document.querySelector('[data-act="wire"]');
+  btn.classList.toggle('on', isWire);
+  setStep(isWire ? '<b>Mode fil de fer :</b> on voit la structure interne du solide.' : '<b>Mode solide :</b> retour à la vue normale.');
+}
+
+function toggleLabels(){
+  TWEAKS.showLabels = !TWEAKS.showLabels;
+  postTweaks();
+  buildLabels();
+  document.querySelector('[data-act="labels"]').classList.toggle('on', TWEAKS.showLabels);
+  setStep(TWEAKS.showLabels ? '<b>Étiquettes activées :</b> chaque dimension est nommée directement sur le solide.' : 'Étiquettes masquées.');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PICK / CTRLS / REFRESH
+// ═══════════════════════════════════════════════════════════════
+function pick(s){
+  shape = s;
+  document.querySelectorAll('.sh').forEach(b=>b.classList.toggle('on', b.dataset.shape===s));
+  document.getElementById('chipShape').textContent = CFG[s].name;
+  document.getElementById('stageShapeName').textContent = CFG[s].name;
+  document.getElementById('stageObj').textContent = '— '+CFG[s].obj;
+  applyObjectsVisibility();
+  buildCtrls();
+  buildVocab();
+  buildQuiz();
+  setView('3d');
+  setStep('Choisis un outil ci-dessous pour explorer ce solide.');
+  buildSurface();
+}
+
+function buildCtrls(){
+  const c = CFG[shape];
+  const COLS = {terra:'#C65A3A',sage:'#6B8E5A',slate:'#4A6B8A',ochre:'#B8893A',plum:'#8A4A6B'};
+  document.getElementById('ctrls').innerHTML = c.ctrls.map(ct=>`
+    <div class="ctrl">
+      <label>
+        <span class="nm-wrap">
+          <span class="dmk" style="background:${COLS[ct.c]}">${ct.sym}</span>
+          ${ct.l}
+        </span>
+        <span class="val"><span id="cv-${ct.id}">${ct.v}</span><span class="u">cm</span></span>
+      </label>
+      <input type="range" min="${ct.mn}" max="${ct.mx}" value="${ct.v}" step="0.5" data-p="${ct.id}">
+    </div>
+  `).join('');
+  P = {};
+  c.ctrls.forEach(ct=>P[ct.id]=ct.v);
+  document.querySelectorAll('[data-p]').forEach(el=>{
+    el.oninput = e=>{
+      P[e.target.dataset.p] = parseFloat(e.target.value);
+      document.getElementById('cv-'+e.target.dataset.p).textContent = e.target.value;
+      refresh();
+    };
+  });
+  refresh();
+}
+
+function refresh(){
+  const c = CFG[shape];
+  const vol = c.vol(P), surf = c.surf(P);
+  document.getElementById('vV').innerHTML = `${vol}<span class="u">cm³</span>`;
+  document.getElementById('vS').innerHTML = `${surf}<span class="u">cm²</span>`;
+  document.getElementById('fV').textContent = c.fv(P);
+  document.getElementById('fS').textContent = c.fs(P);
+  // Conversions
+  const v_cm3 = vol;
+  const v_dm3 = rn(v_cm3/1000, 4);
+  const v_m3  = rn(v_cm3/1000000, 6);
+  const v_L   = v_dm3; // 1 L = 1 dm³
+  document.getElementById('convBox').innerHTML = `
+    <b>${v_cm3}</b> cm³ &nbsp;=&nbsp; <b>${v_dm3}</b> dm³ &nbsp;=&nbsp; <b>${v_L}</b> L &nbsp;=&nbsp; <b>${v_m3}</b> m³
+  `;
+  buildSolid();
+  buildSurface();
+}
+
+function buildVocab(){
+  const c = CFG[shape];
+  const COLS = {terra:'#C65A3A',sage:'#6B8E5A',slate:'#4A6B8A',ochre:'#B8893A',plum:'#8A4A6B'};
+  const palette = ['slate','ochre','sage','terra','plum'];
+  document.getElementById('vocabList').innerHTML = c.vocab.map((v,i)=>{
+    const col = COLS[palette[i%palette.length]];
+    return `<div class="vocab" data-def="${v.d.replace(/"/g,'&quot;')}">
+      <span class="dmk" style="background:${col}">${v.sym}</span>
+      <span class="word">${v.w}</span>
+      <span class="amt" style="color:${col}">${v.sym}</span>
+    </div>`;
+  }).join('');
+  // tooltips
+  const tip = document.getElementById('tip');
+  document.querySelectorAll('.vocab').forEach(el=>{
+    el.addEventListener('mouseenter', e=>{
+      tip.textContent = el.dataset.def;
+      tip.classList.add('show');
+    });
+    el.addEventListener('mousemove', e=>{
+      tip.style.left = (e.clientX + 12) + 'px';
+      tip.style.top = (e.clientY - 40) + 'px';
+    });
+    el.addEventListener('mouseleave', ()=>tip.classList.remove('show'));
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// QUIZ
+// ═══════════════════════════════════════════════════════════════
+let quizIdx = 0, quizScore = 0, quizTotal = 0;
+function buildQuiz(){
+  quizIdx = 0; quizScore = 0; quizTotal = CFG[shape].quiz.length;
+  renderQuiz();
+}
+
+function renderQuiz(){
+  const box = document.getElementById('quizBox');
+  const quiz = CFG[shape].quiz;
+  if(quizIdx >= quiz.length){
+    const msg = quizScore === quizTotal ? 'Bravo, tout juste !' :
+                quizScore >= quizTotal/2 ? 'Bien joué !' : 'Continue à t\'entraîner !';
+    box.innerHTML = `
+      <div style="text-align:center;padding:12px 0">
+        <div style="font-family:Fraunces,serif;font-size:1.4rem;font-weight:500;color:var(--sage)">${quizScore} / ${quizTotal}</div>
+        <div style="font-size:.85rem;color:var(--ink-2);margin:4px 0 12px">${msg}</div>
+        <button class="qopt" style="text-align:center;font-weight:600" onclick="buildQuiz()">↻ Recommencer</button>
+      </div>
+    `;
+    return;
+  }
+  const q = quiz[quizIdx];
+  box.innerHTML = `
+    <div class="quiz-q">${q.q}</div>
+    <div class="quiz-opts">
+      ${q.o.map((opt,i)=>`<button class="qopt" data-i="${i}">${opt}</button>`).join('')}
+    </div>
+    <div class="quiz-foot">
+      <span>Question ${quizIdx+1} / ${quizTotal} · Score ${quizScore}</span>
+      <button class="qnext" id="qnext">Suivante →</button>
+    </div>
+  `;
+  box.querySelectorAll('.qopt').forEach(btn=>{
+    btn.onclick = ()=>{
+      const i = parseInt(btn.dataset.i);
+      box.querySelectorAll('.qopt').forEach(b=>b.disabled=true);
+      if(i === q.a){
+        btn.classList.add('correct');
+        quizScore++;
+      } else {
+        btn.classList.add('wrong');
+        box.querySelectorAll('.qopt')[q.a].classList.add('correct');
+      }
+      document.getElementById('qnext').classList.add('show');
+      document.getElementById('qnext').onclick = ()=>{ quizIdx++; renderQuiz() };
+    };
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TWEAKS (edit mode)
+// ═══════════════════════════════════════════════════════════════
+let editMode = false;
+window.addEventListener('message', e=>{
+  if(!e.data) return;
+  if(e.data.type === '__activate_edit_mode'){
+    editMode = true;
+    document.getElementById('tweaksPanel').classList.add('on');
+  } else if(e.data.type === '__deactivate_edit_mode'){
+    editMode = false;
+    document.getElementById('tweaksPanel').classList.remove('on');
+  }
+});
+function postTweaks(){
+  window.parent.postMessage({type:'__edit_mode_set_keys', edits: TWEAKS}, '*');
+}
+document.querySelectorAll('#tweaksPanel .toggle').forEach(t=>{
+  const k = t.dataset.k;
+  if(TWEAKS[k]) t.classList.add('on');
+  t.onclick = ()=>{
+    TWEAKS[k] = !TWEAKS[k];
+    t.classList.toggle('on', TWEAKS[k]);
+    postTweaks();
+    applyTweaks();
+  };
+});
+function applyTweaks(){
+  applyObjectsVisibility();
+  // grid
+  const grid = scene.children.find(c=>c.name==='__grid');
+  if(grid) grid.visible = TWEAKS.showGrid;
+  // labels
+  buildLabels();
+  // simple language — mostly affects step messages; we just redraw
+}
+window.parent.postMessage({type:'__edit_mode_available'}, '*');
+
+// ═══════════════════════════════════════════════════════════════
+// SURFACE SECTION (Comprendre l'aire)
+// ═══════════════════════════════════════════════════════════════
+const FACE_COLORS = ['#F5D0C1','#D8E5CE','#C6D5E3','#F0DDBE','#E5CEDB','#E8DCC7','#D0C8DE'];
+let surfMode = 'total'; // total | laterale | base
+let surfFaces = [];
+let surfAnimT = null;
+let stepSpeed = 2800; // ms per step
+let stepMode = 'auto'; // 'auto' | 'manuel'
+let stepAdvance = null; // callback for next step (manuel mode)
+
+function initSurface(){
+  // Speed + mode controls
+  const slider = document.getElementById('speedSlider');
+  const spdVal = document.getElementById('spdVal');
+  if(slider){
+    slider.oninput = ()=>{ stepSpeed = +slider.value; spdVal.textContent = (stepSpeed/1000).toFixed(1)+' s' };
+  }
+  const auto = document.getElementById('spdAuto');
+  const manuel = document.getElementById('spdManuel');
+  const sliderWrap = document.getElementById('speedSliderWrap');
+  if(auto) auto.onclick = ()=>{ stepMode='auto'; auto.classList.add('on'); manuel.classList.remove('on'); sliderWrap.classList.remove('hide'); document.getElementById('btnNext').classList.add('hide'); };
+  if(manuel) manuel.onclick = ()=>{ stepMode='manuel'; manuel.classList.add('on'); auto.classList.remove('on'); sliderWrap.classList.add('hide'); };
+  const btnNext = document.getElementById('btnNext');
+  if(btnNext) btnNext.onclick = ()=>{ if(stepAdvance){ stepAdvance(); } };
+
+  // Patron unfold speed controls
+  const nSlider = document.getElementById('netSpeedSlider');
+  const nSpdVal = document.getElementById('netSpdVal');
+  if(nSlider) nSlider.oninput = ()=>{ netDuration = +nSlider.value; nSpdVal.textContent = (netDuration/1000).toFixed(1)+' s'; };
+  const nAuto = document.getElementById('netSpdAuto');
+  const nManuel = document.getElementById('netSpdManuel');
+  const nWrap = document.getElementById('netSliderWrap');
+  if(nAuto) nAuto.onclick = ()=>{ netMode='auto'; nAuto.classList.add('on'); nManuel.classList.remove('on'); nWrap.classList.remove('hide'); document.getElementById('btnNetNext').classList.add('hide'); };
+  if(nManuel) nManuel.onclick = ()=>{ netMode='manuel'; nManuel.classList.add('on'); nAuto.classList.remove('on'); nWrap.classList.add('hide'); };
+  const bNext = document.getElementById('btnNetNext');
+  if(bNext) bNext.onclick = ()=>{ if(netAdvance) netAdvance(); };
+  const bReplay = document.getElementById('btnNetReplay');
+  if(bReplay) bReplay.onclick = ()=>{ if(activeOverlay==='net'){ netAnimTimers.forEach(t=>clearTimeout(t)); netAnimTimers=[]; playNetSequence(); } };
+  document.querySelectorAll('.mode-btn').forEach(b=>{
+    b.onclick = ()=>{
+      document.querySelectorAll('.mode-btn').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      surfMode = b.dataset.mode;
+      stopStepAnim();
+      document.getElementById('stepCalc').classList.remove('on');
+      surfFaces.forEach(f=>{ f._active=true; f._isolated=false });
+      renderSurface();
+    };
+  });
+  document.getElementById('btnStep').onclick = ()=>{ startStepAnim(); };
+  document.getElementById('btnResetArea').onclick = ()=>{
+    stopStepAnim();
+    document.getElementById('stepCalc').classList.remove('on');
+    surfFaces.forEach(f=>{ f._active=true; f._isolated=false });
+    renderSurface();
+  };
+}
+
+function isFaceVisible(f){
+  if(surfMode==='total') return true;
+  if(surfMode==='laterale') return f.role==='lat';
+  if(surfMode==='base') return f.role==='base';
+  return true;
+}
+
+function stopStepAnim(){
+  if(surfAnimT){ clearTimeout(surfAnimT); surfAnimT=null }
+  stepAdvance = null;
+  const btn = document.getElementById('btnNext');
+  if(btn){ btn.classList.add('hide'); btn.classList.remove('flash'); btn.textContent='Suivant ▶' }
+}
+
+function startStepAnim(){
+  stopStepAnim();
+  const sc = document.getElementById('stepCalc');
+  sc.classList.add('on');
+  // Deactivate all faces first
+  surfFaces.forEach(f=>{ f._active=false; f._isolated=false });
+  renderSurface();
+
+  const visible = surfFaces.filter(isFaceVisible);
+  const total = visible.length;
+
+  // Build progress pips
+  const prog = document.getElementById('scProgress');
+  prog.innerHTML = visible.map(()=>`<span class="sc-pip"></span>`).join('');
+
+  // Reset addition lines
+  const addBox = document.getElementById('scAddLines');
+  addBox.innerHTML = '';
+  document.getElementById('scSumLine').style.display = 'none';
+  document.getElementById('scSum').textContent = '0';
+
+  let runningSum = 0;
+  let i = 0;
+
+  const doStep = ()=>{
+    if(i >= total){
+      // All done → show final celebration
+      document.getElementById('scBadge').textContent = `✓ Terminé !`;
+      document.getElementById('scFace').innerHTML = `<span class="sc-dot" style="background:var(--sage)"></span>Toutes les faces comptées`;
+      document.getElementById('scFormula').innerHTML = `<span class="sc-eq">Aire totale = ${rn(runningSum)} cm²</span>`;
+      document.getElementById('scExplain').textContent = `Bravo ! On a additionné les ${total} faces.`;
+      prog.querySelectorAll('.sc-pip').forEach(p=>{p.classList.remove('current');p.classList.add('done')});
+      const btn = document.getElementById('btnNext');
+      if(btn){ btn.classList.add('hide'); btn.classList.remove('flash'); btn.textContent='Suivant ▶' }
+      document.getElementById('ftLabel').textContent = (surfMode==='laterale'?'Aire latérale':(surfMode==='base'?'Aire des bases':'Aire totale'));
+      return;
+    }
+
+    const f = visible[i];
+    f._active = true;
+    renderSurface();
+
+    // Update progress pips
+    prog.querySelectorAll('.sc-pip').forEach((p,idx)=>{
+      p.classList.remove('current','done');
+      if(idx<i) p.classList.add('done');
+      else if(idx===i) p.classList.add('current');
+    });
+
+    // Badge + face name
+    document.getElementById('scBadge').textContent = `Étape ${i+1} sur ${total}`;
+    document.getElementById('scFace').innerHTML = `<span class="sc-dot" style="background:${f.color}"></span>${f.name}`;
+
+    // Formula with numbers substituted: f.calc is like "8×5" or "π×3²" — we want to show it clearly
+    const calcStr = f.calc;
+    document.getElementById('scFormula').innerHTML =
+      `Aire <span class="sc-var">=</span> <span class="sc-num">${calcStr}</span> <span class="sc-eq">= ${rn(f.area)}</span> <span class="sc-var">cm²</span>`;
+    document.getElementById('scExplain').textContent = stepExplain(f, i);
+
+    // Add to running sum with step-by-step addition display
+    const prev = runningSum;
+    runningSum = rn(runningSum + f.area);
+
+    // Add a new line to the addition
+    const line = document.createElement('div');
+    line.className = 'sc-add-line new';
+    const op = i===0 ? ' ' : '+';
+    line.innerHTML = `<span class="sc-add-op">${op}</span><span class="sc-add-num">${rn(f.area)}</span><span class="sc-add-label">${f.name}</span>`;
+    // Remove "new" class from previous lines
+    addBox.querySelectorAll('.sc-add-line').forEach(l=>l.classList.remove('new'));
+    addBox.appendChild(line);
+
+    // Show/update sum line
+    const sumLine = document.getElementById('scSumLine');
+    const sumEl = document.getElementById('scSum');
+    if(i===0){
+      // First step: no sum shown yet, just the single value becomes the total
+      sumLine.style.display = 'none';
+    } else {
+      sumLine.style.display = 'flex';
+      // Animate sum: prev → runningSum
+      animateNumber(sumEl, prev, runningSum, 600);
+    }
+
+    // Also update the main ftPartial total
+    updateTotal(runningSum);
+    document.getElementById('ftLabel').textContent = (surfMode==='laterale'?'Aire latérale':(surfMode==='base'?'Aire des bases':'Aire totale'))+` (en cours…)`;
+
+    i++;
+    if(stepMode === 'manuel'){
+      // Show Suivant button and wait for click
+      const btn = document.getElementById('btnNext');
+      btn.classList.remove('hide');
+      btn.classList.add('flash');
+      if(i >= total) btn.textContent = '✓ Voir le résultat';
+      else btn.textContent = 'Suivant ▶';
+      stepAdvance = ()=>{
+        btn.classList.remove('flash');
+        if(i >= total){ btn.classList.add('hide'); }
+        stepAdvance = null;
+        doStep();
+      };
+    } else {
+      surfAnimT = setTimeout(doStep, stepSpeed);
+    }
+  };
+
+  // Start first step after a brief pause
+  if(stepMode === 'manuel'){
+    // In manuel mode, kick off immediately
+    doStep();
+  } else {
+    surfAnimT = setTimeout(doStep, 400);
+  }
+}
+
+function stepExplain(f, idx){
+  if(idx===0) return `On commence par cette face. Son aire est notre point de départ.`;
+  if(f.isCircle) return `Cette base est un disque : on multiplie π par le rayon au carré.`;
+  if(f.role==='base') return `C'est une base du solide. On l'ajoute au total.`;
+  return `On additionne cette face au total des précédentes.`;
+}
+
+function animateNumber(el, from, to, dur){
+  const t0 = performance.now();
+  const step = (t)=>{
+    const k = Math.min(1, (t-t0)/dur);
+    const eased = k<.5 ? 2*k*k : 1 - Math.pow(-2*k+2,2)/2;
+    const val = from + (to-from)*eased;
+    el.textContent = Math.abs(val-Math.round(val))<0.01 ? Math.round(val) : val.toFixed(1);
+    if(k<1) requestAnimationFrame(step);
+    else el.textContent = rn(to);
+  };
+  requestAnimationFrame(step);
+}
+
+function buildSurface(){
+  const nameEl = document.getElementById('areaShapeName');
+  if(nameEl) nameEl.textContent = CFG[shape].name.toLowerCase();
+  stopStepAnim();
+  const sc = document.getElementById('stepCalc'); if(sc) sc.classList.remove('on');
+  surfFaces = buildNet(shape, P);
+  surfFaces.forEach(f=>{ f._active=true; f._isolated=false });
+  renderSurface();
+}
+
+function renderSurface(){
+  const svg = document.getElementById('areaSvg');
+  if(!svg) return;
+  if(shape==='sphere'){
+    svg.setAttribute('viewBox','-50 -30 100 60');
+    svg.innerHTML = `<text x="0" y="0" text-anchor="middle" dominant-baseline="middle" font-family="Fraunces" font-size="5" fill="#1A1A1A" font-style="italic">La sphère n'a pas de patron plat.</text>
+    <text x="0" y="10" text-anchor="middle" font-family="Inter" font-size="3" fill="#55504A">Aire = 4 × π × r² ≈ ${rn(4*PI*P.r**2)} cm²</text>
+    <text x="0" y="16" text-anchor="middle" font-family="Inter" font-size="2.4" fill="#8A857E" font-style="italic">(on ne peut pas l'aplatir sans la déformer)</text>`;
+    document.getElementById('faceList').innerHTML = '<li class="on" style="border-left-color:var(--sage)"><span class="fl-dot" style="background:'+FACE_COLORS[0]+'"></span><span class="fl-name">Surface de la sphère<small>formule spéciale, pas de patron</small></span><span class="fl-calc"><b>4πr² ≈ '+rn(4*PI*P.r**2)+'</b></span></li>';
+    updateTotal(rn(4*PI*P.r**2));
+    return;
+  }
+  // compute bounds
+  const visible = surfFaces.filter(isFaceVisible);
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  surfFaces.forEach(f=>f.points.forEach(([x,y])=>{
+    if(x<minX) minX=x; if(x>maxX) maxX=x;
+    if(y<minY) minY=y; if(y>maxY) maxY=y;
+  }));
+  const w=maxX-minX, h=maxY-minY;
+  const pad = Math.max(w,h)*0.08;
+  svg.setAttribute('viewBox',`${minX-pad} ${minY-pad} ${w+pad*2} ${h+pad*2}`);
+
+  // Dynamic font size based on viewBox scale
+  const span = Math.max(w, h);
+  const fsLabel = Math.max(0.9, span*0.028);
+  const fsArea = Math.max(0.75, span*0.022);
+  let inner='';
+  surfFaces.forEach((f,i)=>{
+    const visFlag = isFaceVisible(f);
+    const dim = (!visFlag) || (!f._active) || (surfFaces.some(x=>x._isolated) && !f._isolated);
+    const pts = f.points.map(p=>p.join(',')).join(' ');
+    inner += `<polygon class="face ${dim?'dim':''} ${f._isolated?'active':''}" points="${pts}" fill="${f.color}" data-i="${i}"/>`;
+  });
+  // labels on top
+  surfFaces.forEach((f,i)=>{
+    const dim = !f._active || !isFaceVisible(f) || (surfFaces.some(x=>x._isolated) && !f._isolated);
+    if(dim) return;
+    inner += `<text class="face-label" x="${f.cx}" y="${f.cy-fsLabel*0.3}" font-size="${fsLabel}">${f.name}</text>`;
+    inner += `<text class="face-area" x="${f.cx}" y="${f.cy+fsLabel*0.9}" font-size="${fsArea}">${f.calcShort}</text>`;
+  });
+  svg.innerHTML = inner;
+  svg.querySelectorAll('.face').forEach(el=>{
+    el.onclick = ()=>{
+      const idx = +el.dataset.i;
+      const wasIso = surfFaces[idx]._isolated;
+      surfFaces.forEach(f=>f._isolated=false);
+      if(!wasIso) surfFaces[idx]._isolated = true;
+      renderSurface();
+    };
+  });
+
+  // Face list
+  let total = 0;
+  const listHTML = surfFaces.map((f,i)=>{
+    const vis = isFaceVisible(f);
+    const active = f._active && vis;
+    if(active) total += f.area;
+    return `<li class="${active?'on':''}" style="color:${f.color.replace('rgb','rgba').replace(')',',.9)')};">
+      <span class="fl-dot" style="background:${f.color}"></span>
+      <span class="fl-name">${f.name}<small>${f.roleLabel}</small></span>
+      <span class="fl-calc">${f.calc} = <b>${rn(f.area)}</b></span>
+    </li>`;
+  }).join('');
+  document.getElementById('faceList').innerHTML = listHTML;
+  updateTotal(rn(total));
+
+  const ftLabel = surfMode==='laterale'?'Aire latérale':(surfMode==='base'?'Aire des bases':'Aire totale');
+  document.getElementById('ftLabel').textContent = ftLabel;
+}
+
+function updateTotal(total){
+  document.getElementById('ftPartial').textContent = total;
+  const dm2 = rn(total/100, 4);
+  const m2 = rn(total/10000, 6);
+  document.getElementById('ftConv').textContent = `= ${dm2} dm² = ${m2} m²`;
+}
+
+function buildNet(sh, P){
+  const faces = [];
+  if(sh==='pave' || sh==='cube'){
+    const L = sh==='cube'?P.c:P.L;
+    const l = sh==='cube'?P.c:P.l;
+    const h = sh==='cube'?P.c:P.h;
+    // scale so largest dim fits in ~20 units
+    const k = 20/Math.max(L+2*h, 2*l+2*h);
+    const L2=L*k, l2=l*k, h2=h*k;
+    const r = (x0,y0,w,hh,name,role,col,calc,calcShort,area)=>faces.push({
+      name, role, roleLabel: role==='base'?'base':'face latérale',
+      color:col, points:[[x0,y0],[x0+w,y0],[x0+w,y0+hh],[x0,y0+hh]],
+      cx:x0+w/2, cy:y0+hh/2, calc, calcShort, area
+    });
+    r(-L2/2, -l2/2, L2, l2, 'Base (dessous)', 'base', FACE_COLORS[1], `${L}×${sh==='cube'?L:l}`, `= ${L*l}`, L*l);
+    r(-L2/2, -l2/2-h2, L2, h2, 'Face arrière', 'lat', FACE_COLORS[2], `${L}×${h}`, `= ${L*h}`, L*h);
+    r(-L2/2, l2/2, L2, h2, 'Face avant', 'lat', FACE_COLORS[2], `${L}×${h}`, `= ${L*h}`, L*h);
+    r(-L2/2-h2, -l2/2, h2, l2, 'Face gauche', 'lat', FACE_COLORS[4], `${h}×${l}`, `= ${h*l}`, h*l);
+    r(L2/2, -l2/2, h2, l2, 'Face droite', 'lat', FACE_COLORS[4], `${h}×${l}`, `= ${h*l}`, h*l);
+    r(-L2/2, -l2/2-h2-l2, L2, l2, 'Base (dessus)', 'base', FACE_COLORS[1], `${L}×${l}`, `= ${L*l}`, L*l);
+    return faces;
+  }
+  if(sh==='cylindre'){
+    const r=P.r, h=P.h;
+    const perim = 2*PI*r;
+    const k = 20/Math.max(perim, h+2*r);
+    const r2=r*k, h2=h*k, p2=perim*k;
+    // base circles + rectangle
+    faces.push({name:'Base (dessous)', role:'base', roleLabel:'disque', color:FACE_COLORS[1],
+      points:circlePts(-p2/2-r2-2, 0, r2, 48),
+      cx:-p2/2-r2-2, cy:0, calc:`π×${r}²`, calcShort:`π×${r}²`, area:rn(PI*r*r),
+      isCircle:true});
+    faces.push({name:'Surface latérale', role:'lat', roleLabel:'rectangle qui s\'enroule', color:FACE_COLORS[2],
+      points:[[-p2/2,-h2/2],[p2/2,-h2/2],[p2/2,h2/2],[-p2/2,h2/2]],
+      cx:0, cy:0, calc:`2π×${r}×${h}`, calcShort:`= ${rn(2*PI*r*h)}`, area:rn(2*PI*r*h)});
+    faces.push({name:'Base (dessus)', role:'base', roleLabel:'disque', color:FACE_COLORS[1],
+      points:circlePts(p2/2+r2+2, 0, r2, 48),
+      cx:p2/2+r2+2, cy:0, calc:`π×${r}²`, calcShort:`π×${r}²`, area:rn(PI*r*r),
+      isCircle:true});
+    return faces;
+  }
+  if(sh==='cone'){
+    const r=P.r, h=P.h, g=Math.sqrt(r*r+h*h);
+    const angle = 2*PI*r/g;
+    const k = 20/(2*g+r+2);
+    const g2=g*k, r2=r*k;
+    // Sector
+    const secPts = [];
+    const steps=48;
+    secPts.push([0,0]);
+    for(let i=0;i<=steps;i++){
+      const a = -angle/2 + (i/steps)*angle - PI/2;
+      secPts.push([Math.cos(a)*g2, Math.sin(a)*g2]);
+    }
+    faces.push({name:'Surface latérale', role:'lat', roleLabel:'secteur circulaire', color:FACE_COLORS[2],
+      points:secPts, cx:0, cy:g2*0.55, calc:`π×${r}×${rn(g)}`, calcShort:`= ${rn(PI*r*g)}`, area:rn(PI*r*g)});
+    // Base circle below
+    faces.push({name:'Base', role:'base', roleLabel:'disque', color:FACE_COLORS[1],
+      points:circlePts(0, g2+r2+2, r2, 48),
+      cx:0, cy:g2+r2+2, calc:`π×${r}²`, calcShort:`π×${r}²`, area:rn(PI*r*r), isCircle:true});
+    return faces;
+  }
+  if(sh==='pyramide'){
+    const a=P.a, h=P.h;
+    const apo = Math.sqrt(h*h+(a/2)*(a/2));
+    const k = 20/(a+2*apo);
+    const a2=a*k, ap2=apo*k;
+    // base square at center
+    faces.push({name:'Base (carré)', role:'base', roleLabel:'carré', color:FACE_COLORS[1],
+      points:[[-a2/2,-a2/2],[a2/2,-a2/2],[a2/2,a2/2],[-a2/2,a2/2]],
+      cx:0, cy:0, calc:`${a}²`, calcShort:`= ${a*a}`, area:a*a});
+    // 4 triangles
+    const triArea = rn(a*apo/2);
+    // top triangle: base at (-a/2, -a/2) to (a/2, -a/2), apex at (0, -a/2 - apo)
+    faces.push({name:'Face avant', role:'lat', roleLabel:'triangle', color:FACE_COLORS[2],
+      points:[[-a2/2,-a2/2],[a2/2,-a2/2],[0,-a2/2-ap2]],
+      cx:0, cy:-a2/2-ap2/3, calc:`${a}×${rn(apo)}/2`, calcShort:`= ${triArea}`, area:triArea});
+    faces.push({name:'Face arrière', role:'lat', roleLabel:'triangle', color:FACE_COLORS[2],
+      points:[[-a2/2,a2/2],[a2/2,a2/2],[0,a2/2+ap2]],
+      cx:0, cy:a2/2+ap2/3, calc:`${a}×${rn(apo)}/2`, calcShort:`= ${triArea}`, area:triArea});
+    faces.push({name:'Face gauche', role:'lat', roleLabel:'triangle', color:FACE_COLORS[2],
+      points:[[-a2/2,-a2/2],[-a2/2,a2/2],[-a2/2-ap2,0]],
+      cx:-a2/2-ap2/3, cy:0, calc:`${a}×${rn(apo)}/2`, calcShort:`= ${triArea}`, area:triArea});
+    faces.push({name:'Face droite', role:'lat', roleLabel:'triangle', color:FACE_COLORS[2],
+      points:[[a2/2,-a2/2],[a2/2,a2/2],[a2/2+ap2,0]],
+      cx:a2/2+ap2/3, cy:0, calc:`${a}×${rn(apo)}/2`, calcShort:`= ${triArea}`, area:triArea});
+    return faces;
+  }
+  if(sh==='prisme'){
+    const b=P.b, t=P.ht, hh=P.h;
+    const hyp = Math.sqrt((b/2)*(b/2)+t*t);
+    const k = 20/(b+2*hyp);
+    const b2=b*k, t2=t*k, h2=hh*k, hy2=hyp*k;
+    // strip: [tri_left, rect_slant1, rect_bottom, rect_slant2, tri_right]
+    // Lay out horizontally
+    let x=-b2/2-hy2-hy2/2;
+    // Triangle left
+    faces.push({name:'Base gauche', role:'base', roleLabel:'triangle', color:FACE_COLORS[1],
+      points:[[x-b2/2,h2/2],[x+b2/2,h2/2],[x,h2/2-t2]],
+      cx:x, cy:h2/2-t2/3, calc:`${b}×${t}/2`, calcShort:`= ${rn(b*t/2)}`, area:rn(b*t/2)});
+    // Rect slant 1
+    x = -b2/2-hy2/2;
+    faces.push({name:'Face inclinée G', role:'lat', roleLabel:'rectangle', color:FACE_COLORS[2],
+      points:[[x-hy2/2,-h2/2],[x+hy2/2,-h2/2],[x+hy2/2,h2/2],[x-hy2/2,h2/2]],
+      cx:x, cy:0, calc:`${rn(hyp)}×${hh}`, calcShort:`= ${rn(hyp*hh)}`, area:rn(hyp*hh)});
+    // Rect bottom
+    faces.push({name:'Face arrière', role:'lat', roleLabel:'rectangle', color:FACE_COLORS[4],
+      points:[[-b2/2,-h2/2],[b2/2,-h2/2],[b2/2,h2/2],[-b2/2,h2/2]],
+      cx:0, cy:0, calc:`${b}×${hh}`, calcShort:`= ${rn(b*hh)}`, area:rn(b*hh)});
+    // Rect slant 2
+    x = b2/2+hy2/2;
+    faces.push({name:'Face inclinée D', role:'lat', roleLabel:'rectangle', color:FACE_COLORS[2],
+      points:[[x-hy2/2,-h2/2],[x+hy2/2,-h2/2],[x+hy2/2,h2/2],[x-hy2/2,h2/2]],
+      cx:x, cy:0, calc:`${rn(hyp)}×${hh}`, calcShort:`= ${rn(hyp*hh)}`, area:rn(hyp*hh)});
+    // Triangle right
+    x = b2/2+hy2+hy2/2;
+    faces.push({name:'Base droite', role:'base', roleLabel:'triangle', color:FACE_COLORS[1],
+      points:[[x-b2/2,h2/2],[x+b2/2,h2/2],[x,h2/2-t2]],
+      cx:x, cy:h2/2-t2/3, calc:`${b}×${t}/2`, calcShort:`= ${rn(b*t/2)}`, area:rn(b*t/2)});
+    return faces;
+  }
+  return [];
+}
+
+function circlePts(cx,cy,r,n){
+  const pts=[];
+  for(let i=0;i<n;i++){
+    const a = (i/n)*2*PI;
+    pts.push([cx+Math.cos(a)*r, cy+Math.sin(a)*r]);
+  }
+  return pts;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WIRE UP BUTTONS
+// ═══════════════════════════════════════════════════════════════
+document.querySelectorAll('.vbtn').forEach(b=>{
+  b.onclick = ()=>setView(b.dataset.v);
+});
+
+document.querySelectorAll('.tools .tool').forEach(b=>{
+  b.onclick = ()=>{
+    const act = b.dataset.act;
+    if(act === 'reset'){ clearOverlay(); buildLabels(); setStep('Vue réinitialisée. Choisis un outil pour explorer.'); return }
+    if(act === 'wire'){ toggleWire(); return }
+    if(act === 'labels'){ toggleLabels(); return }
+    // overlays: toggle off if same
+    if(activeOverlay === act){ clearOverlay(); setStep('Outil désactivé.'); return }
+    document.querySelectorAll('.tool').forEach(t=>t.classList.remove('on'));
+    b.classList.add('on');
+    if(act === 'units') overlayUnits();
+    else if(act === 'slices') overlaySlices();
+    else if(act === 'net') overlayNet();
+    else if(act === 'height') overlayHeight();
+    else if(act === 'base') overlayBase();
+  };
+});
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+buildShapeSel();
+initThree();
+initSurface();
+pick('pave');
+
 </script>
-</body>
-</html>
+
+
+</body></html>
