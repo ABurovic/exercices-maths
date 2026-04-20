@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PPMC, PGDC et Fractions</title>
+<style>
+  :root {
+    --bleu: rgb(20, 75, 165);
+    --bleu-bg: rgb(232, 241, 255);
+    --bleu-clair: rgb(100, 140, 210);
+    --vert: rgb(20, 125, 50);
+    --vert-bg: rgb(225, 248, 230);
+    --orange: rgb(190, 80, 0);
+    --orange-bg: rgb(255, 242, 220);
+    --rouge: rgb(165, 10, 10);
+    --rouge-bg: rgb(255, 232, 232);
+    --jaune: rgb(155, 115, 0);
+    --jaune-bg: rgb(255, 252, 215);
+    --violet: rgb(110, 25, 150);
+    --violet-bg: rgb(243, 232, 255);
+    --cyan: rgb(0, 120, 140);
+    --cyan-bg: rgb(220, 248, 252);
+    --gris: #555;
+    --gris-clair: #eee;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f5f7fb;
+    color: #222;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* === En-tête === */
+  header {
+    background: linear-gradient(135deg, var(--bleu) 0%, var(--bleu-clair) 100%);
+    color: white;
+    padding: 1.2rem 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  header .sous-titre {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    margin-top: 4px;
+  }
+
+  /* === Onglets === */
+  .onglets {
+    display: flex;
+    flex-wrap: wrap;
+    background: white;
+    border-bottom: 2px solid var(--bleu);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  .onglet {
+    flex: 1;
+    min-width: 110px;
+    padding: 0.9rem 0.6rem;
+    background: white;
+    border: none;
+    cursor: pointer;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--gris);
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  .onglet:hover { background: var(--bleu-bg); color: var(--bleu); }
+  .onglet.actif {
+    color: var(--bleu);
+    border-bottom-color: var(--bleu);
+    background: var(--bleu-bg);
+  }
+
+  /* === Panneaux === */
+  main { padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
+  .panneau { display: none; }
+  .panneau.actif { display: block; animation: fade 0.25s; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* === Cartes === */
+  .carte {
+    background: white;
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-left: 5px solid var(--bleu);
+  }
+  .carte h2 {
+    color: var(--bleu);
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
+  }
+  .carte h3 {
+    color: var(--bleu);
+    font-size: 1.05rem;
+    margin: 0.8rem 0 0.5rem 0;
+  }
+  .carte.vert { border-left-color: var(--vert); }
+  .carte.vert h2, .carte.vert h3 { color: var(--vert); }
+  .carte.orange { border-left-color: var(--orange); }
+  .carte.orange h2, .carte.orange h3 { color: var(--orange); }
+  .carte.rouge { border-left-color: var(--rouge); }
+  .carte.rouge h2, .carte.rouge h3 { color: var(--rouge); }
+
+  /* === Boutons === */
+  .btn {
+    display: inline-block;
+    padding: 0.55rem 1.1rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--bleu);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: transform 0.1s, background 0.2s;
+    margin: 0.3rem 0.3rem 0.3rem 0;
+  }
+  .btn:hover { background: rgb(30, 90, 180); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn.vert { background: var(--vert); }
+  .btn.vert:hover { background: rgb(30, 145, 60); }
+  .btn.orange { background: var(--orange); }
+  .btn.rouge { background: var(--rouge); }
+  .btn.secondaire { background: #888; }
+  .btn.secondaire:hover { background: #666; }
+
+  /* === Saisie === */
+  input[type="number"], input[type="text"] {
+    padding: 0.5rem 0.7rem;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    width: 80px;
+    text-align: center;
+  }
+  input[type="number"]:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: var(--bleu);
+  }
+  input.juste { border-color: var(--vert); background: var(--vert-bg); }
+  input.faux { border-color: var(--rouge); background: var(--rouge-bg); }
+
+  /* === Zones info === */
+  .info {
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    margin: 0.8rem 0;
+    background: var(--cyan-bg);
+    border-left: 4px solid var(--cyan);
+  }
+  .info.vert { background: var(--vert-bg); border-left-color: var(--vert); }
+  .info.orange { background: var(--orange-bg); border-left-color: var(--orange); }
+  .info.jaune { background: var(--jaune-bg); border-left-color: var(--jaune); }
+  .info.rouge { background: var(--rouge-bg); border-left-color: var(--rouge); }
+
+  /* === Nombres : liste de multiples/diviseurs === */
+  .liste-nombres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0.7rem 0;
+  }
+  .nbre {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 44px;
+    padding: 0 10px;
+    border-radius: 6px;
+    background: white;
+    border: 2px solid var(--bleu-clair);
+    color: var(--bleu);
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s;
+  }
+  .nbre.vert { border-color: var(--vert); color: var(--vert); }
+  .nbre.orange { border-color: var(--orange); color: var(--orange); }
+  .nbre.commun {
+    background: var(--orange-bg);
+    border-color: var(--orange);
+    color: var(--orange);
+    font-weight: 700;
+  }
+  .nbre.plus-grand, .nbre.plus-petit {
+    background: var(--rouge-bg);
+    border-color: var(--rouge);
+    color: var(--rouge);
+    font-weight: 800;
+    transform: scale(1.08);
+  }
+
+  /* === Fractions === */
+  .fraction {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    margin: 0 4px;
+    font-family: Georgia, serif;
+    font-size: 1.3rem;
+  }
+  .fraction .num {
+    padding: 0 8px;
+    border-bottom: 2px solid currentColor;
+  }
+  .fraction .den { padding: 0 8px; }
+
+  /* === Pizza (fraction visuelle) === */
+  .pizza-box {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0.5rem;
+  }
+  .pizza-box svg { display: block; }
+  .pizza-box .libelle {
+    font-weight: 600;
+    margin-top: 4px;
+    color: var(--bleu);
+  }
+
+  /* === Grilles === */
+  .grille-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin: 0.8rem 0;
+  }
+  .grille-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.8rem;
+    margin: 0.8rem 0;
+  }
+
+  /* === Quiz === */
+  .quiz-question {
+    font-size: 1.15rem;
+    margin: 1rem 0 0.8rem 0;
+    color: var(--bleu);
+    font-weight: 600;
+  }
+  .quiz-choix {
+    display: block;
+    width: 100%;
+    padding: 0.7rem 1rem;
+    margin: 0.4rem 0;
+    background: white;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 1rem;
+    transition: all 0.15s;
+  }
+  .quiz-choix:hover { border-color: var(--bleu); background: var(--bleu-bg); }
+  .quiz-choix.juste { background: var(--vert-bg); border-color: var(--vert); color: var(--vert); font-weight: 700; }
+  .quiz-choix.faux { background: var(--rouge-bg); border-color: var(--rouge); color: var(--rouge); }
+  .quiz-choix:disabled { cursor: not-allowed; }
+
+  .score {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    background: var(--bleu);
+    color: white;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  /* === Tableau choix PPMC/PGDC === */
+  table.choix {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.8rem 0;
+  }
+  table.choix th, table.choix td {
+    padding: 0.7rem;
+    text-align: left;
+    border: 1px solid #ddd;
+  }
+  table.choix th {
+    background: var(--bleu-bg);
+    color: var(--bleu);
+    font-weight: 700;
+  }
+  table.choix td:last-child {
+    text-align: center;
+    font-weight: 700;
+    color: var(--rouge);
+    font-size: 1.1rem;
+  }
+
+  /* === Arbre de décomposition === */
+  .arbre { margin: 1rem 0; text-align: center; }
+  .arbre svg { max-width: 100%; height: auto; }
+
+  /* === Badges === */
+  .badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: var(--bleu);
+    color: white;
+    margin-right: 4px;
+  }
+
+  /* === Responsive === */
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.2rem; }
+    .onglet { font-size: 0.82rem; padding: 0.7rem 0.3rem; min-width: 80px; }
+    main { padding: 0.8rem; }
+    .carte { padding: 1rem; }
+    .nbre { min-width: 38px; height: 36px; font-size: 0.9rem; }
+  }
+
+  /* === Feedback === */
+  .feedback {
+    margin-top: 0.8rem;
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+  .feedback.juste { background: var(--vert-bg); color: var(--vert); border-left: 4px solid var(--vert); }
+  .feedback.faux { background: var(--rouge-bg); color: var(--rouge); border-left: 4px solid var(--rouge); }
+
+  /* === Compteurs === */
+  .compteur {
+    display: flex;
+    gap: 1rem;
+    margin: 0.8rem 0;
+    flex-wrap: wrap;
+  }
+  .compteur > div {
+    background: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    font-weight: 600;
+  }
+  .compteur .juste-c { color: var(--vert); }
+  .compteur .faux-c { color: var(--rouge); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>PPMC, PGDC et Fractions</h1>
+  <div class="sous-titre">Exercices interactifs — Classe d'alphabétisation</div>
+</header>
+
+<nav class="onglets" id="onglets">
+  <button class="onglet actif" data-panneau="cours">📖 Cours</button>
+  <button class="onglet" data-panneau="multiples">🔢 Multiples / Diviseurs</button>
+  <button class="onglet" data-panneau="ppmc">🎯 PPMC</button>
+  <button class="onglet" data-panneau="pgdc">✂️ PGDC</button>
+  <button class="onglet" data-panneau="choix">🤔 PPMC ou PGDC ?</button>
+  <button class="onglet" data-panneau="fractions">🍕 Fractions</button>
+  <button class="onglet" data-panneau="frac-calcul">➕ Calculer</button>
+  <button class="onglet" data-panneau="quiz">🏆 Quiz</button>
+</nav>
+
+<main>
+
+<!-- ============================================ -->
+<!-- PANNEAU COURS                                  -->
+<!-- ============================================ -->
+<div class="panneau actif" id="panneau-cours">
+
+  <div class="carte">
+    <h2>📖 Rappels essentiels</h2>
+    <p>Choisis ci-dessous la notion que tu veux revoir.</p>
+  </div>
+
+  <div class="grille-2">
+
+    <div class="carte">
+      <h3>🔢 Multiples</h3>
+      <p>Les <b>multiples de 3</b> : je multiplie 3 par 1, 2, 3, 4, …</p>
+      <div class="liste-nombres">
+        <span class="nbre">3</span><span class="nbre">6</span>
+        <span class="nbre">9</span><span class="nbre">12</span>
+        <span class="nbre">15</span><span class="nbre">18</span>
+      </div>
+      <p style="font-size:0.9rem;color:#666">Il y en a une infinité.</p>
+    </div>
+
+    <div class="carte vert">
+      <h3>✂️ Diviseurs</h3>
+      <p>Les <b>diviseurs de 12</b> : les nombres qui divisent 12 exactement.</p>
+      <div class="liste-nombres">
+        <span class="nbre vert">1</span><span class="nbre vert">2</span>
+        <span class="nbre vert">3</span><span class="nbre vert">4</span>
+        <span class="nbre vert">6</span><span class="nbre vert">12</span>
+      </div>
+      <p style="font-size:0.9rem;color:#666">Ils sont en nombre limité.</p>
+    </div>
+
+    <div class="carte orange">
+      <h3>🎯 PPMC</h3>
+      <p><b>Plus Petit Multiple Commun.</b> Utile pour : choses qui reviennent en même temps (bus, feux rouges).</p>
+      <p>Exemple : PPMC(4; 6) = <b>12</b></p>
+    </div>
+
+    <div class="carte rouge">
+      <h3>✂️ PGDC</h3>
+      <p><b>Plus Grand Diviseur Commun.</b> Utile pour : couper en parts égales, faire des paquets.</p>
+      <p>Exemple : PGDC(12; 18) = <b>6</b></p>
+    </div>
+
+    <div class="carte">
+      <h3>🍕 Fractions</h3>
+      <p>Une fraction, c'est une part du tout.</p>
+      <div style="text-align:center;margin:0.8rem 0">
+        <span class="fraction"><span class="num">3</span><span class="den">4</span></span>
+        <span style="color:#666;margin-left:8px">= 3 parts sur 4</span>
+      </div>
+      <div style="text-align:center" id="pizza-demo"></div>
+    </div>
+
+    <div class="carte vert">
+      <h3>➕ Calculer avec les fractions</h3>
+      <p><b>Même dénominateur :</b> j'additionne les numérateurs.</p>
+      <p style="text-align:center;margin:0.5rem 0">
+        <span class="fraction"><span class="num">1</span><span class="den">5</span></span> +
+        <span class="fraction"><span class="num">2</span><span class="den">5</span></span> =
+        <span class="fraction"><span class="num">3</span><span class="den">5</span></span>
+      </p>
+      <p><b>Multiplier :</b> haut × haut, bas × bas.</p>
+    </div>
+
+  </div>
+
+  <div class="info">
+    💡 <b>Astuce :</b> va directement sur l'onglet qui t'intéresse via la barre du haut. Chaque onglet a des exercices interactifs.
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PANNEAU MULTIPLES / DIVISEURS                -->
+<!-- ============================================ -->
+<div class="panneau" id="panneau-multiples">
+
+  <div class="carte">
+    <h2>🔢 Multiples d'un nombre</h2>
+    <p>Entre un nombre, je te donne ses 10 premiers multiples.</p>
+    <p style="margin-top:0.8rem">
+      Nombre : <input type="number" id="mult-n" min="1" max="99" value="7">
+      <button class="btn" onclick="afficherMultiples()">Voir les multiples</button>
+    </p>
+    <div id="mult-resultat"></div>
+  </div>
+
+  <div class="carte vert">
+    <h2>✂️ Diviseurs d'un nombre</h2>
+    <p>Entre un nombre, je te donne tous ses diviseurs.</p>
+    <p style="margin-top:0.8rem">
+      Nombre : <input type="number" id="div-n" min="1" max="200" value="24">
+      <button class="btn vert" onclick="afficherDiviseurs()">Voir les diviseurs</button>
+    </p>
+    <div id="div-resultat"></div>
+  </div>
+
+  <div class="carte orange">
+    <h2>🎮 Exercice : trouve les diviseurs</h2>
+    <p id="ex-div-q" style="font-size:1.1rem;margin:0.8rem 0">Trouve tous les diviseurs de <b>18</b>.</p>
+    <p>Écris-les séparés par une virgule : <input type="text" id="ex-div-rep" style="width:220px" placeholder="ex: 1, 2, 3">
+      <button class="btn orange" onclick="verifierDiviseurs()">Vérifier</button>
+      <button class="btn secondaire" onclick="nouvExDiv()">Nouveau</button>
+    </p>
+    <div id="ex-div-feedback"></div>
+    <div class="compteur">
+      <div>Justes : <span class="juste-c" id="div-justes">0</span></div>
+      <div>Faux : <span class="faux-c" id="div-faux">0</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================ -->
+<!-- PANNEAU PPMC                                  -->
+<!-- ============================================ -->
+<div class="panneau" id="panneau-ppmc">
+
+  <div class="carte orange">
+    <h2>🎯 Calcul du PPMC par la méthode des listes</h2>
+    <p>Entre deux nombres. Je montre les multiples et j'entoure le plus petit commun.</p>
+    <p style="margin-top:0.8rem">
+      a = <input type="number" id="ppmc-a" min="1" max="50" value="4">
+      b = <input type="number" id="ppmc-b" min="1" max="50" value="6">
+      <button class="btn orange" onclick="calculerPPMC()">Calculer</button>
+    </p>
+    <div id="ppmc-resultat"></div>
+  </div>
+
+  <div class="carte">
+    <h2>🎮 À toi de jouer</h2>
+    <p id="ex-ppmc-q" style="font-size:1.1rem;margin:0.8rem 0">Calcule PPMC(6 ; 8).</p>
+    <p>Ta réponse : <input type="number" id="ex-ppmc-rep">
+      <button class="btn" onclick="verifierPPMC()">Vérifier</button>
+      <button class="btn secondaire" onclick="nouvExPPMC()">Nouveau</button>
+      <button class="btn secondaire" onclick="aidePPMC()">Aide</button>
+    </p>
+    <div id="ex-ppmc-feedback"></div>
+    <div class="compteur">
+      <div>Justes : <span class="juste-c" id="ppmc-justes">0</span></div>
+      <div>Faux : <span class="faux-c" id="ppmc-faux">0</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PANNEAU PGDC                                  -->
+<!-- ============================================ -->
+<div class="panneau" id="panneau-pgdc">
+
+  <div class="carte rouge">
+    <h2>✂️ Calcul du PGDC par la méthode des listes</h2>
+    <p>Entre deux nombres. Je montre les diviseurs et j'entoure le plus grand commun.</p>
+    <p style="margin-top:0.8rem">
+      a = <input type="number" id="pgdc-a" min="1" max="200" value="12">
+      b = <input type="number" id="pgdc-b" min="1" max="200" value="18">
+      <button class="btn rouge" onclick="calculerPGDC()">Calculer</button>
+    </p>
+    <div id="pgdc-resultat"></div>
+  </div>
+
+  <div class="carte">
+    <h2>🎮 À toi de jouer</h2>
+    <p id="ex-pgdc-q" style="font-size:1.1rem;margin:0.8rem 0">Calcule PGDC(8 ; 12).</p>
+    <p>Ta réponse : <input type="number" id="ex-pgdc-rep">
+      <button class="btn" onclick="verifierPGDC()">Vérifier</button>
+      <button class="btn secondaire" onclick="nouvExPGDC()">Nouveau</button>
+      <button class="btn secondaire" onclick="aidePGDC()">Aide</button>
+    </p>
+    <div id="ex-pgdc-feedback"></div>
+    <div class="compteur">
+      <div>Justes : <span class="juste-c" id="pgdc-justes">0</span></div>
+      <div>Faux : <span class="faux-c" id="pgdc-faux">0</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PANNEAU CHOIX                                 -->
+<!-- ============================================ -->
+<div class="panneau" id="panneau-choix">
+
+  <div class="carte">
+    <h2>🤔 PPMC ou PGDC ? Comment choisir</h2>
+    <table class="choix">
+      <thead>
+        <tr><th>Mot ou idée du problème</th><th>À utiliser</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>En même temps (deux choses qui reviennent)</td><td>PPMC</td></tr>
+        <tr><td>Couper en parts égales (le plus de parts)</td><td>PGDC</td></tr>
+        <tr><td>Faire des paquets (le plus de paquets)</td><td>PGDC</td></tr>
+        <tr><td>Se retrouver ensemble (bus, feux)</td><td>PPMC</td></tr>
+        <tr><td>La plus grande taille / longueur identique</td><td>PGDC</td></tr>
+        <tr><td>Le plus petit nombre / temps</td><td>PPMC</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="carte orange">
+    <h2>🎮 Problèmes : choisis le bon outil</h2>
+    <div id="pb-enonce" class="info" style="font-size:1.05rem"></div>
+    <div id="pb-choix"></div>
+    <div id="pb-feedback"></div>
+    <button class="btn secondaire" onclick="nouveauProbleme()" style="margin-top:0.8rem">Nouveau problème</button>
+    <div class="compteur">
+      <div>Justes : <span class="juste-c" id="pb-justes">0</span></div>
+      <div>Faux : <span class="faux-c" id="pb-faux">0</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PANNEAU FRACTIONS                             -->
+<!-- ============================================ -->
+<div class="panneau" id="panneau-fractions">
+
+  <div class="carte">
+    <h2>🍕 Comprendre une fraction</h2>
+    <p>Change la fraction avec les curseurs et regarde la pizza.</p>
+    <div style="text-align:center;margin:1rem 0">
+      <div id="frac-pizza"></div>
+    </div>
+    <div class="grille-2">
+      <div>
+        <label><b>Numérateur</b> (parts coloriées) : <span id="frac-num-val">3</span></label><br>
+        <input type="range" id="frac-num" min="0" max="12" value="3" style="width:100%">
+      </div>
+      <div>
+        <label><b>Dénominateur</b> (parts en tout) : <span id="frac-den-val">4</span></label><br>
+        <input type="range" id="frac-den" min="1" max="12" value="4" style="width:100%">
+      </div>
+    </div>
+    <div id="frac-info" class="info"></div>
+  </div>
+
+  <div class="carte vert">
+    <h2>🎮 Reconnais la fraction</h2>
+    <div style="text-align:center" id="frac-ex-pizza"></div>
+    <p style="text-align:center;margin-top:0.8rem">
+      Numérateur : <input type="number" id="frac-ex-num" style="width:70px">
+      / Dénominateur : <input type="number" id="frac-ex-den" style="width:70px">
+      <button class="btn vert" onclick="verifierFrac()">Vérifier</button>
+      <button class="btn secondaire" onclick="nouvExFrac()">Nouveau</button>
+    </p>
+    <div id="frac-ex-feedback"></div>
+    <div class="compteur">
+      <div>Justes : <span class="juste-c" id="frac-justes">0</span></div>
+      <div>Faux : <span class="faux-c" id="frac-faux">0</span></div>
+    </div>
+  </div>
+
+  <div class="carte orange">
+    <h2>✂️ Simplifier une fraction</h2>
+    <p>Entre une fraction, je la simplifie à fond (avec le PGDC).</p>
+    <p style="margin-top:0.8rem">
+      <input type="number" id="simp-num" min="0" max="999" value="12" style="width:80px"> /
+      <input type="number" id="simp-den" min="1" max="999" value="18" style="width:80px">
+      <button class="btn orange" onclick="simplifier()">Simplifier</button>
+    </p>
+    <div id="simp-resultat"></div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PANNEAU CALCULER                              -->
+<!-- ============================================ -->
+<div class="panneau" id="panneau-frac-calcul">
+
+  <div class="carte">
+    <h2>➕ Calculer avec deux fractions</h2>
+    <p>Je fais le calcul étape par étape (avec PPMC si nécessaire).</p>
+
+    <div style="margin:1rem 0;text-align:center;font-size:1.1rem">
+      <input type="number" id="calc-a" value="1" style="width:60px">
+      /
+      <input type="number" id="calc-b" value="2" style="width:60px" min="1">
+
+      <select id="calc-op" style="padding:0.4rem;font-size:1rem;margin:0 0.5rem">
+        <option value="+">+</option>
+        <option value="-">−</option>
+        <option value="*">×</option>
+        <option value="/">÷</option>
+      </select>
+
+      <input type="number" id="calc-c" value="1" style="width:60px">
+      /
+      <input type="number" id="calc-d" value="3" style="width:60px" min="1">
+
+      <button class="btn" onclick="calculerFraction()" style="margin-left:0.5rem">Calculer</button>
+    </div>
+
+    <div id="calc-resultat"></div>
+  </div>
+
+  <div class="carte vert">
+    <h2>🎮 À toi : calcule</h2>
+    <div id="ex-calc-enonce" style="font-size:1.15rem;margin:1rem 0;text-align:center"></div>
+    <p style="text-align:center">
+      Ta réponse :
+      <input type="number" id="ex-calc-num" style="width:70px">
+      /
+      <input type="number" id="ex-calc-den" style="width:70px">
+      <button class="btn vert" onclick="verifierCalc()">Vérifier</button>
+      <button class="btn secondaire" onclick="nouvExCalc()">Nouveau</button>
+    </p>
+    <p style="text-align:center;font-size:0.9rem;color:#666">Donne la fraction simplifiée à fond.</p>
+    <div id="ex-calc-feedback"></div>
+    <div class="compteur">
+      <div>Justes : <span class="juste-c" id="calc-justes">0</span></div>
+      <div>Faux : <span class="faux-c" id="calc-faux">0</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- PANNEAU QUIZ                                  -->
+<!-- ============================================ -->
+<div class="panneau" id="panneau-quiz">
+
+  <div class="carte">
+    <h2>🏆 Quiz mélangé</h2>
+    <p>10 questions mélangées sur tout le programme.</p>
+    <div id="quiz-zone">
+      <button class="btn" onclick="demarrerQuiz()" style="font-size:1.1rem;padding:0.8rem 1.5rem">🚀 Démarrer le quiz</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// =========================================================
+// UTILITAIRES
+// =========================================================
+function pgdc(a, b) {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b) { [a, b] = [b, a % b]; }
+  return a || 1;
+}
+function ppmc(a, b) {
+  return Math.abs(a * b) / pgdc(a, b);
+}
+function multiples(n, combien) {
+  const r = [];
+  for (let i = 1; i <= combien; i++) r.push(n * i);
+  return r;
+}
+function diviseurs(n) {
+  const r = [];
+  for (let i = 1; i <= n; i++) if (n % i === 0) r.push(i);
+  return r;
+}
+function fracSimp(num, den) {
+  const g = pgdc(num, den);
+  return [num / g, den / g];
+}
+
+// Affichage fraction HTML
+function fracHTML(num, den) {
+  if (den === 1) return `<b>${num}</b>`;
+  return `<span class="fraction"><span class="num">${num}</span><span class="den">${den}</span></span>`;
+}
+
+// Dessin pizza SVG
+function pizzaSVG(num, den, taille = 120, couleur = 'rgb(190,80,0)') {
+  if (den < 1) den = 1;
+  if (num < 0) num = 0;
+  if (num > den) num = den;
+  const r = taille / 2 - 4;
+  const cx = taille / 2, cy = taille / 2;
+  let svg = `<svg width="${taille}" height="${taille}" viewBox="0 0 ${taille} ${taille}">`;
+  const angle = 2 * Math.PI / den;
+  // Parts coloriées
+  for (let i = 0; i < num; i++) {
+    const a1 = -Math.PI / 2 + i * angle;
+    const a2 = a1 + angle;
+    const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+    const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+    const large = angle > Math.PI ? 1 : 0;
+    if (den === 1) {
+      svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${couleur}" opacity="0.5"/>`;
+    } else {
+      svg += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z" fill="${couleur}" opacity="0.5"/>`;
+    }
+  }
+  // Traits
+  for (let i = 0; i < den; i++) {
+    const a = -Math.PI / 2 + i * angle;
+    const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
+    svg += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${couleur}" stroke-width="1.5"/>`;
+  }
+  svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${couleur}" stroke-width="2.5"/>`;
+  svg += `</svg>`;
+  return svg;
+}
+
+// =========================================================
+// ONGLETS
+// =========================================================
+document.querySelectorAll('.onglet').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.onglet').forEach(b => b.classList.remove('actif'));
+    document.querySelectorAll('.panneau').forEach(p => p.classList.remove('actif'));
+    btn.classList.add('actif');
+    document.getElementById('panneau-' + btn.dataset.panneau).classList.add('actif');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+// Pizza démo dans l'onglet Cours
+document.getElementById('pizza-demo').innerHTML = pizzaSVG(3, 4, 100);
+
+// =========================================================
+// MULTIPLES / DIVISEURS
+// =========================================================
+function afficherMultiples() {
+  const n = parseInt(document.getElementById('mult-n').value);
+  if (!n || n < 1) return;
+  const mult = multiples(n, 10);
+  let html = `<div class="info"><b>Les 10 premiers multiples de ${n} :</b></div>`;
+  html += `<div class="liste-nombres">`;
+  mult.forEach((m, i) => {
+    html += `<span class="nbre">${m}</span>`;
+  });
+  html += `</div>`;
+  html += `<p style="font-size:0.9rem;color:#666;margin-top:0.5rem">Calculs : `;
+  mult.slice(0, 5).forEach((m, i) => {
+    html += `${n}×${i+1}=${m}${i<4 ? ' ; ' : ''}`;
+  });
+  html += `…</p>`;
+  document.getElementById('mult-resultat').innerHTML = html;
+}
+
+function afficherDiviseurs() {
+  const n = parseInt(document.getElementById('div-n').value);
+  if (!n || n < 1) return;
+  const div = diviseurs(n);
+  let html = `<div class="info vert"><b>Les diviseurs de ${n} :</b> il y en a ${div.length}.</div>`;
+  html += `<div class="liste-nombres">`;
+  div.forEach(d => html += `<span class="nbre vert">${d}</span>`);
+  html += `</div>`;
+  // Paires
+  html += `<p style="font-size:0.9rem;color:#666;margin-top:0.5rem">Décomposition : `;
+  const paires = [];
+  for (let i = 1; i * i <= n; i++) {
+    if (n % i === 0) paires.push(`${i}×${n/i}=${n}`);
+  }
+  html += paires.join(' ; ') + `</p>`;
+  document.getElementById('div-resultat').innerHTML = html;
+}
+
+// Exercice diviseurs
+let exDivN = 18;
+function nouvExDiv() {
+  // Nombres pas trop gros, avec 3 à 6 diviseurs
+  const choix = [6, 8, 10, 12, 14, 15, 16, 18, 20, 21, 24, 25, 27, 28, 30, 32, 35, 36, 40, 42, 45, 48];
+  exDivN = choix[Math.floor(Math.random() * choix.length)];
+  document.getElementById('ex-div-q').innerHTML = `Trouve tous les diviseurs de <b>${exDivN}</b>.`;
+  document.getElementById('ex-div-rep').value = '';
+  document.getElementById('ex-div-feedback').innerHTML = '';
+}
+
+function verifierDiviseurs() {
+  const rep = document.getElementById('ex-div-rep').value;
+  const nums = rep.split(/[,;\s]+/).filter(x => x).map(x => parseInt(x)).filter(x => !isNaN(x));
+  const attendu = diviseurs(exDivN);
+  const triNums = [...new Set(nums)].sort((a,b) => a-b);
+  const juste = triNums.length === attendu.length && triNums.every((v, i) => v === attendu[i]);
+  const fb = document.getElementById('ex-div-feedback');
+  if (juste) {
+    fb.innerHTML = `<div class="feedback juste">✓ Bravo ! Les diviseurs de ${exDivN} sont bien ${attendu.join(', ')}.</div>`;
+    incrementer('div-justes');
+  } else {
+    fb.innerHTML = `<div class="feedback faux">✗ Pas tout à fait. Les diviseurs de ${exDivN} sont : <b>${attendu.join(', ')}</b>.</div>`;
+    incrementer('div-faux');
+  }
+}
+
+// =========================================================
+// PPMC
+// =========================================================
+function calculerPPMC() {
+  const a = parseInt(document.getElementById('ppmc-a').value);
+  const b = parseInt(document.getElementById('ppmc-b').value);
+  if (!a || !b || a < 1 || b < 1) return;
+  const res = ppmc(a, b);
+  const combien = Math.max(10, Math.ceil(res / Math.min(a, b)) + 2);
+  const mA = multiples(a, combien);
+  const mB = multiples(b, combien);
+  const communs = mA.filter(x => mB.includes(x)).slice(0, 3);
+
+  let html = `<div class="info"><b>Multiples de ${a} :</b></div><div class="liste-nombres">`;
+  mA.forEach(m => {
+    const cls = m === res ? 'plus-petit' : (communs.includes(m) ? 'commun' : '');
+    html += `<span class="nbre ${cls}">${m}</span>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="info vert"><b>Multiples de ${b} :</b></div><div class="liste-nombres">`;
+  mB.forEach(m => {
+    const cls = m === res ? 'plus-petit' : (communs.includes(m) ? 'commun' : '');
+    html += `<span class="nbre vert ${cls}">${m}</span>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="info orange" style="font-size:1.15rem;text-align:center">
+    <b>PPMC(${a} ; ${b}) = ${res}</b>
+  </div>`;
+  document.getElementById('ppmc-resultat').innerHTML = html;
+}
+
+// Exercice PPMC
+let exPPMCa = 6, exPPMCb = 8;
+function nouvExPPMC() {
+  const paires = [[2,3],[3,4],[4,6],[3,5],[4,5],[6,8],[6,9],[4,10],[8,12],[5,6],[6,10],[9,12],[3,7]];
+  const p = paires[Math.floor(Math.random() * paires.length)];
+  exPPMCa = p[0]; exPPMCb = p[1];
+  document.getElementById('ex-ppmc-q').innerHTML = `Calcule PPMC(${exPPMCa} ; ${exPPMCb}).`;
+  document.getElementById('ex-ppmc-rep').value = '';
+  document.getElementById('ex-ppmc-feedback').innerHTML = '';
+}
+
+function verifierPPMC() {
+  const rep = parseInt(document.getElementById('ex-ppmc-rep').value);
+  const attendu = ppmc(exPPMCa, exPPMCb);
+  const fb = document.getElementById('ex-ppmc-feedback');
+  if (rep === attendu) {
+    fb.innerHTML = `<div class="feedback juste">✓ Bravo ! PPMC(${exPPMCa} ; ${exPPMCb}) = ${attendu}.</div>`;
+    incrementer('ppmc-justes');
+  } else {
+    fb.innerHTML = `<div class="feedback faux">✗ Non, la bonne réponse est <b>${attendu}</b>.</div>`;
+    incrementer('ppmc-faux');
+  }
+}
+
+function aidePPMC() {
+  const mA = multiples(exPPMCa, 8);
+  const mB = multiples(exPPMCb, 8);
+  document.getElementById('ex-ppmc-feedback').innerHTML = `
+    <div class="info jaune">
+      💡 Multiples de ${exPPMCa} : ${mA.join(', ')} …<br>
+      Multiples de ${exPPMCb} : ${mB.join(', ')} …<br>
+      Cherche le <b>plus petit</b> qui est dans les deux listes.
+    </div>`;
+}
+
+// =========================================================
+// PGDC
+// =========================================================
+function calculerPGDC() {
+  const a = parseInt(document.getElementById('pgdc-a').value);
+  const b = parseInt(document.getElementById('pgdc-b').value);
+  if (!a || !b || a < 1 || b < 1) return;
+  const res = pgdc(a, b);
+  const dA = diviseurs(a);
+  const dB = diviseurs(b);
+  const communs = dA.filter(x => dB.includes(x));
+
+  let html = `<div class="info"><b>Diviseurs de ${a} :</b></div><div class="liste-nombres">`;
+  dA.forEach(d => {
+    const cls = d === res ? 'plus-grand' : (communs.includes(d) ? 'commun' : '');
+    html += `<span class="nbre ${cls}">${d}</span>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="info vert"><b>Diviseurs de ${b} :</b></div><div class="liste-nombres">`;
+  dB.forEach(d => {
+    const cls = d === res ? 'plus-grand' : (communs.includes(d) ? 'commun' : '');
+    html += `<span class="nbre vert ${cls}">${d}</span>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="info rouge" style="font-size:1.15rem;text-align:center">
+    <b>PGDC(${a} ; ${b}) = ${res}</b>
+  </div>`;
+  document.getElementById('pgdc-resultat').innerHTML = html;
+}
+
+// Exercice PGDC
+let exPGDCa = 8, exPGDCb = 12;
+function nouvExPGDC() {
+  const paires = [[8,12],[15,20],[16,24],[20,30],[18,24],[12,18],[24,36],[14,21],[10,15],[12,20],[9,15],[25,30],[18,30]];
+  const p = paires[Math.floor(Math.random() * paires.length)];
+  exPGDCa = p[0]; exPGDCb = p[1];
+  document.getElementById('ex-pgdc-q').innerHTML = `Calcule PGDC(${exPGDCa} ; ${exPGDCb}).`;
+  document.getElementById('ex-pgdc-rep').value = '';
+  document.getElementById('ex-pgdc-feedback').innerHTML = '';
+}
+
+function verifierPGDC() {
+  const rep = parseInt(document.getElementById('ex-pgdc-rep').value);
+  const attendu = pgdc(exPGDCa, exPGDCb);
+  const fb = document.getElementById('ex-pgdc-feedback');
+  if (rep === attendu) {
+    fb.innerHTML = `<div class="feedback juste">✓ Bravo ! PGDC(${exPGDCa} ; ${exPGDCb}) = ${attendu}.</div>`;
+    incrementer('pgdc-justes');
+  } else {
+    fb.innerHTML = `<div class="feedback faux">✗ Non, la bonne réponse est <b>${attendu}</b>.</div>`;
+    incrementer('pgdc-faux');
+  }
+}
+
+function aidePGDC() {
+  const dA = diviseurs(exPGDCa);
+  const dB = diviseurs(exPGDCb);
+  document.getElementById('ex-pgdc-feedback').innerHTML = `
+    <div class="info jaune">
+      💡 Diviseurs de ${exPGDCa} : ${dA.join(', ')}<br>
+      Diviseurs de ${exPGDCb} : ${dB.join(', ')}<br>
+      Cherche le <b>plus grand</b> qui est dans les deux listes.
+    </div>`;
+}
+
+// =========================================================
+// CHOIX PPMC / PGDC (problèmes)
+// =========================================================
+const problemes = [
+  {enonce: "Deux feux rouges deviennent verts ensemble. Le premier toutes les 30 s, le second toutes les 45 s. Dans combien de secondes deviennent-ils verts en même temps ?", outil: "PPMC", a: 30, b: 45, unite: "secondes"},
+  {enonce: "On veut faire des bouquets identiques avec 12 roses et 18 tulipes. Quel est le plus grand nombre de bouquets ?", outil: "PGDC", a: 12, b: 18, unite: "bouquets"},
+  {enonce: "Marie va au parc tous les 4 jours, Pierre tous les 6 jours. Ils se rencontrent aujourd'hui. Dans combien de jours se reverront-ils ?", outil: "PPMC", a: 4, b: 6, unite: "jours"},
+  {enonce: "On veut couvrir un mur de 48 cm sur 36 cm avec des carreaux carrés de la plus grande taille possible. Quelle est cette taille ?", outil: "PGDC", a: 48, b: 36, unite: "cm"},
+  {enonce: "Deux bus partent ensemble. Le bus A passe toutes les 10 min, le bus B toutes les 15 min. Quand repartent-ils ensemble ?", outil: "PPMC", a: 10, b: 15, unite: "minutes"},
+  {enonce: "Un pâtissier a 24 fraises et 36 menthes. Il veut faire des sachets identiques. Combien de sachets maximum ?", outil: "PGDC", a: 24, b: 36, unite: "sachets"},
+  {enonce: "Une lumière clignote toutes les 8 s, une autre toutes les 12 s. Elles sont synchronisées maintenant. Dans combien de secondes le seront-elles à nouveau ?", outil: "PPMC", a: 8, b: 12, unite: "secondes"},
+  {enonce: "Une classe de 20 filles et 30 garçons doit être répartie en équipes mixtes identiques. Quel est le plus grand nombre d'équipes ?", outil: "PGDC", a: 20, b: 30, unite: "équipes"},
+  {enonce: "Deux coureurs tournent sur une piste. Le premier met 40 s par tour, le second 60 s. Quand se recroisent-ils au point de départ ?", outil: "PPMC", a: 40, b: 60, unite: "secondes"},
+  {enonce: "On découpe deux planches (16 m et 24 m) en morceaux égaux les plus longs possibles. Quelle est la longueur d'un morceau ?", outil: "PGDC", a: 16, b: 24, unite: "m"}
+];
+
+let pbActuel = null;
+function nouveauProbleme() {
+  pbActuel = problemes[Math.floor(Math.random() * problemes.length)];
+  document.getElementById('pb-enonce').innerHTML = pbActuel.enonce;
+  document.getElementById('pb-choix').innerHTML = `
+    <button class="btn" onclick="choisirOutil('PPMC')">PPMC</button>
+    <button class="btn" onclick="choisirOutil('PGDC')">PGDC</button>`;
+  document.getElementById('pb-feedback').innerHTML = '';
+}
+
+function choisirOutil(choix) {
+  if (!pbActuel) return;
+  const fb = document.getElementById('pb-feedback');
+  const resultat = pbActuel.outil === 'PPMC' ? ppmc(pbActuel.a, pbActuel.b) : pgdc(pbActuel.a, pbActuel.b);
+  if (choix === pbActuel.outil) {
+    fb.innerHTML = `<div class="feedback juste">
+      ✓ Bravo ! Il fallait utiliser le <b>${pbActuel.outil}</b>.<br>
+      ${pbActuel.outil}(${pbActuel.a} ; ${pbActuel.b}) = <b>${resultat} ${pbActuel.unite}</b>.
+    </div>`;
+    incrementer('pb-justes');
+  } else {
+    fb.innerHTML = `<div class="feedback faux">
+      ✗ Non, il fallait utiliser le <b>${pbActuel.outil}</b>.<br>
+      ${pbActuel.outil}(${pbActuel.a} ; ${pbActuel.b}) = <b>${resultat} ${pbActuel.unite}</b>.
+    </div>`;
+    incrementer('pb-faux');
+  }
+}
+nouveauProbleme();
+
+// =========================================================
+// FRACTIONS visualisation
+// =========================================================
+function majFrac() {
+  const num = parseInt(document.getElementById('frac-num').value);
+  const den = parseInt(document.getElementById('frac-den').value);
+  document.getElementById('frac-num-val').textContent = num;
+  document.getElementById('frac-den-val').textContent = den;
+  // Borner num ≤ den pour affichage simple
+  const numAff = Math.min(num, den);
+  document.getElementById('frac-num').max = den;
+  if (num > den) document.getElementById('frac-num').value = den;
+  document.getElementById('frac-pizza').innerHTML = pizzaSVG(numAff, den, 160);
+  const [sn, sd] = fracSimp(numAff, den);
+  let txt = `<b>Lecture :</b> la pizza est coupée en <b>${den}</b> parts, on en prend <b>${numAff}</b>. On écrit ${fracHTML(numAff, den)}.`;
+  if (sn !== numAff) txt += ` Simplifiée : ${fracHTML(sn, sd)}.`;
+  if (numAff === den && den > 0) txt += ` C'est une <b>pizza entière</b> (= 1).`;
+  if (numAff === 0) txt += ` Rien n'est colorié (= 0).`;
+  document.getElementById('frac-info').innerHTML = txt;
+}
+document.getElementById('frac-num').addEventListener('input', majFrac);
+document.getElementById('frac-den').addEventListener('input', majFrac);
+majFrac();
+
+// Exercice reconnaître fraction
+let exFracNum = 3, exFracDen = 5;
+function nouvExFrac() {
+  exFracDen = 2 + Math.floor(Math.random() * 7); // 2 à 8
+  exFracNum = 1 + Math.floor(Math.random() * exFracDen);
+  document.getElementById('frac-ex-pizza').innerHTML = pizzaSVG(exFracNum, exFracDen, 140);
+  document.getElementById('frac-ex-num').value = '';
+  document.getElementById('frac-ex-den').value = '';
+  document.getElementById('frac-ex-feedback').innerHTML = '';
+}
+
+function verifierFrac() {
+  const n = parseInt(document.getElementById('frac-ex-num').value);
+  const d = parseInt(document.getElementById('frac-ex-den').value);
+  const fb = document.getElementById('frac-ex-feedback');
+  // Accepte la fraction exacte OU la forme simplifiée
+  const [sn, sd] = fracSimp(exFracNum, exFracDen);
+  const juste = (n === exFracNum && d === exFracDen) || (n === sn && d === sd);
+  if (juste) {
+    fb.innerHTML = `<div class="feedback juste">✓ Bravo ! La fraction est ${fracHTML(exFracNum, exFracDen)}.</div>`;
+    incrementer('frac-justes');
+  } else {
+    fb.innerHTML = `<div class="feedback faux">✗ Non, c'est ${fracHTML(exFracNum, exFracDen)} (ou simplifié : ${fracHTML(sn, sd)}).</div>`;
+    incrementer('frac-faux');
+  }
+}
+nouvExFrac();
+
+// Simplification
+function simplifier() {
+  const n = parseInt(document.getElementById('simp-num').value);
+  const d = parseInt(document.getElementById('simp-den').value);
+  if (isNaN(n) || !d || d < 1) return;
+  if (n === 0) {
+    document.getElementById('simp-resultat').innerHTML = `<div class="info vert">0 divisé par ${d} = <b>0</b>.</div>`;
+    return;
+  }
+  const g = pgdc(n, d);
+  let html = `<div class="info"><b>Étape 1 :</b> PGDC(${n} ; ${d}) = ${g}.</div>`;
+  if (g === 1) {
+    html += `<div class="info vert"><b>La fraction ${fracHTML(n,d)} est déjà irréductible.</b></div>`;
+  } else {
+    html += `<div class="info"><b>Étape 2 :</b> je divise haut ET bas par ${g}.</div>`;
+    html += `<div style="text-align:center;font-size:1.3rem;margin:1rem 0">
+      ${fracHTML(n, d)} = <span class="fraction"><span class="num">${n} ÷ ${g}</span><span class="den">${d} ÷ ${g}</span></span> = ${fracHTML(n/g, d/g)}
+    </div>`;
+  }
+  document.getElementById('simp-resultat').innerHTML = html;
+}
+
+// =========================================================
+// CALCUL DE FRACTIONS
+// =========================================================
+function calculerFraction() {
+  const a = parseInt(document.getElementById('calc-a').value);
+  const b = parseInt(document.getElementById('calc-b').value);
+  const c = parseInt(document.getElementById('calc-c').value);
+  const d = parseInt(document.getElementById('calc-d').value);
+  const op = document.getElementById('calc-op').value;
+  if (isNaN(a) || !b || isNaN(c) || !d) return;
+
+  let html = `<div class="info"><b>Calcul :</b> ${fracHTML(a,b)} ${opSym(op)} ${fracHTML(c,d)}</div>`;
+  let num, den;
+
+  if (op === '+' || op === '-') {
+    const m = ppmc(b, d);
+    const facA = m / b, facC = m / d;
+    html += `<div class="info"><b>Étape 1.</b> PPMC(${b} ; ${d}) = <b>${m}</b>.</div>`;
+    if (b !== m || d !== m) {
+      html += `<div class="info"><b>Étape 2.</b> Même dénominateur :<br>
+        ${fracHTML(a,b)} = <span class="fraction"><span class="num">${a}×${facA}</span><span class="den">${b}×${facA}</span></span> = ${fracHTML(a*facA, m)}<br>
+        ${fracHTML(c,d)} = <span class="fraction"><span class="num">${c}×${facC}</span><span class="den">${d}×${facC}</span></span> = ${fracHTML(c*facC, m)}
+      </div>`;
+    }
+    num = op === '+' ? a*facA + c*facC : a*facA - c*facC;
+    den = m;
+    html += `<div class="info"><b>Étape 3.</b> ${fracHTML(a*facA, m)} ${opSym(op)} ${fracHTML(c*facC, m)} = ${fracHTML(num, den)}</div>`;
+  } else if (op === '*') {
+    html += `<div class="info"><b>Méthode :</b> haut × haut, bas × bas.</div>`;
+    num = a * c; den = b * d;
+    html += `<div class="info">${fracHTML(a,b)} × ${fracHTML(c,d)} = <span class="fraction"><span class="num">${a}×${c}</span><span class="den">${b}×${d}</span></span> = ${fracHTML(num, den)}</div>`;
+  } else if (op === '/') {
+    if (c === 0) {
+      html += `<div class="info rouge">Division par zéro impossible.</div>`;
+      document.getElementById('calc-resultat').innerHTML = html;
+      return;
+    }
+    html += `<div class="info"><b>Méthode :</b> je retourne la 2<sup>e</sup> fraction, puis je multiplie.</div>`;
+    html += `<div class="info">${fracHTML(a,b)} ÷ ${fracHTML(c,d)} = ${fracHTML(a,b)} × ${fracHTML(d,c)}</div>`;
+    num = a * d; den = b * c;
+    html += `<div class="info">= <span class="fraction"><span class="num">${a}×${d}</span><span class="den">${b}×${c}</span></span> = ${fracHTML(num, den)}</div>`;
+  }
+
+  // Simplification
+  // Gestion signe
+  let sign = 1;
+  if (num < 0) { sign = -1; num = -num; }
+  if (den < 0) { sign = -sign; den = -den; }
+  const g = pgdc(num, den);
+  let snum = num/g, sden = den/g;
+  if (g > 1 && den !== 0) {
+    html += `<div class="info orange"><b>Étape finale : simplification.</b> PGDC = ${g}.<br>
+      Résultat simplifié : <b>${sign < 0 ? '−' : ''}${fracHTML(snum, sden)}</b>${sden === 1 ? ` = ${sign*snum}` : ''}</div>`;
+  } else {
+    html += `<div class="info vert" style="font-size:1.15rem;text-align:center"><b>Résultat : ${sign < 0 ? '−' : ''}${fracHTML(snum, sden)}</b>${sden === 1 ? ` = ${sign*snum}` : ''}</div>`;
+  }
+  document.getElementById('calc-resultat').innerHTML = html;
+}
+
+function opSym(op) {
+  return { '+': '+', '-': '−', '*': '×', '/': '÷' }[op];
+}
+
+// Exercice calcul
+let exCalc = null;
+function nouvExCalc() {
+  const types = ['+', '+', '-', '*', '/'];
+  const op = types[Math.floor(Math.random() * types.length)];
+  // Paires simples
+  const paires = [[1,2,1,4],[1,2,1,3],[1,3,1,6],[2,3,1,4],[3,4,1,2],[2,5,1,5],[3,5,1,5],[1,2,2,3],[3,4,1,4],[5,6,1,3],[2,3,3,4],[1,4,3,8]];
+  const p = paires[Math.floor(Math.random() * paires.length)];
+  exCalc = { a: p[0], b: p[1], c: p[2], d: p[3], op };
+
+  document.getElementById('ex-calc-enonce').innerHTML = `Calcule : ${fracHTML(exCalc.a, exCalc.b)} ${opSym(op)} ${fracHTML(exCalc.c, exCalc.d)} = ?`;
+  document.getElementById('ex-calc-num').value = '';
+  document.getElementById('ex-calc-den').value = '';
+  document.getElementById('ex-calc-feedback').innerHTML = '';
+}
+
+function calculerResultat(a, b, c, d, op) {
+  let num, den;
+  if (op === '+') { num = a*d + c*b; den = b*d; }
+  else if (op === '-') { num = a*d - c*b; den = b*d; }
+  else if (op === '*') { num = a*c; den = b*d; }
+  else if (op === '/') { num = a*d; den = b*c; }
+  let sign = 1;
+  if (num < 0) { sign = -1; num = -num; }
+  if (den < 0) { sign = -sign; den = -den; }
+  const g = pgdc(num, den);
+  return { num: sign * num/g, den: den/g };
+}
+
+function verifierCalc() {
+  if (!exCalc) return;
+  const n = parseInt(document.getElementById('ex-calc-num').value);
+  const d = parseInt(document.getElementById('ex-calc-den').value);
+  const fb = document.getElementById('ex-calc-feedback');
+  const att = calculerResultat(exCalc.a, exCalc.b, exCalc.c, exCalc.d, exCalc.op);
+  // Accepte n/d si n/d simplifié == att
+  if (d === 0 || isNaN(n) || isNaN(d)) {
+    fb.innerHTML = `<div class="feedback faux">Donne ta réponse sous forme d'une fraction.</div>`;
+    return;
+  }
+  const gr = pgdc(Math.abs(n), d);
+  const rn = n/gr, rd = d/gr;
+  const juste = rn === att.num && rd === att.den;
+  if (juste) {
+    fb.innerHTML = `<div class="feedback juste">✓ Bravo ! La bonne réponse est ${fracHTML(att.num, att.den)}.</div>`;
+    incrementer('calc-justes');
+  } else {
+    fb.innerHTML = `<div class="feedback faux">✗ Non, la bonne réponse est <b>${fracHTML(att.num, att.den)}</b>${att.den === 1 ? ` = ${att.num}` : ''}.</div>`;
+    incrementer('calc-faux');
+  }
+}
+nouvExCalc();
+
+// =========================================================
+// QUIZ
+// =========================================================
+let quizQuestions = [];
+let quizIdx = 0;
+let quizScore = 0;
+
+function genererQuestionsQuiz() {
+  const q = [];
+  // PPMC
+  [[4,6],[6,9],[3,8],[5,6]].forEach(([a,b]) => {
+    const r = ppmc(a,b);
+    const faux = [r+1, r-1, r*2, r+a].filter(x => x !== r && x > 0);
+    const choix = [r, faux[0], faux[1], faux[2]].sort(() => Math.random() - 0.5);
+    q.push({ question: `PPMC(${a} ; ${b}) = ?`, choix, bonne: r });
+  });
+  // PGDC
+  [[12,18],[16,24],[15,20],[24,36]].forEach(([a,b]) => {
+    const r = pgdc(a,b);
+    const faux = [r+1, r-1, r*2, a].filter(x => x !== r && x > 0);
+    const choix = [r, faux[0], faux[1], faux[2]].sort(() => Math.random() - 0.5);
+    q.push({ question: `PGDC(${a} ; ${b}) = ?`, choix, bonne: r });
+  });
+  // Choix PPMC/PGDC
+  q.push({
+    question: "Deux bus passent toutes les 12 et 18 minutes. Quand repartent-ils ensemble ?",
+    choix: ["PPMC(12 ; 18) = 36", "PGDC(12 ; 18) = 6", "12 + 18 = 30", "12 × 18 = 216"],
+    bonne: "PPMC(12 ; 18) = 36"
+  });
+  q.push({
+    question: "On veut faire des paquets identiques avec 20 stylos et 30 crayons. Combien de paquets maximum ?",
+    choix: ["PPMC(20 ; 30) = 60", "PGDC(20 ; 30) = 10", "20 + 30 = 50", "30 − 20 = 10 (par hasard)"],
+    bonne: "PGDC(20 ; 30) = 10"
+  });
+  // Fraction
+  q.push({
+    question: "Simplifie 12/18.",
+    choix: ["1/2", "2/3", "3/4", "6/9"],
+    bonne: "2/3"
+  });
+  q.push({
+    question: "Combien font 1/4 + 2/4 ?",
+    choix: ["3/8", "2/8", "3/4", "3/16"],
+    bonne: "3/4"
+  });
+  q.push({
+    question: "Combien font 1/2 + 1/3 ?",
+    choix: ["2/5", "2/6", "5/6", "1/5"],
+    bonne: "5/6"
+  });
+  q.push({
+    question: "Combien font 2/3 × 3/4 ?",
+    choix: ["1/2", "6/7", "5/7", "6/12"],
+    bonne: "1/2"
+  });
+
+  // Mélange et prend 10
+  return q.sort(() => Math.random() - 0.5).slice(0, 10);
+}
+
+function demarrerQuiz() {
+  quizQuestions = genererQuestionsQuiz();
+  quizIdx = 0;
+  quizScore = 0;
+  afficherQuestionQuiz();
+}
+
+function afficherQuestionQuiz() {
+  if (quizIdx >= quizQuestions.length) {
+    const zone = document.getElementById('quiz-zone');
+    const pct = Math.round(100 * quizScore / quizQuestions.length);
+    let msg = '';
+    if (pct >= 80) msg = '🏆 Excellent !';
+    else if (pct >= 60) msg = '👍 Bien !';
+    else if (pct >= 40) msg = '💪 Continue à t\'entraîner.';
+    else msg = '📚 Relis le cours et recommence.';
+    zone.innerHTML = `
+      <div class="info vert" style="text-align:center;font-size:1.3rem">
+        Quiz terminé !<br>
+        <b>Score : ${quizScore} / ${quizQuestions.length}</b> (${pct}%)<br>
+        <span style="font-size:1rem">${msg}</span>
+      </div>
+      <div style="text-align:center"><button class="btn" onclick="demarrerQuiz()">🔄 Recommencer</button></div>`;
+    return;
+  }
+  const q = quizQuestions[quizIdx];
+  let html = `<div><span class="badge">Question ${quizIdx + 1} / ${quizQuestions.length}</span>
+    <span class="score">Score : ${quizScore}</span></div>
+    <div class="quiz-question">${q.question}</div>`;
+  q.choix.forEach((c, i) => {
+    html += `<button class="quiz-choix" data-val="${c}" onclick="repondreQuiz(this, '${String(c).replace(/'/g,'\\\'')}')">${c}</button>`;
+  });
+  document.getElementById('quiz-zone').innerHTML = html;
+}
+
+function repondreQuiz(btn, choix) {
+  const q = quizQuestions[quizIdx];
+  const tous = document.querySelectorAll('.quiz-choix');
+  tous.forEach(b => {
+    b.disabled = true;
+    if (b.dataset.val == q.bonne) b.classList.add('juste');
+  });
+  if (choix == q.bonne) {
+    quizScore++;
+  } else {
+    btn.classList.add('faux');
+  }
+  setTimeout(() => {
+    quizIdx++;
+    afficherQuestionQuiz();
+  }, 1400);
+}
+
+// =========================================================
+// COMPTEURS GENERIQUES
+// =========================================================
+function incrementer(id) {
+  const el = document.getElementById(id);
+  el.textContent = parseInt(el.textContent) + 1;
+}
+</script>
+
+</body>
+</html>
